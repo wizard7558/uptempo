@@ -1,0 +1,97 @@
+# Fastlane — Uptempo Pro (com.uptempo.owner)
+#
+# Auth uses an App Store Connect API key (recommended over Apple ID + password).
+# Set these env vars (e.g. in a local .env, NOT committed):
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH   (path to the AuthKey_XXXX.p8)
+#   APPLE_TEAM_ID
+#
+# Prereqs: `npx cap sync ios` has been run (Capacitor 8 uses SPM — no xcworkspace),
+# and signing is configured in Xcode (automatic signing with your team).
+#
+# Usage:
+#   bundle exec fastlane beta      # build + upload to TestFlight
+#   bundle exec fastlane release   # build + upload to App Store (no auto-submit)
+
+default_platform(:ios)
+
+PROJECT = "ios/App/App.xcodeproj"
+SCHEME = "App"
+BUNDLE_ID = "com.uptempo.owner"
+
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_filepath: ENV.fetch("ASC_KEY_PATH"),
+    in_house: false,
+  )
+end
+
+platform :ios do
+  before_all do
+    setup_ci if ENV["CI"]
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    api_key = asc_api_key
+    # Distribution signing needs no registered devices (unlike development):
+    # create/fetch the Apple Distribution cert + App Store profile, then build
+    # with manual-signing overrides so the committed project stays untouched.
+    cert(api_key: api_key, team_id: ENV["APPLE_TEAM_ID"])
+    sigh(api_key: api_key, app_identifier: BUNDLE_ID, team_id: ENV["APPLE_TEAM_ID"])
+    profile = lane_context[SharedValues::SIGH_NAME]
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      export_method: "app-store",
+      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='#{profile}'",
+      export_options: {
+        method: "app-store",
+        provisioningProfiles: { BUNDLE_ID => profile },
+      },
+    )
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+    )
+  end
+
+  desc "Build and upload to App Store (review submission done manually)"
+  lane :release do
+    api_key = asc_api_key
+    # Distribution signing needs no registered devices (unlike development):
+    # create/fetch the Apple Distribution cert + App Store profile, then build
+    # with manual-signing overrides so the committed project stays untouched.
+    cert(api_key: api_key, team_id: ENV["APPLE_TEAM_ID"])
+    sigh(api_key: api_key, app_identifier: BUNDLE_ID, team_id: ENV["APPLE_TEAM_ID"])
+    profile = lane_context[SharedValues::SIGH_NAME]
+    build_app(
+      project: PROJECT,
+      scheme: SCHEME,
+      export_method: "app-store",
+      xcargs: "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='#{profile}'",
+      export_options: {
+        method: "app-store",
+        provisioningProfiles: { BUNDLE_ID => profile },
+      },
+    )
+    upload_to_app_store(
+      api_key: api_key,
+      submit_for_review: false,
+      force: true, # skip the HTML preview prompt
+      precheck_include_in_app_purchases: false,
+      skip_screenshots: true,
+      skip_metadata: false,
+    )
+  end
+
+  desc "Upload App Store text metadata only (no binary, no screenshots, no submission)"
+  # Pushes fastlane/metadata/en-US/ + Deliverfile settings to App Store Connect.
+  # Everything else (skip_binary_upload, skip_screenshots, submit_for_review:false,
+  # force, categories) is driven by the Deliverfile so it stays in one place.
+  lane :metadata do
+    api_key = asc_api_key
+    upload_to_app_store(api_key: api_key)
+  end
+end

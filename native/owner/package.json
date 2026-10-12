@@ -1,0 +1,25 @@
+{
+  "name": "uptempo-owner-ios",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Uptempo Pro — native iOS shell (Capacitor, remote-URL mode)",
+  "scripts": {
+    "assets": "capacitor-assets generate --ios",
+    "sync": "cap sync ios",
+    "open": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/browser": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/keyboard": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.0",
+    "@capacitor/cli": "^8.0.0"
+  }
+}

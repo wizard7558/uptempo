@@ -1,0 +1,11 @@
+# OS
+.DS_Store
+
+.vercel
+.env
+.env*.local
+node_modules/
+.claude/worktrees/
+/book-uptempo
+
+.agent-plans/

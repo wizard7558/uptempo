@@ -1,0 +1,61 @@
+# Applies Drizzle (public) + tenant migrations to production Postgres when migration
+# artifacts change on main. Requires repo secret: PRODUCTION_DATABASE_URL (same value
+# as Vercel Production → DATABASE_URL, e.g. Neon pooled connection string).
+#
+# Vercel must not serve that commit until this job succeeds. The production
+# ignored-build step skips a commit that changes these paths. Promote the commit
+# to production only after "Apply platform + tenant migrations" is green.
+# A failed migration leaves the previous production deployment in place.
+
+name: Migrate production database
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/drizzle/**"
+      - "web/src/lib/tenant/migrations/**"
+      - "web/scripts/migrate-platform.mjs"
+      - "web/scripts/migrate-production.mjs"
+      - "web/scripts/migrate-tenants.ts"
+      - "web/scripts/archive-legacy-public.mjs"
+      - ".github/workflows/migrate-production.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: migrate-production
+  cancel-in-progress: true
+
+jobs:
+  migrate:
+    if: github.repository == 'wizard7558/book-uptempo'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply platform + tenant migrations
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Missing GitHub secret PRODUCTION_DATABASE_URL (use the same Neon URL as Vercel Production DATABASE_URL)."
+            exit 1
+          fi
+          pnpm run migrate

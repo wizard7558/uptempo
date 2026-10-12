@@ -1,0 +1,71 @@
+import { describe, it, expect } from "vitest";
+import {
+  SERVICE_PRESETS,
+  filterUnusedPresets,
+} from "./preset-catalog";
+import { SERVICE_CATEGORY_OPTIONS } from "./categories";
+
+const validCategories = new Set(SERVICE_CATEGORY_OPTIONS.map((o) => o.value));
+
+describe("preset catalog", () => {
+  it("has unique keys", () => {
+    const keys = SERVICE_PRESETS.map((p) => p.key);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("uses only known categories", () => {
+    for (const p of SERVICE_PRESETS) {
+      expect(validCategories.has(p.category)).toBe(true);
+    }
+  });
+
+  it("has duration in valid range", () => {
+    for (const p of SERVICE_PRESETS) {
+      expect(p.defaultDurationMinutes).toBeGreaterThanOrEqual(5);
+      expect(p.defaultDurationMinutes).toBeLessThanOrEqual(480);
+    }
+  });
+
+  it("active+processing fits inside duration when both set", () => {
+    for (const p of SERVICE_PRESETS) {
+      if (p.activeMinutes != null && p.processingMinutes != null) {
+        expect(p.activeMinutes + p.processingMinutes).toBeLessThanOrEqual(
+          p.defaultDurationMinutes,
+        );
+      }
+    }
+  });
+
+  it("non-negative suggested prices", () => {
+    for (const p of SERVICE_PRESETS) {
+      expect(p.suggestedPriceCents).toBeGreaterThanOrEqual(0);
+    }
+  });
+});
+
+describe("filterUnusedPresets", () => {
+  it("removes presets that already exist by name (case-insensitive)", () => {
+    const filtered = filterUnusedPresets(
+      [
+        { ...SERVICE_PRESETS[0] },
+        { ...SERVICE_PRESETS[1] },
+      ],
+      [SERVICE_PRESETS[0].name.toUpperCase()],
+    );
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].key).toBe(SERVICE_PRESETS[1].key);
+  });
+
+  it("trims whitespace when comparing names", () => {
+    const filtered = filterUnusedPresets(
+      [{ ...SERVICE_PRESETS[0] }],
+      [`  ${SERVICE_PRESETS[0].name}  `],
+    );
+    expect(filtered).toHaveLength(0);
+  });
+
+  it("keeps all presets when no names match", () => {
+    const filtered = filterUnusedPresets(SERVICE_PRESETS, ["Nonexistent"]);
+    expect(filtered).toHaveLength(SERVICE_PRESETS.length);
+  });
+});

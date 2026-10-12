@@ -1,0 +1,72 @@
+name: Self-host smoke
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Playwright
+        working-directory: web
+        run: pnpm install --frozen-lockfile && pnpm exec playwright install chromium --with-deps
+
+      - name: Create env
+        run: ./scripts/init-env.sh
+
+      - name: Build and start
+        run: |
+          start=$(date +%s)
+          echo "START=$start" >> "$GITHUB_ENV"
+          docker compose up -d --build
+
+      - name: Wait for health
+        run: timeout 600 sh -c 'until curl -fsS localhost:3000/api/health; do sleep 5; done'
+
+      - name: Playwright
+        working-directory: web
+        run: pnpm exec playwright test -c playwright.selfhost.config.ts
+
+      - name: Time budget
+        run: |
+          end=$(date +%s)
+          echo "elapsed=$((end - START))s"
+          test $((end - START)) -le 600
+
+      - name: Worker ran calendar sync
+        run: |
+          ok=0
+          for _ in 1 2 3 4 5 6 7 8 9; do
+            if docker compose logs worker | grep -q "ran calendar-sync"; then
+              ok=1
+              break
+            fi
+            sleep 10
+          done
+          test "$ok" -eq 1
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

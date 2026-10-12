@@ -1,0 +1,429 @@
+{
+  "SERVICE_PRESETS": [
+    {
+      "key": "haircut_womens",
+      "name": "Women's Haircut",
+      "description": "Consultation, shampoo, cut, and finish style.",
+      "category": "cut",
+      "defaultDurationMinutes": 60,
+      "suggestedPriceCents": 8500
+    },
+    {
+      "key": "haircut_mens",
+      "name": "Men's Haircut",
+      "description": "Precision cut and style.",
+      "category": "cut",
+      "defaultDurationMinutes": 30,
+      "suggestedPriceCents": 4500
+    },
+    {
+      "key": "haircut_kids",
+      "name": "Kids' Haircut",
+      "description": "Cut for clients age 12 and under.",
+      "category": "cut",
+      "defaultDurationMinutes": 30,
+      "suggestedPriceCents": 3500
+    },
+    {
+      "key": "trim_bang",
+      "name": "Bang Trim",
+      "description": "Quick fringe maintenance between full cuts.",
+      "category": "cut",
+      "defaultDurationMinutes": 15,
+      "suggestedPriceCents": 1500
+    },
+    {
+      "key": "color_root_touchup",
+      "name": "Root Touch-Up",
+      "description": "Single-process color on regrowth only.",
+      "category": "color",
+      "defaultDurationMinutes": 90,
+      "suggestedPriceCents": 9500,
+      "activeMinutes": 30,
+      "processingMinutes": 35
+    },
+    {
+      "key": "color_single_process",
+      "name": "Single-Process Color",
+      "description": "All-over single application of permanent or demi-color.",
+      "category": "color",
+      "defaultDurationMinutes": 120,
+      "suggestedPriceCents": 12500,
+      "activeMinutes": 45,
+      "processingMinutes": 35
+    },
+    {
+      "key": "color_partial_highlights",
+      "name": "Partial Highlights",
+      "description": "Foils on the top and crown for dimensional brightness.",
+      "category": "color",
+      "defaultDurationMinutes": 120,
+      "suggestedPriceCents": 14500,
+      "activeMinutes": 60,
+      "processingMinutes": 30
+    },
+    {
+      "key": "color_full_highlights",
+      "name": "Full Highlights",
+      "description": "Foils throughout for a head-to-tip color change.",
+      "category": "color",
+      "defaultDurationMinutes": 180,
+      "suggestedPriceCents": 19500,
+      "activeMinutes": 90,
+      "processingMinutes": 35
+    },
+    {
+      "key": "color_balayage",
+      "name": "Balayage",
+      "description": "Hand-painted highlights for a soft, lived-in lightening effect.",
+      "category": "color",
+      "defaultDurationMinutes": 180,
+      "suggestedPriceCents": 22500,
+      "activeMinutes": 90,
+      "processingMinutes": 45
+    },
+    {
+      "key": "color_foilayage",
+      "name": "Foilayage",
+      "description": "Balayage technique sealed in foils for extra lift.",
+      "category": "color",
+      "defaultDurationMinutes": 210,
+      "suggestedPriceCents": 26500,
+      "activeMinutes": 105,
+      "processingMinutes": 45
+    },
+    {
+      "key": "color_gloss_toner",
+      "name": "Gloss / Toner",
+      "description": "Refresh tone, add shine, and neutralize unwanted warmth.",
+      "category": "color",
+      "defaultDurationMinutes": 45,
+      "suggestedPriceCents": 5500,
+      "activeMinutes": 15,
+      "processingMinutes": 20
+    },
+    {
+      "key": "color_correction",
+      "name": "Color Correction",
+      "description": "Multi-step color repair. Quoted per consultation.",
+      "category": "color",
+      "defaultDurationMinutes": 240,
+      "suggestedPriceCents": 35000,
+      "activeMinutes": 120,
+      "processingMinutes": 60
+    },
+    {
+      "key": "style_blowout",
+      "name": "Blowout",
+      "description": "Shampoo and round-brush blow-dry style.",
+      "category": "style",
+      "defaultDurationMinutes": 45,
+      "suggestedPriceCents": 5500
+    },
+    {
+      "key": "style_special_occasion",
+      "name": "Special Occasion Style",
+      "description": "Updo, half-up, or formal styling for events and weddings.",
+      "category": "style",
+      "defaultDurationMinutes": 60,
+      "suggestedPriceCents": 9500
+    },
+    {
+      "key": "treatment_keratin_smoothing",
+      "name": "Keratin Smoothing",
+      "description": "Smoothing treatment that reduces frizz and cuts blow-dry time.",
+      "category": "treatment",
+      "defaultDurationMinutes": 150,
+      "suggestedPriceCents": 25000,
+      "activeMinutes": 60,
+      "processingMinutes": 45
+    },
+    {
+      "key": "treatment_olaplex",
+      "name": "Bond Repair Treatment",
+      "description": "In-salon Olaplex or equivalent bond-builder.",
+      "category": "treatment",
+      "defaultDurationMinutes": 30,
+      "suggestedPriceCents": 4500,
+      "activeMinutes": 15,
+      "processingMinutes": 10
+    },
+    {
+      "key": "treatment_deep_conditioning",
+      "name": "Deep Conditioning Treatment",
+      "description": "Hydrating mask with steam or heat processing.",
+      "category": "treatment",
+      "defaultDurationMinutes": 30,
+      "suggestedPriceCents": 3500
+    },
+    {
+      "key": "addon_scalp_massage",
+      "name": "Scalp Massage Add-On",
+      "description": "10-minute scalp massage during shampoo.",
+      "category": "addon",
+      "defaultDurationMinutes": 10,
+      "suggestedPriceCents": 1500
+    },
+    {
+      "key": "addon_face_frame",
+      "name": "Face-Frame Foils Add-On",
+      "description": "A handful of brightening foils around the face.",
+      "category": "addon",
+      "defaultDurationMinutes": 30,
+      "suggestedPriceCents": 4500
+    },
+    {
+      "key": "extensions_consultation",
+      "name": "Extensions Consultation",
+      "description": "Color match, length planning, and custom quote.",
+      "category": "extensions",
+      "defaultDurationMinutes": 30,
+      "suggestedPriceCents": 0
+    },
+    {
+      "key": "extensions_install_tape",
+      "name": "Tape-In Extension Install",
+      "description": "Install of one row of tape-in extensions.",
+      "category": "extensions",
+      "defaultDurationMinutes": 90,
+      "suggestedPriceCents": 18500
+    },
+    {
+      "key": "extensions_move_up",
+      "name": "Extension Move-Up",
+      "description": "Reposition tape-ins as natural hair grows out.",
+      "category": "extensions",
+      "defaultDurationMinutes": 120,
+      "suggestedPriceCents": 22500
+    }
+  ],
+  "SERVICE_TEMPLATES": [
+    {
+      "id": "womens-haircut",
+      "name": "Women's Haircut",
+      "defaultDurationMinutes": 60,
+      "priceCents": 8500,
+      "category": "cut"
+    },
+    {
+      "id": "mens-haircut",
+      "name": "Men's Haircut",
+      "defaultDurationMinutes": 30,
+      "priceCents": 4500,
+      "category": "cut"
+    },
+    {
+      "id": "kids-haircut",
+      "name": "Kids Haircut",
+      "defaultDurationMinutes": 30,
+      "priceCents": 3000,
+      "category": "cut"
+    },
+    {
+      "id": "bang-trim",
+      "name": "Bang Trim",
+      "defaultDurationMinutes": 15,
+      "priceCents": 1500,
+      "category": "cut"
+    },
+    {
+      "id": "blowout",
+      "name": "Blowout",
+      "defaultDurationMinutes": 45,
+      "priceCents": 5500,
+      "category": "style"
+    },
+    {
+      "id": "color-full",
+      "name": "Color (Full)",
+      "defaultDurationMinutes": 120,
+      "priceCents": 18000,
+      "category": "color"
+    },
+    {
+      "id": "color-root-touchup",
+      "name": "Color (Root Touch-Up)",
+      "defaultDurationMinutes": 90,
+      "priceCents": 12000,
+      "category": "color"
+    },
+    {
+      "id": "highlights-full",
+      "name": "Highlights (Full)",
+      "defaultDurationMinutes": 150,
+      "priceCents": 22000,
+      "category": "color"
+    },
+    {
+      "id": "highlights-partial",
+      "name": "Highlights (Partial)",
+      "defaultDurationMinutes": 90,
+      "priceCents": 15000,
+      "category": "color"
+    },
+    {
+      "id": "balayage",
+      "name": "Balayage",
+      "defaultDurationMinutes": 180,
+      "priceCents": 25000,
+      "category": "color"
+    },
+    {
+      "id": "deep-conditioning",
+      "name": "Deep Conditioning Treatment",
+      "defaultDurationMinutes": 30,
+      "priceCents": 4000,
+      "category": "treatment"
+    },
+    {
+      "id": "keratin-treatment",
+      "name": "Keratin Treatment",
+      "defaultDurationMinutes": 180,
+      "priceCents": 30000,
+      "category": "treatment"
+    },
+    {
+      "id": "updo",
+      "name": "Updo / Formal Style",
+      "defaultDurationMinutes": 60,
+      "priceCents": 8500,
+      "category": "style"
+    },
+    {
+      "id": "extensions-install",
+      "name": "Extensions (Install)",
+      "defaultDurationMinutes": 180,
+      "priceCents": 35000,
+      "category": "extensions"
+    },
+    {
+      "id": "extensions-maintenance",
+      "name": "Extensions (Maintenance)",
+      "defaultDurationMinutes": 90,
+      "priceCents": 15000,
+      "category": "extensions"
+    }
+  ],
+  "SERVICE_CATEGORY_OPTIONS": [
+    {
+      "value": "cut",
+      "label": "Cut"
+    },
+    {
+      "value": "color",
+      "label": "Color"
+    },
+    {
+      "value": "extensions",
+      "label": "Extensions"
+    },
+    {
+      "value": "style",
+      "label": "Style"
+    },
+    {
+      "value": "treatment",
+      "label": "Treatment"
+    },
+    {
+      "value": "addon",
+      "label": "Add-on"
+    },
+    {
+      "value": "other",
+      "label": "Other"
+    }
+  ],
+  "SERVICE_CATEGORY_LABELS": {
+    "cut": "Cut",
+    "color": "Color",
+    "extensions": "Extensions",
+    "style": "Style",
+    "treatment": "Treatment",
+    "addon": "Add-on",
+    "other": "Other"
+  },
+  "EXPENSE_CATEGORY_OPTIONS": [
+    {
+      "value": "color",
+      "label": "Color"
+    },
+    {
+      "value": "extensions",
+      "label": "Extensions"
+    },
+    {
+      "value": "backbar",
+      "label": "Backbar"
+    },
+    {
+      "value": "retail",
+      "label": "Retail"
+    },
+    {
+      "value": "tools_supplies",
+      "label": "Tools & Supplies"
+    },
+    {
+      "value": "rent",
+      "label": "Rent"
+    },
+    {
+      "value": "utilities",
+      "label": "Utilities"
+    },
+    {
+      "value": "subscriptions",
+      "label": "Subscriptions"
+    },
+    {
+      "value": "other",
+      "label": "Other"
+    }
+  ],
+  "EXPENSE_CATEGORY_LABELS": {
+    "color": "Color",
+    "extensions": "Extensions",
+    "backbar": "Backbar",
+    "retail": "Retail",
+    "tools_supplies": "Tools & Supplies",
+    "rent": "Rent",
+    "utilities": "Utilities",
+    "subscriptions": "Subscriptions",
+    "other": "Other"
+  },
+  "DEFAULT_ASSISTANT_TASKS": [
+    {
+      "name": "Shampoo",
+      "defaultDurationMinutes": 15
+    },
+    {
+      "name": "All over gloss",
+      "defaultDurationMinutes": 30
+    },
+    {
+      "name": "Extension prep",
+      "defaultDurationMinutes": 30
+    },
+    {
+      "name": "Blowdry",
+      "defaultDurationMinutes": 30
+    },
+    {
+      "name": "Conditioning mask",
+      "defaultDurationMinutes": 20
+    },
+    {
+      "name": "Laundry",
+      "defaultDurationMinutes": 15
+    },
+    {
+      "name": "Inventory",
+      "defaultDurationMinutes": 30
+    },
+    {
+      "name": "Client notes",
+      "defaultDurationMinutes": 15
+    }
+  ]
+}

@@ -1,0 +1,2408 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "calendar": "Calendar",
+    "clients": "{CustomerPlural}",
+    "services": "{OfferingPlural}",
+    "staff": "{StaffPlural}",
+    "team": "Team",
+    "schedule": "Schedule",
+    "analytics": "Analytics",
+    "payments": "Payments",
+    "expenses": "Expenses",
+    "revenue": "Revenue",
+    "reports": "Reports",
+    "settings": "Settings",
+    "adminSidebar": {
+      "startNewPlace": "Start a new {place}",
+      "switchPlaceAria": "Switch {place}. Current {place}: {name}",
+      "getHelp": "Get help",
+      "reportsOverview": "Overview",
+      "reportsRevenue": "Revenue",
+      "reportsServiceAnalytics": "Service analytics"
+    },
+    "requests": "Requests",
+    "projects": "Projects",
+    "classes": "Classes",
+    "walkIns": "Walk-ins",
+    "waitlist": "Waitlist",
+    "giftCards": "Gift cards"
+  },
+  "team": {
+    "roles": {
+      "provider": "{Staff} — Schedule and clients only"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "loading": "Loading..."
+  },
+  "settings": {
+    "index": {
+      "subtitle": "Manage your {place} configuration.",
+      "descriptions": {
+        "general": "Timezone and {place}-wide preferences.",
+        "hours": "Set weekly availability for each {staff}.",
+        "staff": "Manage {staff} profiles and service assignments.",
+        "policies": "{Place} policies clients sign at intake, plus cancellation and no-show fees.",
+        "features": "Turn tools on or off for your {place}.",
+        "bookingRules": "Choose how soon and how far ahead {customerPlural} can book.",
+        "resources": "Rooms, chairs, and equipment that {offeringPlural} need.",
+        "serviceAreas": "Choose where you travel and how much time to leave between jobs.",
+        "packages": "Sell bundles of {bookingPlural} that {customerPlural} use over time.",
+        "checklists": "Steps to check off during each {booking}.",
+        "customFields": "Extra details to keep for {customerPlural} and {bookingPlural}."
+      },
+      "cards": {
+        "staff": "{StaffPlural}",
+        "memberships": "{prepaidBalance} / Memberships",
+        "features": "Features",
+        "bookingRules": "Booking Rules",
+        "resources": "Rooms & Equipment",
+        "serviceAreas": "Service area",
+        "packages": "Session packs",
+        "checklists": "Checklists",
+        "customFields": "Custom fields"
+      }
+    },
+    "bookingRules": {
+      "title": "Booking rules",
+      "subtitle": "These rules apply to online booking. Your team can still book any time from the calendar.",
+      "sameDayLabel": "Let {customerPlural} book for later today",
+      "sameDayHint": "When this is off, the earliest online booking is tomorrow.",
+      "minNoticeLabel": "Minimum notice",
+      "minNoticeHint": "How much warning you need before a new {booking}.",
+      "maxAdvanceLabel": "How far ahead {customerPlural} can book",
+      "intervalLabel": "Start times every",
+      "intervalHint": "Every 15 minutes shows 9:00, 9:15, 9:30.",
+      "noNotice": "No notice",
+      "minutes": "{count} minutes",
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "save": "Save booking rules",
+      "saved": "Booking rules saved",
+      "saveError": "Could not save booking rules"
+    },
+    "calendarsPage": {
+      "empty": "No {staffPlural} configured. Add {staffPlural} in Settings first."
+    },
+    "branding": {
+      "logoHelp": "Display your {place} logo on the booking page. PNG, JPG, SVG, or WebP up to 2MB.",
+      "logoAlt": "{Place} logo",
+      "title": "{Booking} page",
+      "subtitle": "Choose the color, type, and spacing on your {booking} page.",
+      "colorLabel": "Your color",
+      "colorHelp": "Selected times and links on your {booking} page use this color.",
+      "pickColor": "Pick a color",
+      "pairingLabel": "Type",
+      "pairingScore": "Score",
+      "pairingSans": "Sans",
+      "cornersLabel": "Corners",
+      "cornerSquare": "Square",
+      "cornerSoft": "Soft",
+      "cornerRound": "Round",
+      "densityLabel": "Spacing",
+      "densityComfortable": "Comfortable",
+      "densityCompact": "Compact",
+      "densityHelp": "Compact tightens the space between items on your {booking} page. Buttons stay easy to tap.",
+      "modeLabel": "Page background",
+      "modeLight": "Light",
+      "modeDark": "Dark",
+      "modeHelp": "Light or dark for your {booking} page.",
+      "darkened": "We darkened your color so text stays readable.",
+      "lightened": "We lightened your color so text stays readable.",
+      "swatchYours": "Your color",
+      "swatchOnPage": "On the page",
+      "previewLabel": "Preview",
+      "previewStaff": "Alex",
+      "previewServiceA": "Signature {offering}",
+      "previewServiceB": "Quick {offering}",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saved": "Branding saved",
+      "saveError": "Could not save branding"
+    },
+    "assistantsPage": {
+      "rosterCount": "{count, plural, one {# assistant} other {# assistants}}"
+    },
+    "assistants": {
+      "emptyHint": "No task types defined yet. Create your first task type or start with the default {place} assistant tasks."
+    },
+    "general": {
+      "timezoneLabel": "{Place} Timezone"
+    },
+    "marketplace": {
+      "listed": "Your {place} is now listed in the app.",
+      "description": "List your {place} in the Uptempo client app so customers can discover and book you from their phone."
+    },
+    "deleteAccount": {
+      "description": "Permanently delete your account. If you are the only owner of a {place}, you must transfer ownership to another team member (or close the {place}) first. This cannot be undone."
+    },
+    "generalPage": {
+      "subtitle": "Configure your {place}'s timezone and other general settings."
+    },
+    "policiesPage": {
+      "subtitle": "Author the {place} policies clients sign before an appointment, and configure cancellation windows, deposits, and who can book online."
+    },
+    "locationsPage": {
+      "subtitle": "Manage the {place} locations your {staffPlural} work from. After adding a location, set per-{staff} working hours under",
+      "gapMany": "{count} {staffPlural} ({names})",
+      "gapTail": ". Until at least one {staff} has hours there, the location won't appear in the booking flow."
+    },
+    "teamPage": {
+      "description": "Manage your {place} team members and invitations."
+    },
+    "team": {
+      "invitePlaceholder": "{staff}@example.com"
+    },
+    "membershipsPage": {
+      "title": "{prepaidBalance} memberships",
+      "subtitle": "Create monthly plans. Clients enroll from their profile; subscription payments credit their {prepaidBalance} balance. Requires Stripe Connect for payouts."
+    },
+    "hoursPage": {
+      "subtitle": "Configure working hours for each {staff}. Switch each day on or off, and add more than one shift if the day has a break.",
+      "gapTitle": "Some {staffPlural} don't have hours at every location yet",
+      "gapBody": "A location only appears in the booking flow for a {staff} who has at least one enabled day there. Pick a {staff} below and add hours for any missing location, or hide unused locations under",
+      "empty": "No {staffPlural} found. Add a {staff} in"
+    },
+    "hours": {
+      "selectLabel": "Select {staff}",
+      "selectPlaceholder": "Select a {staff}",
+      "missingHint": ". Add at least one enabled day there to make this {staff} bookable at that location.",
+      "open": "Open",
+      "closed": "Closed",
+      "openOn": "Open on {day}",
+      "addShift": "Add another shift",
+      "removeShift": "Remove",
+      "shiftTo": "to",
+      "locationPlaceholder": "Choose a location",
+      "overlapError": "Shifts on the same day can't overlap. Start the next shift after the last one ends.",
+      "orderError": "Each shift must end after it starts.",
+      "save": "Save Working Hours",
+      "saved": "Working hours saved",
+      "saving": "Saving...",
+      "overrides": {
+        "title": "Days off and special hours",
+        "subtitle": "Close one date or set different hours for it. Your regular week stays the same.",
+        "add": "Add a day off or special hours",
+        "dialogTitle": "Day off or special hours",
+        "closedAllDay": "Closed all day",
+        "reason": "Note (optional)",
+        "reasonPlaceholder": "Vacation, training, holiday",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "remove": "Remove",
+        "empty": "No days off or special hours coming up.",
+        "closedLabel": "Closed",
+        "pickDate": "Pick a date first"
+      }
+    },
+    "staffPage": {
+      "title": "{Staff} Management",
+      "subtitle": "Add {staffPlural}, edit their contact details, and manage which services each one offers."
+    },
+    "staffClient": {
+      "deactivateFailed": "Failed to deactivate {staff}",
+      "addButton": "Add {Staff}",
+      "addTitle": "Add {staff}",
+      "empty": "No {staffPlural} yet. Add your first {staff} to get started.",
+      "servicesTooltip": "Manage services & per-{staff} pricing",
+      "deactivateTooltip": "Deactivate {staff}",
+      "noServices": "No services assigned. Click the checklist icon to choose which services this {staff} offers.",
+      "editTitle": "Edit {staff}"
+    },
+    "staffServicesPage": {
+      "back": "Back to {staffPlural}",
+      "subtitle": "Pick which catalog services this {staff} offers and override the price, duration, or display name. Changes take effect on new bookings; past appointments keep their original pricing."
+    },
+    "notifications": {
+      "addressTitle": "{Place} Address"
+    },
+    "storefront": {
+      "pickupOnly": "Pickup only — clients collect their orders in the {place}."
+    },
+    "capacityGoals": {
+      "description": "Set how many hours each {staff} wants to work per week and the take-home they want to average per hour. We'll watch the numbers and flag when a price increase or dropping a low-yield service is worth considering. Leave blank to opt out.",
+      "empty": "No {staffPlural} yet."
+    },
+    "policyForm": {
+      "label": "{Place} Policies"
+    },
+    "staffForm": {
+      "updateFailed": "Failed to update {staff}",
+      "updated": "{Staff} updated",
+      "createFailed": "Failed to create {staff}",
+      "created": "{Staff} created",
+      "editHint": "Manage which services this {staff} offers and per-{staff} pricing from the services button on this {staff}'s card.",
+      "update": "Update {staff}",
+      "add": "Add {staff}"
+    },
+    "staffServices": {
+      "customDescription": "Creates a new service in the {place} catalog and assigns it only to this {staff}. Other {staffPlural} can opt in later from their own services page.",
+      "emptyCatalog": "No services in the {place} catalog yet. Add one in Settings → Services.",
+      "unlinkConfirmExpanded": "Remove \"{name}\" from this {staff}? Existing bookings are unaffected. You can add it back any time.",
+      "unlinkConfirm": "Remove \"{name}\" from this {staff}'s services? Existing bookings are unaffected. You can add it back any time.",
+      "customNameHint": "Shown to clients booking with this {staff}. Leave blank for catalog name."
+    },
+    "resources": {
+      "title": "Rooms and equipment",
+      "subtitle": "Add the rooms, chairs, and equipment your services need. A {booking} only goes through when everything it needs is free.",
+      "add": "Add a room or equipment",
+      "name": "Name",
+      "namePlaceholder": "Pedicure chair",
+      "kind": "Type",
+      "kinds": {
+        "room": "Room",
+        "chair": "Chair",
+        "station": "Station",
+        "equipment": "Equipment",
+        "vehicle": "Vehicle"
+      },
+      "location": "Location",
+      "anyLocation": "Every location",
+      "capacity": "How many people can use it at once",
+      "capacityHint": "Use 1 for things only one person can use at a time.",
+      "count": "How many of these",
+      "countHint": "We'll number them for you, like Chair 1 and Chair 2.",
+      "atOnce": "{count} at once",
+      "on": "On",
+      "off": "Off",
+      "edit": "Edit",
+      "turnOff": "Turn off",
+      "turnOn": "Turn on",
+      "save": "Save",
+      "saved": "Saved",
+      "cancel": "Cancel",
+      "saveError": "Could not save. Please try again.",
+      "empty": "Nothing added yet.",
+      "capacityConflict": "This one already has overlapping {bookingPlural}. Move them before setting it to 1."
+    },
+    "staffBooks": {
+      "title": "Online booking",
+      "label": "Books",
+      "open": "Open",
+      "windows": "Open only on certain dates",
+      "closed": "Closed",
+      "addDates": "Add dates",
+      "whatOpens": "What opens",
+      "requests": "Requests",
+      "direct": "Online booking",
+      "saveDates": "Save dates",
+      "remove": "Remove",
+      "row": "{from} to {to} · {what}",
+      "noWindows": "No dates yet. Until you add some, this books stays closed.",
+      "pickRange": "Pick the first and last day on the calendar.",
+      "badRange": "The last day can't be before the first day.",
+      "saved": "Saved.",
+      "saveFailed": "We couldn't save that. Please try again."
+    },
+    "onSite": {
+      "title": "Service area",
+      "subtitle": "Tell {customerPlural} where you travel and how long they should expect to wait for you.",
+      "areasTitle": "Where you work",
+      "noAreas": "No areas yet. Until you add one, you can travel anywhere.",
+      "areaSummaryZips": "{count, plural, one {# ZIP code} other {# ZIP codes}}",
+      "areaSummaryRadius": "Within {km} km of {zip}",
+      "areaOnlyFor": "Only for {name}",
+      "addArea": "Add an area",
+      "editArea": "Edit area",
+      "name": "Name",
+      "howToSet": "How to set it",
+      "byZips": "A list of ZIP codes",
+      "byRadius": "A distance from a ZIP code",
+      "zips": "ZIP codes, separated by commas or new lines",
+      "centerZip": "Center ZIP code",
+      "distance": "Distance (km)",
+      "appliesTo": "Applies to",
+      "everyone": "Everyone",
+      "saveArea": "Save area",
+      "cancel": "Cancel",
+      "on": "On",
+      "off": "Off",
+      "edit": "Edit",
+      "turnOff": "Turn off",
+      "turnOn": "Turn on",
+      "arrivalTitle": "Arrival window",
+      "arrivalHint": "{CustomerPlural} see a window like 9:00 to 11:00 AM instead of an exact time.",
+      "exact": "Exact time",
+      "minutes": "{count} minutes",
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "saveArrival": "Save arrival window",
+      "travelTitle": "Travel",
+      "baseZip": "Starts the day from (ZIP code)",
+      "maxTravel": "Longest drive to a job",
+      "buffer": "Extra time between jobs",
+      "speed": "Average driving speed",
+      "kmh": "{n} km/h",
+      "advanced": "Advanced: exact location",
+      "lat": "Latitude",
+      "lng": "Longitude",
+      "saveTravel": "Save travel settings",
+      "travelHint": "Until this is saved, this {staff} can't take jobs at a {customer}'s address.",
+      "postalNotFound": "We couldn't find that ZIP code.",
+      "saved": "Saved",
+      "invalidArea": "Please check the area and try again.",
+      "zipsRequired": "Add at least one ZIP code.",
+      "centerRequired": "Enter the center ZIP code.",
+      "invalidTravel": "Please check the travel settings and try again.",
+      "baseRequired": "Enter a ZIP code or an exact location."
+    }
+  },
+  "schedule": {
+    "previous": "Previous",
+    "next": "Next",
+    "showBy": "Show by",
+    "people": "People",
+    "rooms": "Rooms",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "checkIn": "Check in",
+    "checkedIn": "Checked in",
+    "reschedule": "Reschedule",
+    "sendText": "Send a text",
+    "cancel": "Cancel",
+    "selectBooking": "Select a {booking} to see the details.",
+    "noRooms": "No rooms, chairs, or stations are on.",
+    "checkInMissing": "That {booking} is not on this {place}.",
+    "move": {
+      "title": "Move and notify the client?",
+      "notify": "Move and notify",
+      "silent": "Move without notifying",
+      "dont": "Don't move",
+      "sms": "Your {booking} moved to {date} at {time}."
+    },
+    "textDialog": {
+      "title": "Send a text",
+      "hint": "Plain characters only, 320 at most.",
+      "placeholder": "See you soon",
+      "send": "Send",
+      "sent": "Text sent",
+      "tooLong": "Text must be 320 characters or fewer.",
+      "empty": "Write a message first.",
+      "noPhone": "This {customer} has no mobile number.",
+      "noConsent": "This {customer} has not agreed to texts.",
+      "quietHours": "Texts go out between 8:00 AM and 9:00 PM.",
+      "failed": "The text did not send."
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "checkedIn": "Checked in",
+      "noShow": "No-show",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "pending": "Pending"
+    },
+    "agenda": {
+      "heading": "This day's {bookingPlural}",
+      "empty": "Nothing booked this day."
+    },
+    "details": {
+      "close": "Close"
+    },
+    "dayView": {
+      "noStaff": "No {staffPlural} configured. Add {staffPlural} in Settings."
+    },
+    "bookingPanel": {
+      "staffLabel": "{Staff}",
+      "staffPlaceholder": "Select {staff}",
+      "chooseStaffFirst": "Choose {staff} first",
+      "addPerson": "Add another person",
+      "removePerson": "Remove person",
+      "personN": "Person {n}",
+      "sameClient": "Same client",
+      "differentClient": "Someone else",
+      "startsWhen": "Starts",
+      "sameTime": "At the same time",
+      "rightAfter": "Right after the first",
+      "groupCreated": "Group booking created",
+      "repeat": "Repeat",
+      "repeatNone": "Does not repeat",
+      "repeatWeekly": "Every week",
+      "repeatBiweekly": "Every 2 weeks",
+      "ends": "Ends",
+      "endsNever": "Never",
+      "endsAfter": "After {count} visits",
+      "seriesCreated": "{created} visits booked",
+      "seriesConflicts": "{count, plural, one {# date needs} other {# dates need}} a different time:",
+      "done": "Done",
+      "forProject": "This {booking} will be added to the project."
+    },
+    "servicesPage": {
+      "subtitle": "The {place} catalog of services. Each service's default price and duration are starting points — {staffPlural} can override them on their own services page."
+    },
+    "serviceList": {
+      "commonTitle": "Common {place} services",
+      "commonDescription": "Pick presets to add to your catalog. Suggested prices are national averages — you can edit any service afterwards, and each {staff} can override pricing on their own services page.",
+      "offeredByOne": "1 {staff} offers this",
+      "offeredByMany": "{count} {staffPlural} offer this",
+      "depositInherit": "Use {place} default rule",
+      "depositOverrideHint": "Overrides the {place}'s global deposit rule for this service.",
+      "assistantWorkflowLabel": "Assistant workflow — when this service is on a booking, schedule an assistant task for this {staff}'s default assistant (full appointment window)",
+      "assistantDefaultHint": "Set each {staff}'s default assistant under Settings → {StaffPlural}.",
+      "timing": {
+        "title": "Timing",
+        "hint": "Prep and cleanup time keep the calendar clear around this service.",
+        "bufferBefore": "Prep time before",
+        "bufferAfter": "Cleanup time after",
+        "none": "None",
+        "minutes": "{count} min",
+        "hours": "{count} hr",
+        "days": "{count, plural, one {# day} other {# days}}",
+        "minNotice": "Minimum notice",
+        "maxAdvance": "How far ahead {customerPlural} can book",
+        "interval": "Start times every",
+        "useBusiness": "Use business setting",
+        "locationType": "Where it happens",
+        "inPerson": "In person",
+        "online": "Online",
+        "onSite": "At the customer's location",
+        "variantOf": "This is a version of",
+        "notVariant": "Not a version of another service"
+      },
+      "needs": {
+        "title": "What this service needs",
+        "add": "Add a need",
+        "type": "Needs",
+        "quantity": "How many",
+        "startsAfter": "Starting after",
+        "forHowLong": "For how long",
+        "wholeService": "The whole service",
+        "minutes": "{count} min",
+        "remove": "Remove",
+        "noResources": "Add rooms or equipment in Settings first.",
+        "settingsLink": "Open Rooms & Equipment",
+        "saveError": "The service was saved, but its needs could not be."
+      }
+    },
+    "checkout": {
+      "groupBanner": "Group {booking}: {count} appointments, one payment",
+      "finalSession": "This is the last {booking} for this project. Apply the {amount} deposit credit.",
+      "creditLeft": "Deposit credit left: {amount}",
+      "depositApplied": "Deposit credit applied"
+    },
+    "recurrence": {
+      "alertTitle": "A repeat {booking} needs a new time",
+      "alertBody": "{client}'s visit on {date} at {time} with {staff} couldn't be booked: {reason}. Choose another time for that day.",
+      "reasons": {
+        "slotTaken": "someone else is booked then",
+        "blocked": "that time is blocked off",
+        "closed": "{staff} isn't working then",
+        "resource": "a room or piece of equipment is in use"
+      },
+      "repeatsWeekly": "Repeats every week",
+      "repeatsBiweekly": "Repeats every 2 weeks",
+      "stopRepeating": "Stop repeating",
+      "stopConfirm": "Cancel all later visits in this series?",
+      "stopped": "Later visits cancelled"
+    },
+    "onSite": {
+      "address": "Address",
+      "openMaps": "Open in Maps",
+      "arrival": "Arrival {start} to {end}",
+      "onMyWay": "Send 'On my way' text",
+      "etaQuestion": "About how long until you arrive?",
+      "etaMinutes": "{count} minutes",
+      "send": "Send text",
+      "cancel": "Cancel",
+      "sent": "Text sent",
+      "sentAt": "Text sent at {time}",
+      "alreadySent": "Already sent in the last 30 minutes",
+      "noPhone": "This {customer} has no mobile number or hasn't agreed to texts.",
+      "quietHours": "Texts can only go out between 8 AM and 9 PM.",
+      "sendFailed": "We couldn't send the text. Please try again.",
+      "invalidEta": "Please choose how long until you arrive.",
+      "notFound": "We couldn't find that {booking}.",
+      "notYours": "You can only text for your own {bookingPlural}.",
+      "notConfirmed": "Only a confirmed {booking} can get an 'On my way' text.",
+      "noAddress": "This {booking} has no address.",
+      "notToday": "'On my way' texts can only be sent on the day of the {booking}."
+    }
+  },
+  "booking": {
+    "unpublished": "This {place} is not taking online {bookingPlural} yet.",
+    "staffStep": {
+      "title": "Choose your {staff}",
+      "empty": "No {staffPlural} are currently available for booking.",
+      "anyTitle": "Anyone available",
+      "anyBody": "We'll match you with whoever is free at the time you pick."
+    },
+    "servicesStep": {
+      "consultationOnly": "This {place} books new clients by consultation or referral — please contact the {place} directly to get started.",
+      "noServices": "No services available for this {staff}.",
+      "returningOnly": "Some services at this {place} are for returning clients — new clients start with the options shown here."
+    },
+    "locationStep": {
+      "noLocations": "This {staff} does not have any booking locations set up yet."
+    },
+    "confirmStep": {
+      "prepaidBalance": "{prepaidBalance} balance:",
+      "staffLabel": "{Staff}",
+      "withStaff": "with {name}"
+    },
+    "successView": {
+      "staffLabel": "{Staff}"
+    },
+    "storedValueTopUp": {
+      "success": "Funds added to your {prepaidBalance}",
+      "title": "{prepaidBalance}"
+    },
+    "membershipUpsell": {
+      "inlineDiscount": "Members save {discount}% when paying from {prepaidBalance} — ",
+      "inlineNoDiscount": "{prepaidBalance} members earn monthly credits — ",
+      "cardTitle": "Save with {prepaidBalance}",
+      "cardDiscount": "Members get monthly credits, {discount}% off when paying fully from {prepaidBalance}, and optional priority booking.",
+      "cardNoDiscount": "Members get monthly credits, member pricing when paying fully from {prepaidBalance}, and optional priority booking."
+    },
+    "cardManagement": {
+      "policyNote": "Your card is securely stored by Stripe. It will only be charged per our {place} policy."
+    },
+    "paymentStep": {
+      "cardRequired": "A card on file is required to complete your booking. Your card will only be charged in case of a late cancellation or no-show per our {place} policy."
+    },
+    "storedValueSection": {
+      "title": "{prepaidBalance} membership",
+      "body": "Subscribe for monthly credits, member pricing when you pay fully from {prepaidBalance}, and optional priority booking."
+    },
+    "accountHub": {
+      "paymentHint": "The card on file is used for deposits, no-show fees, and {prepaidBalance} top-ups per the {place}'s policy."
+    },
+    "layout": {
+      "logoAlt": "{Place} logo"
+    },
+    "cancelPage": {
+      "linkExpired": "This cancellation link has expired or is invalid. Please contact the {place} directly to cancel your appointment.",
+      "loadError": "We could not load cancellation details. Please contact the {place}.",
+      "defaultName": "the {place}"
+    },
+    "cancelForm": {
+      "lateFeeAck": "By confirming, you acknowledge that the {place} may charge a cancellation fee."
+    },
+    "formsPage": {
+      "linkExpired": "This form link has expired or is invalid. Please contact the {place} directly if you need to complete a form."
+    },
+    "aftercarePage": {
+      "missingToken": "This link is missing a security token. Open the link from your text message or contact the {place}.",
+      "invalidLink": "This link is invalid or has expired. Contact the {place} for aftercare instructions.",
+      "defaultName": "Our {Place}"
+    },
+    "checkoutPage": {
+      "linkExpired": "This checkout link has expired or is invalid. Please contact the {place} for a new link."
+    },
+    "intakePage": {
+      "invalidLink": "This link is invalid or has expired. Contact the {place} for a new link."
+    },
+    "intakeForm": {
+      "agree": "I have read and agree to these {place} policies.",
+      "policiesTitle": "{Place} Policies"
+    },
+    "storePage": {
+      "handpicked": "Products handpicked by your {staff}, ready for pickup or delivery."
+    },
+    "storeClient": {
+      "pickup": "Pickup at the {place}"
+    },
+    "accountPage": {
+      "defaultName": "{Place}"
+    },
+    "bookLayout": {
+      "description": "Schedule your next {place} appointment online"
+    },
+    "subscribePage": {
+      "metaDescription": "Join {salonName}'s membership — monthly {prepaidBalance} credit toward services, plus member perks."
+    },
+    "planStep": {
+      "discount": "{percent}% off services when paying fully from {prepaidBalance}"
+    },
+    "subscribePayment": {
+      "summary": "{planName} — {amount}/month after you subscribe. Your first charge runs when billing starts; {prepaidBalance} credits apply per your plan."
+    },
+    "subscribeWizard": {
+      "benefitBankTitle": "Build Your {prepaidBalance}",
+      "alreadyActive": "Your {prepaidBalance} membership is active. Manage your account, balance, and saved card anytime.",
+      "alreadyPending": "We already have a {prepaidBalance} subscription on file for you. Check your account for billing details or contact the {place} if you need help.",
+      "title": "{prepaidBalance}",
+      "successBody": "Your membership is starting. You'll see {prepaidBalance} credits after each successful invoice. Open your account for balance and billing details.",
+      "membershipTitle": "{prepaidBalance} membership",
+      "planDiscount": "{percent}% off services when you pay fully from {prepaidBalance}"
+    },
+    "checkoutForm": {
+      "noCardNeeded": "No card payment needed — use Pay fully with {prepaidBalance} or complete without a card.",
+      "successIncluding": "(including {amount} from {prepaidBalance})",
+      "memberRate": "{prepaidBalance} (member rate)",
+      "partial": "{prepaidBalance} (partial)",
+      "balanceNotApplied": "{prepaidBalance} balance: {amount} (not applied — contact the {place} if this looks wrong)",
+      "modeTitle": "{prepaidBalance} checkout",
+      "payFully": "Pay fully with {prepaidBalance}",
+      "standardPrefix": "Standard — {prepaidBalance} + card (",
+      "payAmount": "Pay {amount} with {prepaidBalance}",
+      "fromPrepaid": "{amount} from {prepaidBalance}",
+      "payListPrice": "Pay list price {amount} from {prepaidBalance}"
+    },
+    "checkoutDialog": {
+      "noCardNeeded": "No card payment needed — choose Pay fully with {prepaidBalance} or Cash to complete.",
+      "fullPay": "{prepaidBalance} (full pay)",
+      "partial": "{prepaidBalance} (partial)",
+      "completeWithPrepaid": "Complete with {prepaidBalance} — {amount}"
+    },
+    "paymentSelector": {
+      "needsMembership": "Needs an active membership and enough {prepaidBalance} for the discounted total",
+      "removeTip": "Remove tip to pay fully with {prepaidBalance}",
+      "payServices": "Pay services from {prepaidBalance}",
+      "memberDiscount": "({percent}% member discount)",
+      "payFully": "Pay fully with {prepaidBalance}"
+    },
+    "bookingWizard": {
+      "stepService": "{Offering}",
+      "stepTime": "Time",
+      "stepDetails": "Details",
+      "stepConfirm": "Confirm",
+      "staffFallback": "{Staff}"
+    },
+    "serviceStep": {
+      "title": "Choose a {offering}",
+      "continue": "Continue",
+      "addons": "Add-ons",
+      "alreadySelected": "(already selected)",
+      "bookAgain": "Book again",
+      "lastVisit": "· last visit {date}",
+      "selected": "Selected",
+      "selectRecent": "Select these {offeringPlural}",
+      "selectedOne": "{count} {offering} selected",
+      "selectedMany": "{count} {offeringPlural} selected"
+    },
+    "timeStep": {
+      "title": "Select date & time",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "noTimes": "No available times on this date. Try another day.",
+      "locationTitle": "Choose your location",
+      "continue": "Continue"
+    },
+    "detailsStep": {
+      "title": "Your details",
+      "notYou": "Not you?",
+      "name": "Name",
+      "phone": "Phone",
+      "sendCode": "Send code",
+      "code": "Verification code",
+      "verify": "Verify",
+      "continue": "Continue",
+      "codeSent": "Code sent to {phone}",
+      "resend": "Resend code",
+      "resendIn": "Resend code in {seconds}s"
+    },
+    "confirmPay": {
+      "title": "Confirm your booking",
+      "confirm": "Confirm booking",
+      "working": "Booking...",
+      "services": "{OfferingPlural}",
+      "date": "Date",
+      "time": "Time",
+      "location": "{Place}",
+      "duration": "Duration",
+      "minutes": "{minutes} minutes"
+    },
+    "progress": {
+      "step": "Step {current} of {total}"
+    },
+    "wizard": {
+      "slotMismatch": "That time no longer fits your visit. Pick another time.",
+      "back": "Back"
+    },
+    "reschedulePage": {
+      "linkExpired": "This reschedule link has expired or is invalid. Please contact the {place} directly to reschedule your appointment.",
+      "openError": "We could not open rescheduling. Please contact the {place}."
+    },
+    "quotePage": {
+      "title": "Your quote from {business}",
+      "total": "Total",
+      "depositToday": "Deposit due today",
+      "goodUntil": "Good until {date}",
+      "chooseTime": "Choose a time",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "withStaff": "{time} with {name}",
+      "noTimes": "No open times that day. Try another date.",
+      "loadingTimes": "Looking for open times...",
+      "pickDay": "Pick a day to see the open times.",
+      "accept": "Accept",
+      "typeName": "Type your full name to accept",
+      "agreeDeposit": "I accept this quote and agree to pay the deposit now.",
+      "agree": "I accept this quote.",
+      "acceptPay": "Accept and pay {deposit} deposit",
+      "acceptBook": "Accept and book",
+      "working": "Working on it...",
+      "noThanks": "No thanks",
+      "declineTitle": "Decline this quote?",
+      "declineYes": "Yes, decline",
+      "goBack": "Go back",
+      "declineBody": "{business} will be told you are not going ahead.",
+      "bookedTitle": "You're booked",
+      "depositPaid": "Deposit paid",
+      "depositDue": "Deposit due",
+      "depositRetry": "We couldn't take the deposit. {business} will contact you.",
+      "noteLabel": "A note from {business}",
+      "expired": "This quote has expired. Contact {business} for a new one.",
+      "alreadyAccepted": "You already accepted this quote.",
+      "declined": "You declined this quote.",
+      "withdrawn": "This quote is no longer available.",
+      "unavailable": "This page isn't available.",
+      "bookedFor": "{date} at {time} with {name}",
+      "declinedDone": "Your answer was sent. Thank you.",
+      "genericError": "Something went wrong. Please try again.",
+      "arrival": "Arrival between {start} and {end}"
+    },
+    "addressStep": {
+      "title": "Where should we come?",
+      "continue": "Continue",
+      "notFound": "We couldn't find that ZIP code.",
+      "saving": "Saving"
+    }
+  },
+  "onboarding": {
+    "industry": {
+      "question": "What kind of business is this?",
+      "somethingElse": "Something else",
+      "change": "Change"
+    },
+    "account": {
+      "yourName": "Your name",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "At least 8 characters",
+      "placeName": "{Place} name",
+      "timezone": "Timezone",
+      "submit": "Create your {place} account",
+      "submitting": "Creating your {place}...",
+      "genericError": "Something went wrong. Please try again."
+    },
+    "wizard": {
+      "live": "Your {place} is live!",
+      "setupTitle": "Set up your {place}",
+      "setupDescription": "Enter your {place} details to get started",
+      "nameLabel": "{Place} name",
+      "slugPlaceholder": "bookuptempo.com/book/your-{place}",
+      "noStaffProfile": "No {staff} profile found. This will be set up automatically.",
+      "launch": "Launch your {place}",
+      "stepBusiness": "Your business",
+      "stepReview": "Review",
+      "stepPayments": "Payments",
+      "stepPublish": "Publish",
+      "businessTitle": "Your business",
+      "phone": "Phone",
+      "address": "Address",
+      "continue": "Continue",
+      "back": "Back",
+      "bookingUrl": "Booking URL",
+      "timezone": "Timezone"
+    },
+    "review": {
+      "title": "Review your {place}",
+      "services": "{OfferingPlural}",
+      "hours": "Hours",
+      "policies": "Policies",
+      "forms": "Forms",
+      "theme": "{Booking} page",
+      "edit": "Edit {group}",
+      "done": "Done",
+      "continue": "Continue",
+      "empty": "Nothing here yet.",
+      "save": "Save"
+    },
+    "hoursSummary": "Monday through Saturday, 9:00 AM to 5:00 PM. Sunday is closed.",
+    "hoursMissing": "Hours are not set yet.",
+    "policySeed": "Cancel at least {hours} hours ahead. A late cancel can cost {late} percent. Missing a {booking} can cost {noShow} percent.",
+    "visitNotesName": "Visit notes",
+    "visitNotesField": "Anything we should know?",
+    "requestForm": "Request details",
+    "clientForm": "{Customer} details",
+    "consentForm": "Consent",
+    "signature": "Signature",
+    "payments": {
+      "later": "Do this later",
+      "laterConfirm": "Yes, do this later",
+      "gotIt": "Got it, continue"
+    },
+    "publish": {
+      "title": "Publish",
+      "help": "This turns on your {booking} page.",
+      "button": "Publish",
+      "link": "Your {booking} page",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "qr": "QR code",
+      "open": "Open your calendar"
+    },
+    "salonSwitcher": {
+      "switch": "Switch {place}",
+      "others": "Your other {placePlural}"
+    },
+    "pending": {
+      "defaultName": "Your {place}"
+    }
+  },
+  "giftCards": {
+    "email": {
+      "subject": "{purchaser} sent you a gift card for {business}",
+      "heading": "You got a gift card",
+      "body": "{purchaser} sent you a {amount} gift card for {business}.",
+      "codeLabel": "Your code",
+      "howToUse": "Show this code when you check out, or read it to the front desk.",
+      "balanceLink": "Check your balance",
+      "fromBusiness": "{business}"
+    },
+    "checkout": {
+      "receiptLine": "Gift card ending in {last4}",
+      "title": "Gift card",
+      "code": "Gift card code",
+      "apply": "Apply",
+      "available": "Card ending in {last4}: {amount} available",
+      "use": "Amount to use",
+      "remove": "Remove",
+      "line": "Gift card ending in {last4}",
+      "leftToPay": "Left to pay",
+      "paidByGiftCard": "Paid in full with the gift card"
+    },
+    "admin": {
+      "title": "Gift cards",
+      "subtitle": "Gift cards you've sold and what's left on each one.",
+      "outstanding": "Unused balance on all cards",
+      "sell": "Sell a gift card",
+      "sellTitle": "Sell a gift card in person",
+      "amount": "Amount",
+      "recipientName": "Who it's for (optional)",
+      "recipientEmail": "Their email (optional)",
+      "howPaid": "How was it paid?",
+      "paidInPerson": "Paid at the front desk",
+      "comp": "Free (a gift from you)",
+      "create": "Create gift card",
+      "codeTitle": "Here's the gift card code",
+      "codeBody": "Write this code down or give it to the {customer} now. You won't see it again.",
+      "emailed": "We also emailed it to {email}.",
+      "close": "Done",
+      "colCard": "Card",
+      "colBalance": "Balance",
+      "colSold": "Sold",
+      "colFor": "For",
+      "colStatus": "Status",
+      "endingIn": "Ending in {last4}",
+      "active": "Active",
+      "void": "Cancelled",
+      "notDelivered": "Email not sent",
+      "history": "History",
+      "adjust": "Adjust balance",
+      "adjustTitle": "Adjust balance",
+      "adjustAmount": "Amount to add or remove",
+      "adjustHint": "Use a minus sign to remove money, like -10.00",
+      "adjustNote": "Reason (required)",
+      "save": "Save",
+      "saved": "Saved",
+      "voidButton": "Cancel card",
+      "voidConfirm": "Cancel this gift card? Its balance goes to $0 and the code stops working.",
+      "newCode": "Send a new code",
+      "newCodeConfirm": "This cancels the old code and emails a new one with the same balance.",
+      "reasons": {
+        "issue": "Sold",
+        "redeem": "Used at checkout",
+        "reversal": "Put back on the card",
+        "adjustment": "Adjusted",
+        "void": "Cancelled"
+      },
+      "notesTitle": "Good to know",
+      "liabilityNote": "Unused gift card balances are money you owe your {customerPlural}. Keep track of them like any other debt.",
+      "taxNote": "Selling a gift card isn't a taxable sale. Sales tax applies when the card is used to pay for something taxable.",
+      "expiryNote": "Gift cards from Uptempo don't expire. Many states don't allow gift cards to expire or charge fees, and some require unused balances to be reported after a few years. Check your state's rules or ask your accountant.",
+      "refundNote": "To refund a gift card bought online, cancel the card here, then refund the payment in your Stripe dashboard."
+    },
+    "public": {
+      "title": "Gift cards from {business}",
+      "subtitle": "Send a gift card by email. It can be used for any {offering} or product.",
+      "amount": "Amount",
+      "custom": "Other amount",
+      "customHint": "Between $10 and $1,000",
+      "yourName": "Your name",
+      "yourEmail": "Your email",
+      "toName": "Their name",
+      "toEmail": "Their email",
+      "message": "Message (optional)",
+      "continue": "Continue to payment",
+      "notAvailable": "Gift cards aren't available right now.",
+      "successTitle": "Thank you!",
+      "successBody": "We emailed the gift card to {email}. The code is only in that email.",
+      "pending": "Your payment is still processing. We'll email the gift card as soon as it's done.",
+      "checkBalance": "Check a gift card balance"
+    },
+    "balance": {
+      "title": "Check your balance",
+      "code": "Gift card code",
+      "codeHint": "16 letters and numbers, like ABCD-EFGH-JKMN-PQRS",
+      "check": "Check balance",
+      "result": "Balance: {amount}",
+      "endingIn": "Card ending in {last4}"
+    }
+  },
+  "customFields": {
+    "settings": {
+      "title": "Custom fields",
+      "subtitle": "Keep the extra details your {place} needs on {customer} and {booking} records."
+    },
+    "sections": {
+      "client": "{Customer} fields",
+      "appointment": "{Booking} fields",
+      "project": "Project fields",
+      "request": "Request fields"
+    },
+    "add": "Add a field",
+    "edit": "Edit",
+    "hide": "Hide",
+    "show": "Show",
+    "hidden": "Hidden",
+    "shownOnCard": "Shown on card",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "label": "Field name",
+    "type": "Type",
+    "types": {
+      "text": "Short text",
+      "select": "Choose one",
+      "multi": "Choose several",
+      "date": "Date",
+      "number": "Number",
+      "boolean": "Yes or no"
+    },
+    "options": "Choices",
+    "optionsHint": "One choice per line.",
+    "showOnCard": "Show on the card",
+    "clientEditable": "{CustomerPlural} can fill this in on their account",
+    "save": "Save field",
+    "saved": "Field saved",
+    "empty": "No fields yet.",
+    "typeLocked": "The type can't be changed after a field is created.",
+    "card": {
+      "title": {
+        "client": "{Customer} details",
+        "appointment": "{Booking} details",
+        "project": "Project details",
+        "request": "Request details"
+      },
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "notSet": "Not set",
+      "saved": "Saved",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "filter": {
+      "label": "Filter by",
+      "value": "Value",
+      "clear": "Clear filter"
+    },
+    "products": {
+      "tags": "Tags",
+      "tagsHint": "Products with a tag that matches a {customer}'s profile are shown to them first.",
+      "addTag": "Add a tag",
+      "tagPlaceholder": "Type a tag"
+    },
+    "account": {
+      "title": "Your profile",
+      "save": "Save",
+      "saved": "Saved"
+    }
+  },
+  "errors": {
+    "stripe": {
+      "noPlace": "Could not resolve {place} for this client"
+    },
+    "membership": {
+      "noPlace": "Could not resolve {place} for this client",
+      "notActivated": "Subscription could not be activated yet. Please check your payment method in your account or contact the {place}.",
+      "openSubscription": "You already have a subscription in progress. Check your account or contact the {place}."
+    },
+    "policies": {
+      "addPolicies": "Add your {place} policies in Settings → Policies before sending intake links."
+    },
+    "clientProfile": {
+      "placeNotFound": "{Place} not found"
+    },
+    "bookingPublic": {
+      "notOnlineBookable": "{serviceName} can't be booked online — please contact the {place}.",
+      "addressRequired": "Please tell us where you'd like us to come."
+    },
+    "checkout": {
+      "removeTip": "Remove tip to pay fully with {prepaidBalance}, or pay with card/cash",
+      "notEligible": "Not eligible for full {prepaidBalance} checkout",
+      "insufficientBalance": "Insufficient {prepaidBalance} balance",
+      "ledgerNoteMemberDiscount": "Service checkout (member {prepaidBalance} discount)",
+      "coversVisit": "{prepaidBalance} covers this visit",
+      "remainderDue": "There's still {amount} left to pay. Choose a way to pay it."
+    },
+    "giftCards": {
+      "notFound": "We couldn't find that gift card. Check the code and try again.",
+      "inactive": "This gift card has been cancelled.",
+      "empty": "This gift card has no balance left.",
+      "balanceChanged": "The gift card balance changed. Please apply it again.",
+      "amountRange": "Choose an amount between $10 and $1,000.",
+      "notSetUp": "This {place} can't take card payments online yet.",
+      "rateLimited": "Too many tries. Please wait a few minutes and try again.",
+      "noteRequired": "Enter a reason for the change.",
+      "outOfRange": "That would put the balance below $0 or above $1,000.",
+      "noEmail": "Add an email address for this card first.",
+      "withFullPrepaid": "Gift cards can't be combined with paying the whole bill from {prepaidBalance}.",
+      "coversAll": "The gift card covers the whole bill. No card payment is needed.",
+      "invalidDetails": "Check the names and email addresses and try again.",
+      "checkoutFailed": "Could not start checkout. Please try again."
+    },
+    "customFields": {
+      "invalid": "Check the highlighted fields.",
+      "duplicate": "A field with that name already exists.",
+      "optionsRequired": "Add at least one choice.",
+      "notFound": "That field no longer exists."
+    },
+    "team": {
+      "assistantsDisabled": "Assistant tasks are turned off for this {place}. Turn them on in Settings, under Features.",
+      "signInToJoin": "Sign in to join this {place}.",
+      "alreadyMember": "You're already a member of this {place}.",
+      "joinFailed": "Failed to join this {place}",
+      "noAccess": "You don't have access to this {place}",
+      "switchFailed": "Failed to switch {place}",
+      "existingAccount": "An account with this email already exists. Sign in and use “Join this {place}” below, or open this link again after signing in."
+    },
+    "charges": {
+      "refundLedgerNote": "Service refund — {prepaidBalance} returned"
+    },
+    "domains": {
+      "notFound": "Domain not found or does not belong to this {place}"
+    },
+    "appointments": {
+      "hostWrongStaff": "Host appointment does not belong to this {staff}",
+      "staffUnavailable": "{Staff} is unavailable at the selected location and time",
+      "tooSoon": "That time is too soon to book. Please choose a later time.",
+      "tooFar": "That date is too far ahead to book.",
+      "invalidAddress": "That address doesn't look right. Please choose it again.",
+      "booksClosed": "Online booking is closed for those dates.",
+      "tooFarToTravel": "That time doesn't leave enough travel time. Please choose another time.",
+      "resourceTaken": "A room or piece of equipment this {booking} needs is already in use at that time.",
+      "groupFailed": "We couldn't book everyone at that time, so nothing was booked."
+    },
+    "staff": {
+      "createFailed": "Failed to create {staff}",
+      "notFoundOrInactive": "{Staff} not found or inactive",
+      "updateFailed": "Failed to update {staff}",
+      "missingId": "Missing {staff} id",
+      "notFound": "{Staff} not found",
+      "deactivateFailed": "Failed to deactivate {staff}"
+    },
+    "staffServices": {
+      "saveFailed": "Failed to save {staff} service",
+      "removeFailed": "Failed to remove {staff} service",
+      "updateFailed": "Failed to update {staff} services",
+      "invalidId": "Invalid {staff} ID"
+    },
+    "onboarding": {
+      "ownerOnly": "Only the {place} owner can do this",
+      "createAccountFailed": "Failed to create {place} account",
+      "setupFailed": "Failed to set up {place}",
+      "createFailed": "Failed to create your {place}",
+      "launchFailed": "Failed to launch {place}",
+      "badIndustry": "Choose a type of business.",
+      "missingBusiness": "Add a name, a phone number, and an address."
+    },
+    "ownerAccount": {
+      "soleOwner": "You are the only owner of {names}. Transfer ownership to another team member (or close the {place}) before deleting your account."
+    },
+    "bookingApi": {
+      "placeNotFound": "{Place} not found",
+      "existingOnly": "This {place} is currently booking existing clients only. Please contact us to book.",
+      "newOnly": "Online booking here is for new clients — please contact the {place} to book your next visit."
+    },
+    "stripeWebhook": {
+      "topUpLedgerNote": "{prepaidBalance} top-up"
+    },
+    "storefront": {
+      "notFound": "{Place} not found",
+      "notSetUp": "This {place} isn't set up for online orders yet",
+      "pickupOnly": "This {place} offers pickup only",
+      "closed": "This shop isn't taking orders right now."
+    },
+    "modules": {
+      "turnedOff": "{name} is turned off. An owner or admin can turn it on in Settings, under Features.",
+      "unknown": "That feature can't be changed here."
+    },
+    "expenses": {
+      "unknownCategory": "Choose a category from the list.",
+      "categoryExists": "A category with that name already exists."
+    },
+    "requests": {
+      "depositTooHigh": "The deposit can't be more than the total.",
+      "needsTime": "Add the time this will take so we can find a slot.",
+      "notAllowed": "You can only change requests assigned to you.",
+      "badState": "This request changed. Refresh the page and try again.",
+      "invalid": "Please check the quote and try again.",
+      "alreadyAccepting": "This quote is already being accepted. Refresh the page in a minute.",
+      "slotTaken": "This slot was just taken. Please select another time.",
+      "quoteClosed": "This quote is no longer open.",
+      "acceptInvalid": "Type your full name and tick the box to accept.",
+      "staffMismatch": "Please choose one of the times shown."
+    },
+    "queue": {
+      "alreadyInLine": "This phone number is already in line.",
+      "tooMany": "Too many tries. Please wait a few minutes and try again.",
+      "invalidName": "Enter your name.",
+      "invalidPhone": "Enter a valid mobile number.",
+      "closed": "The line is closed right now.",
+      "full": "The line is full right now.",
+      "turnedOff": "Walk-ins aren't available here.",
+      "staffNoService": "{name} doesn't offer that {offering}.",
+      "needService": "Choose a {offering} before starting.",
+      "staffBusy": "{name} has a {booking} right now.",
+      "stale": "That person's place in line just changed. The board has been refreshed."
+    },
+    "waitlist": {
+      "needsSession": "Please confirm your phone or email first.",
+      "needsConsent": "We need your OK to text you about open times.",
+      "tooMany": "You're on the waitlist for 5 times already. Remove one to add another.",
+      "rateLimited": "Too many tries. Please wait a few minutes and try again.",
+      "badDates": "Choose a latest date on or after the earliest date, within 60 days.",
+      "invalidPhone": "Enter a valid mobile number."
+    }
+  },
+  "emails": {
+    "fallbacks": {
+      "ourPlaceTitle": "Our {Place}",
+      "ourPlace": "Our {place}",
+      "thePlace": "the {place}",
+      "yourPlace": "Your {place}",
+      "yourStaff": "Your {staff}",
+      "yourPlaceTeam": "Your {place} team"
+    },
+    "charges": {
+      "noShowPolicy": "This charge was applied per our {place}'s no-show policy.",
+      "cancellationPolicy": "This charge was applied per our {place}'s cancellation policy for cancellations made within the policy window.",
+      "contactDirectly": "If you have questions, please contact the {place} directly."
+    },
+    "cardSaved": {
+      "policyNote": "This card will only be charged in the event of a late cancellation or no-show, per our {place} policy."
+    },
+    "receipt": {
+      "prepaidApplied": "{prepaidBalance} applied",
+      "smsPrepaidLine": "{prepaidBalance} {amount}"
+    },
+    "intake": {
+      "sms": "{placeName}: please review and sign our {place} policies and add a card on file — {url}"
+    },
+    "request": {
+      "ownerSubject": "New request from {name}",
+      "ownerBody": "{name} sent a request. Open it to read the details and assign a {staff}.",
+      "ownerCta": "Open the request"
+    },
+    "quote": {
+      "subject": "Your quote from {business}",
+      "heading": "Your quote is ready",
+      "intro": "Hi {name}, your {staff} prepared this price for your {offering}.",
+      "total": "Total",
+      "deposit": "Deposit due when you accept",
+      "validUntil": "This quote is good until {date}.",
+      "cta": "Review and book",
+      "sms": "{business}: your quote is ready. Total {total}, deposit {deposit}. Review and book: {link}"
+    },
+    "design": {
+      "subject": "Your design from {business}",
+      "sms": "{business}: your design is ready to review: {link}",
+      "heading": "Your design is ready",
+      "body": "{business} has shared a design with you. Your {staff} can walk you through it.",
+      "cta": "Review your design"
+    },
+    "onMyWay": {
+      "sms": "{staff} from {business} is on the way. Arriving in about {eta} minutes."
+    },
+    "classes": {
+      "promotedSms": "{business}: a spot opened in {className} on {date} at {time}. You're booked. Manage it here: {link}",
+      "cancelledSms": "{business}: {className} on {date} at {time} is cancelled. Any credit used has been returned.",
+      "promotedSubject": "You're in: {className}",
+      "promotedCta": "See my classes",
+      "promotedBody": "A spot opened in {className} on {date} at {time}, and you're booked."
+    },
+    "layout": {
+      "footer": "You received this email from {business} through {product}. Your {staff} at {business} can help if this was not meant for you."
+    },
+    "confirmation": {
+      "preview": "Your {booking} at {business} is confirmed",
+      "greeting": "We can't wait to see you, {name}!",
+      "body": "Your {booking} has been confirmed. Here are the details:",
+      "subject": "{Booking} confirmed at {business}"
+    },
+    "reminder": {
+      "preview": "Reminder: your {booking} at {business} is coming up",
+      "greeting": "Just a friendly reminder, {name}!",
+      "body": "Your {booking} is coming up soon. Here are the details:",
+      "subject": "Reminder: your {booking} at {business} is coming up"
+    },
+    "actions": {
+      "reschedule": "Reschedule {booking}",
+      "cancelPrompt": "Need to cancel?",
+      "cancel": "Cancel {booking}"
+    },
+    "details": {
+      "staff": "{Staff}",
+      "offerings": "{OfferingPlural}",
+      "date": "Date",
+      "time": "Time",
+      "duration": "Duration",
+      "location": "Location"
+    },
+    "aftercare": {
+      "preview": "Care notes from {business}",
+      "greeting": "Hi {name},",
+      "body": "Thank you for visiting {business}. Here are care notes from your {staff}.",
+      "products": "Recommended products",
+      "subject": "Care notes from {business}"
+    },
+    "calendar": {
+      "preview": "Reconnect {platform} for {staffName}",
+      "heading": "Calendar connection needs attention",
+      "body": "The {platform} link for {staffName} is no longer working. Busy times may be out of date until you reconnect.",
+      "cta": "Reconnect calendar",
+      "note": "This note is for the {staff} team at {business}. You can ignore it if you did not expect it.",
+      "subject": "Calendar reconnect needed for {platform}"
+    },
+    "checkout": {
+      "preview": "Complete your payment at {business}",
+      "greeting": "Hi {name},",
+      "body": "Your {booking} with {staffName} is ready to pay. Use the link below.",
+      "cta": "Pay now",
+      "expires": "This link expires in 48 hours.",
+      "subject": "Complete your payment at {business}"
+    },
+    "form": {
+      "preview": "Please complete: {form}",
+      "greeting": "Hi {name},",
+      "body": "Before your {booking}, your {staff} needs you to complete a form.",
+      "cta": "Complete form",
+      "expires": "This link expires in 7 days.",
+      "subject": "Please complete: {form}"
+    },
+    "intakeMail": {
+      "preview": "Please review and sign your policies at {business}",
+      "greeting": "Hi {name},",
+      "body": "Before your {booking} at {business}, please review and sign our {place} policies and add a card on file. Your {staff} will see that you signed.",
+      "cta": "Review and sign",
+      "expires": "This link expires in 7 days.",
+      "subject": "Please review and sign your policies at {business}"
+    },
+    "receiptMail": {
+      "preview": "Your receipt from {business}",
+      "greeting": "Hi {name},",
+      "body": "Thanks for visiting {business}. Here is your receipt for {paidAt}.",
+      "tip": "Tip",
+      "total": "Total paid",
+      "subject": "Your receipt from {business}",
+      "withStaff": "Your {staff} is glad you came."
+    },
+    "team": {
+      "preview": "You are invited to join {business}",
+      "heading": "You are invited",
+      "body": "{inviter} has invited you to join {business} as a {role}. You will be part of the {staff} team.",
+      "next": "Accept the invitation to create your account and start managing your schedule.",
+      "cta": "Accept invitation",
+      "expires": "This invitation expires in 7 days.",
+      "subject": "You are invited to join {business}"
+    },
+    "quiz": {
+      "preview": "New quiz response",
+      "heading": "New quiz response",
+      "submitted": "Submitted {when}.",
+      "empty": "No fields were filled in.",
+      "note": "Pass this to the right {staff}."
+    },
+    "waitlistSignup": {
+      "preview": "New waitlist signup",
+      "heading": "New waitlist signup",
+      "joined": "Joined {when}.",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "source": "Came from",
+      "note": "A {staff} should follow up."
+    },
+    "giftCard": {
+      "subject": "{purchaser} sent you a gift card for {business}",
+      "heading": "You got a gift card",
+      "body": "{purchaser} sent you a {amount} gift card for {business}.",
+      "codeLabel": "Your code",
+      "howToUse": "Show this code to your {staff} when you pay.",
+      "balanceLink": "Check your balance",
+      "fromBusiness": "From {business}"
+    }
+  },
+  "clients": {
+    "clientList": {
+      "prepaidColumn": "{prepaidBalance}"
+    },
+    "clientProfile": {
+      "prepaidTab": "{prepaidBalance}"
+    },
+    "cardOnFile": {
+      "dialogDescription": "The client will not be charged now. The card is saved for future charges authorized by your {place} policies."
+    }
+  },
+  "membership": {
+    "plans": {
+      "kindLabel": "What members get",
+      "kindStoredValue": "Monthly credit to {prepaidBalance}",
+      "kindCredits": "{BookingPlural} each month",
+      "kindDiscount": "Discount only",
+      "perPeriod": "How many each month",
+      "perPeriodError": "Enter a whole number from 1 to 30.",
+      "rollover": "Unused ones that carry over",
+      "rolloverError": "Enter a whole number from 0 to 10.",
+      "which": "Which {offeringPlural}",
+      "all": "All {offeringPlural}"
+    },
+    "expirySettings": {
+      "description": "Optionally expire unused {prepaidBalance} credits after a set time (oldest credits first). Off by default — credits never expire unless you turn this on."
+    },
+    "plansManager": {
+      "defaultName": "{prepaidBalance} Monthly",
+      "discountLabel": "Member discount when paying fully with {prepaidBalance} (%)",
+      "discountHint": "Applied to the services total when the member pays 100% from their {prepaidBalance} balance at checkout (tips are separate)."
+    }
+  },
+  "packages": {
+    "title": "Session packs",
+    "subtitle": "Packs you sell and what each one includes.",
+    "none": "No packs yet. Add your first one below.",
+    "add": "Add a pack",
+    "editPack": "Edit pack",
+    "name": "Name",
+    "description": "Description (optional)",
+    "credits": "How many {bookingPlural}",
+    "price": "Price",
+    "expires": "Expires after",
+    "never": "Never",
+    "days": "{count} days",
+    "which": "Which {offeringPlural}",
+    "all": "All {offeringPlural}",
+    "onSale": "On sale",
+    "notOnSale": "Not on sale",
+    "save": "Save pack",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "saved": "Pack saved.",
+    "summary": "{credits} {bookingPlural} for {price}",
+    "goodFor": "Good for {days} days",
+    "neverExpires": "Never expires",
+    "creditsCard": "Credits",
+    "noCredits": "No packs yet.",
+    "sell": "Sell a pack",
+    "pickPack": "Pack",
+    "payment": "How is {customer} paying?",
+    "cardOnFile": "Card on file",
+    "cash": "Paid in cash",
+    "sellConfirm": "Sell pack",
+    "sold": "Pack added.",
+    "noPacksToSell": "Turn on a pack in Settings, under Session packs, to sell it here.",
+    "adjust": "Adjust",
+    "adjustTitle": "Adjust credits",
+    "adjustPack": "Which pack",
+    "adjustBy": "Change by (-50 to 50)",
+    "adjustNote": "Reason",
+    "adjustSave": "Save adjustment",
+    "adjusted": "Credits adjusted.",
+    "left": "{count} left",
+    "expiresOn": "Expires {date}",
+    "expired": "Expired",
+    "historyTitle": "History",
+    "colDate": "Date",
+    "colChange": "Change",
+    "colReason": "What happened",
+    "colBalance": "Balance",
+    "reasons": {
+      "purchase": "Bought",
+      "grant": "Monthly credits",
+      "redeem": "Used",
+      "refund": "Given back",
+      "expire": "Expired",
+      "late_cancel": "Late cancel",
+      "adjust": "Adjusted"
+    },
+    "useCredit": "Use 1 credit from {name} ({remaining} left)",
+    "paidWithCredit": "Paid with a credit",
+    "useAtCheckout": "Use a credit",
+    "takeLateCancel": "Take a credit for this late cancel",
+    "buy": "Buy",
+    "buying": "Buying...",
+    "bought": "Pack added. You have {count} {bookingPlural} to use.",
+    "insufficient": "There are no credits left on this pack.",
+    "publicSubtitle": "Buy a pack now and use it when you book.",
+    "publicNone": "There are no packs for sale right now.",
+    "unavailable": "Packs are not available here.",
+    "saveCardAndBuy": "Save card and buy pack",
+    "cardNeeded": "Add a card to buy this pack",
+    "signInFirst": "Please sign in to buy a pack.",
+    "errors": {
+      "invalid": "Please check the fields and try again.",
+      "notFound": "That pack is not available.",
+      "clientNotFound": "We could not find that {customer}.",
+      "noCard": "This {customer} has no card on file.",
+      "cardFailed": "The card was declined. Nothing was charged.",
+      "duplicate": "That pack was just added. Wait a minute before adding it again.",
+      "refunded": "We could not add the pack, so your payment was returned. Please try again.",
+      "refundFailed": "Something went wrong after the payment. Please contact the {place} so they can fix it.",
+      "generic": "Something went wrong. Please try again.",
+      "notEligible": "A credit cannot be used for this visit.",
+      "noCredit": "There is no pack with a credit left that covers this visit.",
+      "appointmentNotFound": "We could not find that {booking}."
+    },
+    "lateCancelTaken": "Credit taken.",
+    "creditUsed": "Credit used."
+  },
+  "reports": {
+    "revenuePage": {
+      "subtitle": "Per-{staff} earnings from completed {bookingPlural}."
+    },
+    "revenueDashboard": {
+      "staffColumn": "{Staff}",
+      "paidBookings": "Paid {bookingPlural}",
+      "servicesCard": "{OfferingPlural}",
+      "avgPerBooking": "Average per {booking}",
+      "bookingsColumn": "{BookingPlural}",
+      "retailTitle": "Retail sales",
+      "retailOrders": "{count, plural, one {# order} other {# orders}}"
+    },
+    "analyticsCharts": {
+      "utilizationTitle": "{Staff} Utilization"
+    },
+    "analyticsPage": {
+      "bookingsCard": "{BookingPlural}",
+      "clientMixCard": "{Customer} mix",
+      "revenueByCategoryTitle": "Revenue by {offering} type",
+      "categoryColumn": "{Offering} type",
+      "costFootnote": "Return = revenue ÷ (cost of {offeringPlural} + expenses logged under a category with the same name as the {offering} type). Other costs are shared overhead.",
+      "expensesByCategoryHint": "Spending by category for the selected dates."
+    },
+    "serviceAnalytics": {
+      "title": "How your {offeringPlural} and {staffPlural} are doing",
+      "subtitle": "For {bookingPlural} in the selected dates. Cancelled {bookingPlural} are left out.",
+      "byService": "By {offering}",
+      "byStaff": "By {staff}",
+      "nameService": "{Offering}",
+      "nameStaff": "{Staff}",
+      "bookings": "{BookingPlural}",
+      "revenue": "Revenue",
+      "avgTicket": "Avg. ticket",
+      "hours": "Hours booked",
+      "rebook": "Booked again",
+      "noShows": "No-shows",
+      "newReturning": "New / returning",
+      "total": "Total",
+      "empty": "No {bookingPlural} in these dates yet.",
+      "legendTitle": "What these numbers mean",
+      "legendBookings": "{BookingPlural}: every {booking} that wasn't cancelled.",
+      "legendRevenue": "Revenue: the price of completed {bookingPlural}, before tips.",
+      "legendAvgTicket": "Avg. ticket: revenue divided by completed {bookingPlural}.",
+      "legendHours": "Hours booked: time on the calendar, including no-shows.",
+      "legendRebook": "Booked again: of completed {bookingPlural}, the share where the {customer} has another {booking} afterward. By {staff}, only {bookingPlural} with the same {staff} count.",
+      "legendNoShows": "No-shows: {bookingPlural} where the {customer} didn't come.",
+      "legendNewReturning": "New / returning: first-time {customerPlural} compared with {customerPlural} who have been before."
+    }
+  },
+  "dashboard": {
+    "businessScore": {
+      "steadyMomentum": "Keep building steady momentum across the {place}."
+    }
+  },
+  "business": {
+    "createPage": {
+      "title": "Your own {place}",
+      "description": "Add a new business on your account. You can keep working on your current team and switch {placePlural} when you need to."
+    },
+    "createForm": {
+      "title": "Start your own {place}",
+      "description": "Create a separate booking site for your business. You’ll stay a member of your current team — switch between {placePlural} anytime from the sidebar.",
+      "nameLabel": "{Place} name"
+    }
+  },
+  "auth": {
+    "acceptForm": {
+      "joinButton": "Join this {place}"
+    }
+  },
+  "modules": {
+    "page": {
+      "title": "Features",
+      "subtitle": "Turn tools on or off for your {place}. Everything is included at no extra cost.",
+      "recommended": "Recommended for {industry}",
+      "alwaysOn": "Always on for now",
+      "offNotice": "This feature is off: {name}. Turn it on below to use it.",
+      "turnedOn": "{name} turned on",
+      "turnedOff": "{name} turned off",
+      "failed": "Couldn't save that change. Please try again.",
+      "moreComing": "More tools are on the way. They'll appear here when they're ready.",
+      "switchLabel": "Turn {name} on or off"
+    },
+    "areas": {
+      "booking": "Booking",
+      "team": "Team",
+      "selling": "Selling",
+      "requests": "Requests and projects",
+      "client_care": "{Customer} care"
+    },
+    "items": {
+      "resources": {
+        "name": "Rooms and equipment",
+        "description": "Book rooms, chairs, or equipment with each {booking} so nothing is double-booked."
+      },
+      "booking_groups": {
+        "name": "Group bookings",
+        "description": "Book several people or {staffPlural} together."
+      },
+      "processing_time": {
+        "name": "Processing time",
+        "description": "Fit another {booking} into the wait time of a long service."
+      },
+      "assistant_tasks": {
+        "name": "Assistant tasks",
+        "description": "Give assistants tasks on the calendar alongside each {booking}."
+      },
+      "requests": {
+        "name": "Requests and quotes",
+        "description": "{CustomerPlural} describe what they want and you reply with a price."
+      },
+      "on_site": {
+        "name": "On-site visits",
+        "description": "Travel to your {customerPlural}, with service areas and travel time."
+      },
+      "projects": {
+        "name": "Multi-session projects",
+        "description": "Track work that takes several {bookingPlural}."
+      },
+      "consent_id": {
+        "name": "Consent with ID check",
+        "description": "Collect consent, date of birth, and photo ID before a {booking}."
+      },
+      "classes": {
+        "name": "Classes",
+        "description": "Group sessions with limited spots and a waitlist."
+      },
+      "packages": {
+        "name": "Session packs",
+        "description": "Sell bundles of {bookingPlural} to use over time."
+      },
+      "memberships": {
+        "name": "Memberships",
+        "description": "Monthly plans and {prepaidBalance} for regular {customerPlural}."
+      },
+      "recurring": {
+        "name": "Recurring bookings",
+        "description": "Book the same time every week or every other week."
+      },
+      "walk_in_queue": {
+        "name": "Walk-in line",
+        "description": "{CustomerPlural} join a live line from a QR code."
+      },
+      "slot_waitlist": {
+        "name": "Waitlist",
+        "description": "Text the next {customer} when a time opens up."
+      },
+      "gift_cards": {
+        "name": "Gift cards",
+        "description": "Sell gift cards and take them at checkout."
+      },
+      "attachments": {
+        "name": "Photos and checklists",
+        "description": "Add photos and checklists to each {booking}."
+      },
+      "storefront": {
+        "name": "Online shop",
+        "description": "Sell retail products on your booking page."
+      },
+      "aftercare": {
+        "name": "Aftercare messages",
+        "description": "Send care instructions automatically after a {booking}."
+      }
+    }
+  },
+  "expenses": {
+    "page": {
+      "title": "Expenses",
+      "subtitle": "Track what your {place} spends, by category."
+    },
+    "form": {
+      "vendorPlaceholder": "Supplier, store, or landlord"
+    },
+    "categories": {
+      "manage": "Edit categories",
+      "title": "Expense categories",
+      "description": "Rename, hide, or add categories. Hidden categories stay on past expenses.",
+      "addLabel": "New category",
+      "addPlaceholder": "For example: Laundry",
+      "add": "Add",
+      "hidden": "hidden",
+      "shown": "Shown",
+      "hiddenState": "Hidden",
+      "nameLabel": "Category name",
+      "saved": "Category saved",
+      "failed": "Couldn't save the category. Please try again.",
+      "nameRequired": "Enter a category name."
+    }
+  },
+  "requests": {
+    "stepService": "{Offering}",
+    "stepDescribe": "Describe what you need",
+    "stepDetails": "Your details",
+    "stepSend": "Send request",
+    "stepReview": "Review and send",
+    "serviceTitle": "Choose a {offering}",
+    "serviceHint": "Leave {staff} blank if anyone can take this.",
+    "describeTitle": "Describe what you need",
+    "describeHint": "Tell us about the {offering} you want. We'll reply with a price.",
+    "sendTitle": "Send request",
+    "sendBody": "We will review this at the {place} and send the {customer} a price for the {booking}. The deposit comes later, with the quote.",
+    "reviewTitle": "Review and send",
+    "reviewHint": "Check everything below, then send it.",
+    "serviceLabel": "What kind of {offering}?",
+    "serviceNotSure": "Not sure yet",
+    "staffLabel": "{Staff}",
+    "staffAny": "Any {staff}",
+    "addPhotos": "Add photos",
+    "photoCount": "{count} of {max} photos",
+    "uploaded": "Uploaded",
+    "remove": "Remove",
+    "uploading": "Uploading...",
+    "uploadFailed": "That photo didn't upload. Try a JPG or PNG under 7 MB.",
+    "tooManyUploads": "Too many photos at once. Please wait a few minutes and try again.",
+    "photoMissing": "One of your photos is missing. Please add it again.",
+    "invalid": "Something in your request doesn't look right. Please check it and try again.",
+    "continue": "Continue",
+    "back": "Back",
+    "send": "Send request. The deposit comes with the quote.",
+    "sending": "Sending...",
+    "sentTitle": "Request sent",
+    "sentBody": "Thanks! We'll review it and send you a price by text or email.",
+    "signInFirst": "Please confirm your phone or email first.",
+    "unavailable": "This business isn't taking requests online right now.",
+    "required": "Please fill this in.",
+    "alertTitle": "New request from {client}",
+    "alertBody": "Open Requests to read it and send a price.",
+    "fields": {
+      "placement": {
+        "label": "Where on your body?",
+        "hint": "For example: left forearm"
+      },
+      "size": {
+        "label": "About how big?",
+        "options": {
+          "small": "Small (up to 2 in)",
+          "medium": "Medium (2 to 5 in)",
+          "large": "Large (5 to 10 in)",
+          "xlarge": "Extra large (over 10 in)"
+        }
+      },
+      "style": {
+        "label": "Style",
+        "hint": "For example: fine line, traditional, color"
+      },
+      "budget": {
+        "label": "Budget (optional)"
+      },
+      "references": {
+        "label": "Reference photos",
+        "hint": "Up to 5 photos of ideas you like."
+      },
+      "description": {
+        "label": "Describe the job",
+        "hint": "What needs doing, and anything we should know."
+      },
+      "photos": {
+        "label": "Photos",
+        "hint": "Up to 5 photos help us give an accurate price."
+      },
+      "address": {
+        "label": "Address of the job",
+        "line1": "Street address",
+        "line2": "Apt or unit (optional)",
+        "city": "City",
+        "region": "State",
+        "postalCode": "ZIP code"
+      },
+      "preferred_days": {
+        "label": "When works for you?",
+        "morning": "Mornings",
+        "afternoon": "Afternoons",
+        "evening": "Evenings"
+      },
+      "days": {
+        "d0": "Sun",
+        "d1": "Mon",
+        "d2": "Tue",
+        "d3": "Wed",
+        "d4": "Thu",
+        "d5": "Fri",
+        "d6": "Sat"
+      }
+    },
+    "inbox": {
+      "title": "Requests",
+      "show": "Show",
+      "filters": {
+        "open": "New and in review",
+        "quoted": "Quote sent",
+        "booked": "Booked",
+        "closed": "Closed",
+        "all": "All"
+      },
+      "colCustomer": "{Customer}",
+      "colWhat": "What they want",
+      "colReceived": "Received",
+      "colStatus": "Status",
+      "open": "Open",
+      "empty": "No requests yet. They'll show up here when {customerPlural} send one."
+    },
+    "statuses": {
+      "new": "New",
+      "reviewing": "In review",
+      "quoted": "Quote sent",
+      "accepted": "Accepting",
+      "declined": "Declined",
+      "converted": "Booked",
+      "expired": "Quote expired"
+    },
+    "quoteStatuses": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "accepted": "Accepted",
+      "declined": "Declined by {customer}",
+      "expired": "Expired",
+      "withdrawn": "Withdrawn"
+    },
+    "detail": {
+      "asked": "What they asked for",
+      "when": "When works for them",
+      "photos": "Photos",
+      "photoAlt": "Photo {n}",
+      "viewFull": "View full size",
+      "writeQuote": "Write a quote",
+      "decline": "Decline request",
+      "declineTitle": "Decline this request?",
+      "declineReason": "Reason (optional, the {customer} won't see this)",
+      "declineConfirm": "Decline",
+      "keep": "Keep it",
+      "quotes": "Quotes",
+      "quoteLink": "Quote link",
+      "copyLink": "Copy link",
+      "copied": "Link copied",
+      "withdraw": "Withdraw quote",
+      "sentOn": "Sent {date}",
+      "total": "Total",
+      "deposit": "Deposit",
+      "noAnswers": "Nothing else was asked.",
+      "noWindows": "No preference given.",
+      "anyDay": "Any day",
+      "back": "Back to requests"
+    },
+    "builder": {
+      "title": "Write a quote",
+      "service": "Service",
+      "description": "Description",
+      "quantity": "How many",
+      "unitPrice": "Price each",
+      "time": "Time",
+      "noTime": "No time",
+      "addLine": "Add a line",
+      "remove": "Remove",
+      "total": "Total",
+      "timeNeeded": "Time needed",
+      "deposit": "Deposit",
+      "depositHint": "Due when they accept. Leave at $0 for no deposit.",
+      "who": "Who will do it",
+      "anyone": "Anyone available",
+      "validFor": "Quote good for",
+      "days": "{count} days",
+      "message": "Note to the {customer} (optional)",
+      "saveDraft": "Save draft",
+      "send": "Send quote",
+      "saved": "Draft saved",
+      "sent": "Quote sent to {name}",
+      "pickService": "Choose one",
+      "saving": "Saving...",
+      "sending": "Sending...",
+      "min": "{count} min",
+      "hr": "{count} hr"
+    },
+    "chooseOne": "Choose one",
+    "outOfArea": "We don't serve {zip} yet. Try a nearby ZIP code or call us.",
+    "booksClosedTitle": "Books are closed",
+    "booksClosedBody": "We open for new requests on {date}.",
+    "booksClosedNoDate": "We're not taking new requests right now. Check back soon.",
+    "booksClosed": "Books are closed right now."
+  },
+  "projects": {
+    "title": "Projects",
+    "new": "New project",
+    "empty": "No projects here yet.",
+    "show": "Show",
+    "filters": {
+      "active": "Active",
+      "complete": "Complete",
+      "all": "All"
+    },
+    "colCustomer": "{Customer}",
+    "colProject": "Project",
+    "colStaff": "{Staff}",
+    "colStatus": "Status",
+    "progress": "{done} of {total} {bookingPlural}",
+    "leftToPay": "Left to pay",
+    "open": "Open",
+    "noStaff": "Not assigned",
+    "noQuote": "No quote",
+    "fieldTitle": "Title",
+    "placement": "Placement",
+    "size": "Size",
+    "sessions": "How many {bookingPlural}",
+    "quotedTotal": "Quoted total",
+    "save": "Save project",
+    "cancel": "Cancel",
+    "pickCustomer": "Choose a {customer} first.",
+    "saving": "Saving...",
+    "created": "Project created",
+    "statuses": {
+      "consult": "Consultation",
+      "design": "Design in progress",
+      "scheduled": "Scheduled",
+      "in_progress": "In progress",
+      "healing": "Healing",
+      "touch_up": "Touch-up",
+      "complete": "Complete",
+      "cancelled": "Cancelled"
+    },
+    "summary": {
+      "quoted": "Quoted total",
+      "paid": "Paid so far",
+      "left": "Left to pay",
+      "credit": "Deposit credit"
+    },
+    "back": "All projects",
+    "statusLabel": "Status",
+    "saveStatus": "Save",
+    "saved": "Saved",
+    "timeline": "{BookingPlural}",
+    "timelineEmpty": "No {bookingPlural} booked yet.",
+    "bookNext": "Book the next {booking}",
+    "paidAmount": "Paid {amount}",
+    "design": "Design",
+    "noDesign": "No design uploaded yet.",
+    "designAlt": "Design for {title}",
+    "uploadDesign": "Upload design",
+    "uploading": "Uploading...",
+    "uploaded": "Design uploaded",
+    "sendApproval": "Send for approval",
+    "sending": "Sending...",
+    "sentToClient": "Sent to {name}",
+    "waiting": "Waiting for approval",
+    "approvedBy": "Approved by {name} on {date}",
+    "notApproved": "Design not approved yet",
+    "projectLink": "Project: {title}",
+    "trackAsProject": "Track as a multi-session project",
+    "public": {
+      "title": "Your design",
+      "typeName": "Type your full name to approve",
+      "approve": "Approve design",
+      "approving": "Approving...",
+      "approved": "Design approved. Thank you!",
+      "noDesign": "No design has been shared yet. We'll text or email you as soon as it's ready."
+    },
+    "errors": {
+      "notAllowed": "You can only change your own projects.",
+      "notFound": "That project could not be found.",
+      "invalid": "Please check the project details and try again.",
+      "appointmentNotFound": "That appointment could not be found.",
+      "differentClient": "That project belongs to a different {customer}.",
+      "chooseImage": "Choose an image to upload.",
+      "tooLarge": "That file is too large. Choose a smaller image.",
+      "unsupportedType": "That file type is not supported. Choose a JPG, PNG, WebP, HEIC or PDF file.",
+      "uploadFirst": "Upload a design first.",
+      "noContact": "This {customer} has no email or phone number on file.",
+      "typeName": "Please type your full name.",
+      "linkUnavailable": "This link is no longer available.",
+      "notWaiting": "This design is not waiting for approval."
+    },
+    "apptStatuses": {
+      "confirmed": "Booked",
+      "completed": "Done",
+      "cancelled": "Cancelled",
+      "no_show": "No-show"
+    },
+    "colProgress": "Progress"
+  },
+  "consent": {
+    "dob": "Date of birth",
+    "dobHint": "You must be {minAge} or older for this {offering}.",
+    "dobRequired": "Please enter your date of birth to book this {offering}.",
+    "underage": "You must be {minAge} or older to book this {offering}.",
+    "idRequired": "Please add a photo of your ID.",
+    "addId": "Add a photo of your ID",
+    "idHint": "Only staff can see this. It's deleted automatically after {days} days.",
+    "formType": "Form type",
+    "types": {
+      "intake": "Intake",
+      "waiver": "Waiver",
+      "consent": "Consent",
+      "health_history": "Health history",
+      "par_q": "PAR-Q"
+    },
+    "minAge": "Minimum age",
+    "none": "None",
+    "askId": "Ask for a photo ID",
+    "retention": "Keep ID photos for",
+    "retentionHint": "ID photos are deleted automatically after this time.",
+    "retentionOptions": {
+      "d30": "30 days",
+      "d90": "90 days",
+      "d180": "6 months",
+      "d365": "1 year",
+      "d730": "2 years"
+    },
+    "dobAge": "Date of birth {date} (age {age})",
+    "idUploaded": "ID uploaded",
+    "noId": "No ID yet",
+    "viewId": "View ID",
+    "markChecked": "Mark ID as checked",
+    "checkedBy": "ID checked by {name} on {date}",
+    "idDeleted": "ID photo deleted after {days} days",
+    "uploadFailed": "We couldn't use that file. Choose a photo or PDF under 10 MB and try again.",
+    "idAdded": "Photo added: {name}",
+    "chooseAnother": "Choose a different photo"
+  },
+  "classes": {
+    "title": "Classes",
+    "prevWeek": "Previous week",
+    "thisWeek": "This week",
+    "nextWeek": "Next week",
+    "bookedOf": "{booked} of {capacity} booked",
+    "waitlistCount": "{count} on waitlist",
+    "open": "Open",
+    "add": "Add a class",
+    "class": "Class",
+    "date": "Date",
+    "startsAt": "Starts at",
+    "spots": "Spots",
+    "waitlistSpots": "Waitlist spots",
+    "repeat": "Repeat",
+    "repeatNone": "Does not repeat",
+    "repeatWeeks": "Every week for {count} weeks",
+    "save": "Save class",
+    "saveAnyway": "Save anyway",
+    "conflict": "{date}: {staff} is busy then",
+    "statuses": {
+      "scheduled": "Scheduled",
+      "cancelled": "Cancelled",
+      "completed": "Done"
+    },
+    "enrollment": {
+      "booked": "Booked",
+      "waitlisted": "On waitlist",
+      "attended": "Checked in",
+      "no_show": "No-show",
+      "late_cancel": "Late cancel",
+      "cancelled": "Cancelled"
+    },
+    "bookedList": "Booked",
+    "waitlist": "Waitlist",
+    "waitlistRow": "#{n} {name}",
+    "usesCredit": "Uses a credit",
+    "paysAtPlace": "Pays at the {place}",
+    "checkIn": "Checked in",
+    "noShow": "No-show",
+    "cancelSpot": "Cancel spot",
+    "giveBackTitle": "Give the credit back?",
+    "giveBack": "Give it back",
+    "keepIt": "Keep it (late cancel)",
+    "addCustomer": "Add a {customer}",
+    "addButton": "Add",
+    "changeSpots": "Change spots",
+    "saveSpots": "Save",
+    "cancelClass": "Cancel class",
+    "cancelClassConfirm": "Cancel this class and text everyone booked?",
+    "keepClass": "Keep class",
+    "capacityBelowBooked": "More people are booked than that. Cancel some spots first.",
+    "staff": "{Staff}",
+    "location": "Location",
+    "chooseOne": "Choose one",
+    "empty": "No classes this week. Use Add a class to put one on the schedule.",
+    "noClassServices": "You have no class set up yet. On the Services page, choose a service and turn on This is a class.",
+    "weekLabel": "Week of {range}",
+    "backToClasses": "Back to classes",
+    "conflictBlocked": "{date}: that time is already blocked off for {staff}",
+    "conflictsTitle": "Some dates are not free",
+    "conflictsFix": "Choose another time or date, or clear what is in the way, then save again.",
+    "conflictsAppointmentOnly": "Those times already have an appointment. You can still save the class on top of it.",
+    "saving": "Saving...",
+    "noneBooked": "No one is booked yet.",
+    "noneWaiting": "No one is on the waitlist.",
+    "useOneCredit": "Use 1 credit",
+    "creditLeft": "{name} has {count, plural, one {# credit} other {# credits}} left.",
+    "addedBooked": "Added. They have a spot in the class.",
+    "addedWaitlisted": "The class is full, so they are on the waitlist (number {n}).",
+    "lockedNote": "This class is {status}, so its spots can't be changed.",
+    "cancelSpotTitle": "Cancel this spot?",
+    "cancelSpotBody": "Their spot goes to the next person on the waitlist.",
+    "keepSpot": "Keep spot",
+    "giveBackBody": "Giving it back puts the credit on their pack. Keeping it counts as a late cancel.",
+    "classCancelled": "Class cancelled.",
+    "spotsNow": "Spots now: {count}",
+    "isClass": "This is a class",
+    "spotsPerClass": "Spots per class",
+    "errors": {
+      "invalid": "Some of the class details are not right. Check them and try again.",
+      "notFound": "We could not find that class.",
+      "notYours": "You can only manage your own classes.",
+      "notBooked": "Only a booked spot can be marked.",
+      "needSpots": "Enter how many spots the class has, from 1 to 100.",
+      "needChoice": "Choose the class, who leads it, the date and the start time.",
+      "needWaitlist": "Enter how many waitlist spots there are, from 0 to 100."
+    },
+    "public": {
+      "title": "Class schedule",
+      "flow": {
+        "stepWeek": "This week",
+        "stepTime": "Time",
+        "stepDetails": "Your details",
+        "stepConfirm": "Confirm",
+        "fullWaitlist": "Full, join the waitlist",
+        "emptyWeek": "No classes this week.",
+        "detailsLead": "This {booking} is for the {customer}.",
+        "confirmTitle": "Confirm this {booking}",
+        "confirmLead": "Check the {offering} with your {staff}, then confirm. You can use a pack credit or pay at the {place}.",
+        "instructor": "{Staff} {name}",
+        "payAtPlace": "Pay at the {place}: {price}",
+        "payAtPlaceNoPrice": "Pay at the {place}",
+        "confirm": "Confirm {booking}"
+      },
+      "timeRange": "{start} to {end}",
+      "with": "with {staff}",
+      "spotsLeft": "{count, plural, one {# spot left} other {# spots left}}",
+      "full": "Full",
+      "book": "Book a spot",
+      "join": "Join the waitlist",
+      "waitlistFull": "Waitlist full",
+      "confirm": "Confirm spot",
+      "payAtPlace": "Pay when you arrive: {price}",
+      "booked": "You're booked for {className} on {date} at {time}.",
+      "waitlisted": "You're on the waitlist (number {n}). We'll text you if a spot opens.",
+      "mine": "My classes",
+      "cancelMine": "Cancel my spot",
+      "cancelConfirm": "Cancel your spot?",
+      "lateWarning": "It's less than {hours} hours before the class, so your credit won't be returned.",
+      "scheduleCardTitle": "Group classes",
+      "scheduleCardButton": "See the class schedule",
+      "errors": {
+        "FULL": "This class just filled up.",
+        "CLOSED": "This class isn't taking bookings.",
+        "ALREADY": "You already have a spot in this class.",
+        "STARTED": "This class has already started.",
+        "UNDERAGE": "You are too young for this class.",
+        "DOB_REQUIRED": "Please enter your date of birth to join this class.",
+        "NOT_SIGNED_IN": "Please sign in to book a spot.",
+        "generic": "Something went wrong. Please try again."
+      },
+      "empty": "There are no classes coming up in the next 2 weeks. Please check back soon.",
+      "signIn": "Sign in to book your spot",
+      "payAtPlaceNoPrice": "Pay when you arrive",
+      "back": "Back",
+      "keepMine": "Keep my spot",
+      "cancelNow": "Yes, cancel my spot",
+      "cancelled": "Your spot is cancelled.",
+      "onWaitlist": "On the waitlist (number {n})",
+      "booking": "Saving your spot..."
+    }
+  },
+  "queue": {
+    "meta": {
+      "title": "Join the line"
+    },
+    "join": {
+      "title": "Join the line",
+      "subtitle": "Add your name, your phone, and the {offering}. You can wait away from the {place}.",
+      "closed": "The line is closed right now. Please check back later.",
+      "full": "The line is full right now. Please check back in a little while.",
+      "currentWait": "{count, plural, =0 {No one is waiting} one {# person waiting} other {# people waiting}}",
+      "waitNow": "About {minutes} minutes",
+      "waitUnknown": "We'll text you when it's your turn.",
+      "notABooking": "This saves your place. It is not your {booking}.",
+      "location": "{Place}",
+      "nameLabel": "Your name",
+      "phoneLabel": "Phone",
+      "phoneHint": "We'll text this number when it's your turn.",
+      "serviceLabel": "{Offering}",
+      "serviceAny": "Not sure yet",
+      "staffLabel": "{Staff}",
+      "staffAny": "First available",
+      "consentLabel": "Text me when it's my turn. Message and data rates may apply. Reply STOP to opt out.",
+      "submit": "Join the line",
+      "submitting": "Joining the line...",
+      "failed": "Something went wrong. Please try again."
+    },
+    "status": {
+      "heading": "Your place",
+      "place": "You're number {position}. About {minutes} minutes.",
+      "placeSoon": "You're number {position}. It's almost your turn.",
+      "placeUnknown": "You're number {position}. We'll let you know when it's your turn.",
+      "keepOpen": "Keep this page open. It updates on its own.",
+      "note": "The {place} has you in line as a {customer}. Your {staff} will call you.",
+      "called": "It's your turn. Please come to the front desk.",
+      "calledWith": "{name} is ready for you.",
+      "inService": "You're being taken care of.",
+      "done": "Thanks for coming in.",
+      "left": "You've left the line.",
+      "leave": "Leave the line",
+      "leaveConfirm": "Leave the line? You'll lose your place.",
+      "leaveYes": "Yes, leave the line",
+      "leaveNo": "Stay in line",
+      "notFound": "We couldn't find your place in line."
+    },
+    "kiosk": {
+      "title": "Join the line",
+      "next": "Next person",
+      "nowWaiting": "Now waiting",
+      "invalidLink": "This kiosk link no longer works. Ask the owner for a new one."
+    },
+    "board": {
+      "title": "Walk-ins",
+      "subtitle": "See who's waiting, call the next person, and track who's being served.",
+      "open": "The line is open",
+      "closedState": "The line is closed",
+      "openButton": "Open the line",
+      "closeButton": "Close the line",
+      "addWalkIn": "Add walk-in",
+      "printQr": "Print QR code",
+      "kioskLink": "Kiosk link",
+      "waiting": "Waiting",
+      "called": "Called",
+      "inService": "Being served",
+      "empty": "No one is waiting.",
+      "callNextFor": "Call next for {name}",
+      "freeNow": "Free now",
+      "busyUntil": "Busy until {time}",
+      "notAvailable": "Not available today",
+      "call": "Call",
+      "start": "Start",
+      "done": "Done",
+      "noShow": "Didn't show",
+      "left": "Left",
+      "waitedFor": "Waiting {minutes} min",
+      "estimate": "About {minutes} min",
+      "estimateUnknown": "No estimate yet",
+      "wants": "Wants {name}",
+      "anyStaff": "First available",
+      "chooseStaff": "Who will take them?",
+      "chooseService": "Choose a service first",
+      "checkOut": "Check out",
+      "noOneWaitingFor": "No one is waiting for {name}.",
+      "calledToast": "{name} was called",
+      "calledFor": "Called for {name}",
+      "servedBy": "With {name}",
+      "location": "Location",
+      "loadFailed": "The board could not refresh. Trying again...",
+      "kioskDialogTitle": "Kiosk link",
+      "kioskDialogBody": "Open this link on the tablet in your lobby. Anyone with the link can add people to your line.",
+      "kioskCreate": "Create a new kiosk link",
+      "kioskWarning": "Creating a new link stops the old one from working.",
+      "copy": "Copy link",
+      "copied": "Link copied",
+      "addDialogTitle": "Add a walk-in",
+      "phoneOptional": "Mobile number (optional)",
+      "consentLabel": "This person agreed to get text messages from us.",
+      "add": "Add to the line",
+      "cancel": "Cancel",
+      "close": "Close",
+      "settings": {
+        "title": "Line settings",
+        "maxWaiting": "Most people waiting at once",
+        "textOnJoin": "Text people a link to their place in line when they join",
+        "save": "Save",
+        "saved": "Saved"
+      },
+      "hide": "Hide"
+    },
+    "qr": {
+      "title": "Scan to join the line",
+      "subtitle": "Or go to {url}",
+      "print": "Print"
+    }
+  },
+  "waitlist": {
+    "join": {
+      "button": "Join the waitlist",
+      "hint": "No time that works? We'll text you if one opens up.",
+      "title": "Join the waitlist",
+      "body": "Tell us when you could come in. If a time opens up, we'll text you a link to book it.",
+      "from": "Earliest date",
+      "to": "Latest date",
+      "timeOfDay": "Time of day",
+      "any": "Any time",
+      "morning": "Morning (before 12 PM)",
+      "afternoon": "Afternoon (12 PM to 5 PM)",
+      "evening": "Evening (after 5 PM)",
+      "phone": "Mobile number",
+      "consent": "Text me when a time opens up. Message and data rates may apply. Reply STOP to opt out.",
+      "submit": "Join the waitlist",
+      "cancel": "Cancel",
+      "done": "You're on the waitlist. We'll text you if a time opens up."
+    },
+    "claim": {
+      "title": "A time opened up",
+      "details": "{service} with {staff} on {date} at {time}",
+      "heldUntil": "We're holding it for you until {time}.",
+      "noDeposit": "Times booked from the waitlist don't need a deposit.",
+      "book": "Book this time",
+      "decline": "No thanks",
+      "booked": "You're booked! We'll send you a confirmation.",
+      "expired": "This time is no longer held for you. You're still on the waitlist, and we'll text you if another time opens up.",
+      "taken": "Sorry, that time was just taken. You're still on the waitlist.",
+      "declined": "No problem. You're still on the waitlist.",
+      "remove": "Take me off the waitlist",
+      "removed": "You're off the waitlist.",
+      "notFound": "This link doesn't work anymore."
+    },
+    "admin": {
+      "title": "Waitlist",
+      "subtitle": "{CustomerPlural} who want an earlier time. When a {booking} is cancelled, we text the first person it fits.",
+      "add": "Add to waitlist",
+      "client": "{Customer}",
+      "services": "{OfferingPlural}",
+      "staff": "{Staff}",
+      "anyStaff": "Anyone",
+      "dates": "Dates",
+      "datesValue": "{from} to {to}, {timeOfDay}",
+      "status": "Status",
+      "remove": "Remove",
+      "empty": "No one is on the waitlist.",
+      "statusWaiting": "Waiting",
+      "statusOffered": "Time offered until {time}",
+      "statusBooked": "Booked",
+      "statusExpired": "Expired",
+      "statusCancelled": "Removed",
+      "consentLabel": "{Customer} agreed to get texts",
+      "holdLabel": "Hold an open time for",
+      "holdMinutes": "{count} minutes",
+      "holdInvalid": "Choose 10, 15, 30, or 60 minutes.",
+      "save": "Save",
+      "saved": "Saved",
+      "noPhone": "This {customer} needs a mobile number to get waitlist texts.",
+      "windowAny": "any time",
+      "windowMorning": "mornings",
+      "windowAfternoon": "afternoons",
+      "windowEvening": "evenings"
+    }
+  },
+  "appointmentWork": {
+    "settings": {
+      "title": "Checklists",
+      "subtitle": "Steps your team checks off during each {booking}. Set them up for each {offering}.",
+      "itemsFor": "Checklist for {service}",
+      "addItem": "Add a step",
+      "itemPlaceholder": "For example: Clean and set up the station",
+      "save": "Save checklist",
+      "saved": "Checklist saved",
+      "noItems": "No steps yet.",
+      "remove": "Remove",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "tooMany": "A checklist can have at most 30 steps.",
+      "label": "Each step needs 1 to 120 characters."
+    },
+    "page": {
+      "back": "Back to calendar",
+      "title": "{Booking} details",
+      "status": {
+        "confirmed": "Booked",
+        "completed": "Done",
+        "cancelled": "Cancelled",
+        "no_show": "No-show",
+        "pending": "Pending"
+      }
+    },
+    "checklist": {
+      "title": "Checklist",
+      "progress": "{done} of {total} done",
+      "empty": "No checklist for this {booking}.",
+      "addPlaceholder": "Add an item",
+      "add": "Add",
+      "remove": "Remove"
+    },
+    "photos": {
+      "title": "Photos",
+      "addBefore": "Add before photo",
+      "addAfter": "Add after photo",
+      "addOther": "Add other photo",
+      "before": "Before",
+      "after": "After",
+      "other": "Other",
+      "uploading": "Uploading…",
+      "uploaded": "Photo added",
+      "failed": "Couldn't upload the photo. Please try again.",
+      "deleteFailed": "Couldn't delete the photo. Please try again.",
+      "tooBig": "That photo is too large. Try a smaller one.",
+      "delete": "Delete photo",
+      "deleteConfirm": "Delete this photo? This can't be undone.",
+      "empty": "No photos yet.",
+      "private": "Photos are private. Only your team can see them.",
+      "notAllowed": "You can only delete a photo you added in the last 24 hours.",
+      "notFound": "That photo is already gone.",
+      "type": "Choose a JPG, PNG, WebP, or HEIC photo."
+    },
+    "detail": {
+      "openFull": "Open full details"
+    },
+    "errors": {
+      "notFound": "That step is no longer on the checklist.",
+      "saveFailed": "Couldn't save the checklist. Please try again."
+    }
+  },
+  "theme": {
+    "label": "Color theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Match my device"
+  },
+  "uiGallery": {
+    "title": "Components",
+    "light": "Light",
+    "dark": "Dark",
+    "buttons": "Buttons",
+    "badges": "Badges",
+    "fields": "Fields",
+    "choices": "Choices",
+    "overlays": "Overlays",
+    "content": "Content",
+    "name": "Name",
+    "notes": "Notes",
+    "service": "Service",
+    "open": "Open",
+    "menu": "Menu",
+    "search": "Search",
+    "default": "Default",
+    "destructive": "Destructive",
+    "outline": "Outline",
+    "secondary": "Secondary",
+    "ghost": "Ghost",
+    "link": "Link",
+    "large": "Large",
+    "extraLarge": "Extra large",
+    "icon": "Icon",
+    "iconLarge": "Large icon",
+    "checked": "Checked",
+    "on": "On",
+    "calendar": "Calendar",
+    "empty": "No data for this period"
+  }
+}

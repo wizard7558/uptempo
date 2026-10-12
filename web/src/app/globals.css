@@ -1,0 +1,366 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-hanken-grotesk);
+  --font-display: var(--font-bodoni-moda);
+  --font-mono: var(--font-geist-mono);
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root,
+.light {
+  color-scheme: light;
+  --radius: 0.375rem;
+  --background: #FFFFFF;
+  --foreground: #111111;
+  --card: #FFFFFF;
+  --card-foreground: #111111;
+  --popover: #FFFFFF;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F5F5;
+  --secondary-foreground: #111111;
+  --muted: #F5F5F5;
+  --muted-foreground: #5C5C5C;
+  --accent: #B3122E;
+  --accent-foreground: #FFFFFF;
+  --destructive: #111111;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E5E5;
+  --input: #767676;
+  --ring: #111111;
+  --chart-1: hsl(0 0% 7%);
+  --chart-2: hsl(0 0% 36%);
+  --chart-3: hsl(349 82% 39%);
+  --chart-4: hsl(0 0% 46%);
+  --chart-5: hsl(0 0% 64%);
+  --success: hsl(152 60% 30%);
+  --warning: hsl(42 100% 27%);
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #111111;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F5F5F5;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: #E5E5E5;
+  --sidebar-ring: #111111;
+  --line: var(--border);
+  --ink: var(--foreground);
+  --ink-soft: var(--muted-foreground);
+  --ink-faint: #767676;
+  --sand: var(--border);
+  --ivory: var(--background);
+  --ivory-raised: var(--card);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0E0E0E;
+  --foreground: #F5F5F5;
+  --card: #171717;
+  --card-foreground: #F5F5F5;
+  --popover: #171717;
+  --popover-foreground: #F5F5F5;
+  --primary: #F5F5F5;
+  --primary-foreground: #0E0E0E;
+  --secondary: #1A1A1A;
+  --secondary-foreground: #F5F5F5;
+  --muted: #1A1A1A;
+  --muted-foreground: #A3A3A3;
+  --accent: #F0476A;
+  --accent-foreground: #0E0E0E;
+  --destructive: #F5F5F5;
+  --destructive-foreground: #0E0E0E;
+  --border: #2A2A2A;
+  --input: #8A8A8A;
+  --ring: #F5F5F5;
+  --chart-1: hsl(0 0% 96%);
+  --chart-2: hsl(0 0% 64%);
+  --chart-3: hsl(346 85% 61%);
+  --chart-4: hsl(0 0% 54%);
+  --chart-5: hsl(0 0% 36%);
+  --success: hsl(152 48% 62%);
+  --warning: hsl(42 90% 62%);
+  --sidebar: #0E0E0E;
+  --sidebar-foreground: #F5F5F5;
+  --sidebar-primary: #F5F5F5;
+  --sidebar-primary-foreground: #0E0E0E;
+  --sidebar-accent: #1A1A1A;
+  --sidebar-accent-foreground: #F5F5F5;
+  --sidebar-border: #2A2A2A;
+  --sidebar-ring: #F5F5F5;
+  --line: var(--border);
+  --ink: var(--foreground);
+  --ink-soft: var(--muted-foreground);
+  --ink-faint: #8A8A8A;
+  --sand: var(--border);
+  --ivory: var(--background);
+  --ivory-raised: var(--card);
+}
+
+[data-density="compact"] .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.75rem;
+}
+
+[data-density="compact"] .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.5rem;
+}
+
+[data-density="compact"] .gap-2 {
+  gap: 0.25rem;
+}
+
+[data-density="compact"] .gap-3 {
+  gap: 0.375rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display font-medium;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-xs font-medium;
+    color: var(--ink-soft);
+  }
+
+  .eyebrow-rule {
+    @apply inline-block h-px w-12;
+    background-color: var(--sand);
+  }
+
+  .display {
+    @apply font-display font-medium tracking-tight;
+  }
+
+  .editorial-link {
+    @apply relative inline-flex items-center text-xs font-medium transition-colors;
+    color: var(--ink-soft);
+  }
+
+  .editorial-link:hover {
+    color: var(--ink);
+  }
+
+  .editorial-link::after {
+    @apply pointer-events-none absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-300 ease-out;
+    background-color: var(--ink);
+    content: "";
+  }
+
+  .editorial-link:hover::after,
+  .editorial-link:focus-visible::after {
+    @apply scale-x-100;
+  }
+
+  .liquid-fill {
+    @apply relative overflow-hidden;
+  }
+
+  .liquid-fill__slider {
+    @apply absolute inset-0 z-0 translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.7,0,0.3,1)];
+    background-color: var(--sand);
+  }
+
+  .liquid-fill:hover .liquid-fill__slider,
+  .liquid-fill:focus-visible .liquid-fill__slider,
+  .group:hover .liquid-fill__slider,
+  .group:focus-visible .liquid-fill__slider {
+    @apply translate-y-0;
+  }
+
+  .editorial-card-hover {
+    @apply relative;
+  }
+
+  .editorial-card-hover::before,
+  .editorial-card-hover::after {
+    @apply pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300;
+    content: "";
+  }
+
+  .editorial-card-hover::before {
+    background:
+      linear-gradient(var(--ink), var(--ink)) top left/32px 1px no-repeat,
+      linear-gradient(var(--ink), var(--ink)) top left/1px 32px no-repeat,
+      linear-gradient(var(--ink), var(--ink)) top right/32px 1px no-repeat,
+      linear-gradient(var(--ink), var(--ink)) top right/1px 32px no-repeat;
+  }
+
+  .editorial-card-hover::after {
+    background:
+      linear-gradient(var(--ink), var(--ink)) bottom left/32px 1px no-repeat,
+      linear-gradient(var(--ink), var(--ink)) bottom left/1px 32px no-repeat,
+      linear-gradient(var(--ink), var(--ink)) bottom right/32px 1px no-repeat,
+      linear-gradient(var(--ink), var(--ink)) bottom right/1px 32px no-repeat;
+  }
+
+  .editorial-card-hover:hover::before,
+  .editorial-card-hover:hover::after,
+  .editorial-card-hover:focus-within::before,
+  .editorial-card-hover:focus-within::after {
+    @apply opacity-100;
+  }
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fadeSlideUp {
+    0% {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes drawLine {
+    0% {
+      transform: scaleX(0);
+    }
+    100% {
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes drawSignature {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes marqueeSlide {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    animation: marqueeSlide 48s linear infinite;
+  }
+
+  .animate-fade-up {
+    animation: fadeSlideUp 900ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-line {
+    animation: drawLine 900ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    transform-origin: left;
+  }
+
+  .animate-signature {
+    animation: drawSignature 1200ms cubic-bezier(0.38, 0.01, 0.2, 1) forwards;
+  }
+
+  @keyframes bookCheck {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-book-check {
+    animation: bookCheck 150ms ease-out forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-line,
+  .animate-signature,
+  .animate-book-check {
+    animation: none !important;
+    opacity: 1;
+    transform: none !important;
+  }
+}
+/* Native app shells (Capacitor) stamp .is-native on <html> via NativeBridge.
+   Web chrome the shells replace (e.g. the header account link duplicated by
+   the bottom tab bar) opts out with data-native-hidden. */
+.is-native [data-native-hidden] {
+  display: none !important;
+}

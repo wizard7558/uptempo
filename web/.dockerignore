@@ -1,0 +1,11 @@
+node_modules
+.next
+.env*
+!.env.example
+.vercel
+.planning
+playwright-report
+test-results
+tests/e2e/.auth
+.uploads
+*.tsbuildinfo

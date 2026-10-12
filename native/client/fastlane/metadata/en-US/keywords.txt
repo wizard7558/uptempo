@@ -1,0 +1,1 @@
+salon,booking,hair,stylist,appointment,beauty,book,schedule,barber,nails,spa,haircut,color

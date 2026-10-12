@@ -1,0 +1,28 @@
+# Deliverfile — Uptempo Pro (com.uptempo.owner)
+#
+# Populates the App Store Connect listing from fastlane/metadata/en-US/.
+# Run via the `metadata` lane in the Fastfile, which supplies the App Store
+# Connect API key (ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH from the
+# gitignored .env). No credentials live in this file.
+#
+# This is NOT a submission — it only pushes text metadata.
+
+app_identifier("com.uptempo.owner")
+
+skip_binary_upload(true)   # binaries go up via the `beta` / `release` lanes
+skip_screenshots(true)     # screenshots are handled separately
+
+submit_for_review(false)   # populate metadata only — do not submit for review
+force(true)                # no interactive HTML preview confirmation
+precheck_include_in_app_purchases(false)
+
+# App Store Connect category IDs. These are the ASC API enum values and pass
+# through fastlane 2.237.0's AppCategory map unchanged (verified against the
+# installed gem). Matches listing.md: Business (primary) / Productivity.
+primary_category("BUSINESS")
+secondary_category("PRODUCTIVITY")
+
+# NOT set here (see the metadata scaffolding report):
+#   - Age rating (4+): the app_rating_config JSON schema is easy to get wrong;
+#     set the age rating in App Store Connect manually.
+#   - Copyright: no confirmed legal entity name — set manually.

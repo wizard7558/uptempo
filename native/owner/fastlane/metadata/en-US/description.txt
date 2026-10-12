@@ -1,0 +1,10 @@
+Uptempo Pro is the companion app for salon owners and staff on the Uptempo platform.
+
+• See your schedule and manage appointments from anywhere
+• Manage clients, services, and stylists
+• Take payments and track revenue, powered by Stripe
+• Sync with Google Calendar to keep your availability accurate
+• Get notified when new bookings arrive
+• Configure your booking page, policies, and team
+
+Built for the people who run the salon. Everything you manage on the Uptempo web dashboard, now on your phone.

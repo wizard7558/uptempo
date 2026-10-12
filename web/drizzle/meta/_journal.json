@@ -1,0 +1,230 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1772160303832,
+      "tag": "0000_parched_rick_jones",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1772199102622,
+      "tag": "0001_mushy_doomsday",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772200380075,
+      "tag": "0002_auth_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772211625959,
+      "tag": "0003_nappy_tusk",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772322808199,
+      "tag": "0004_dry_hairball",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773260380172,
+      "tag": "0005_notification_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773983035653,
+      "tag": "0006_appointment_indexes_webhook_lookup",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1774042134013,
+      "tag": "0007_spotty_clea",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1774475048060,
+      "tag": "0008_cynical_wild_child",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1774478330807,
+      "tag": "0009_lying_makkari",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1774888991542,
+      "tag": "0010_public_schema_catchup",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1774989000000,
+      "tag": "0011_calendar_direct_api",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1774990000000,
+      "tag": "0012_calendar_connections_error_count",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1774991000000,
+      "tag": "0013_memberships",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1774992000000,
+      "tag": "0014_stylist_service_overrides",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1774993000000,
+      "tag": "0015_stylist_contact_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1774994000000,
+      "tag": "0016_assistant_tasks_nullable_appointment",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1774995000000,
+      "tag": "0017_tenants_marketplace_listing",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774996000000,
+      "tag": "0018_quiz_responses",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1774997000000,
+      "tag": "0019_quiz_responses_trim",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1774998000000,
+      "tag": "0020_platform_billing",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1774999000000,
+      "tag": "0021_quiz_responses_contact",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1775000000000,
+      "tag": "0022_waitlist_signups",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1775001000000,
+      "tag": "0023_quiz_responses_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1775002000000,
+      "tag": "0024_tenant_industry_modules",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791540931714,
+      "tag": "0025_drop_legacy_single_tenant_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791571272134,
+      "tag": "0026_staff_role_provider",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791575681914,
+      "tag": "0027_assistant_tasks_module",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1791704550985,
+      "tag": "0028_walk_in_queue_module_off",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791790000000,
+      "tag": "0029_slot_waitlist_module_off",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791800000000,
+      "tag": "0030_gift_cards_module_off",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791820000000,
+      "tag": "0031_job_runs",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "ignoreCommand": "node scripts/vercel-ignore-build.mjs",
+  "crons": [
+    {
+      "path": "/api/calendar/sync",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/calendar/retry-push",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/send-reminders",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/send-sms-reminders",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/send-push-reminders",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/expire-stored-value",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/evaluate-capacity-coach",
+      "schedule": "0 2 * * 1"
+    },
+    {
+      "path": "/api/cron/charge-platform-fees",
+      "schedule": "0 6 1 * *"
+    },
+    {
+      "path": "/api/cron/materialize-recurrences",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/purge-private-files",
+      "schedule": "45 4 * * *"
+    },
+    {
+      "path": "/api/cron/expire-credits",
+      "schedule": "15 4 * * *"
+    },
+    {
+      "path": "/api/cron/waitlist-offers",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

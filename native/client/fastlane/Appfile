@@ -1,0 +1,4 @@
+app_identifier("com.uptempo.client")
+
+# Team id is read from env so credentials are never committed.
+team_id(ENV["APPLE_TEAM_ID"]) if ENV["APPLE_TEAM_ID"]
