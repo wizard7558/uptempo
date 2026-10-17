@@ -1,0 +1,946 @@
+{
+  "bridge_mode": {
+    "claude": "bridge",
+    "codex": "bridge"
+  },
+  "files": {
+    ".agents/roster/.gitignore": {
+      "sha256": "1a9ba1479331c1ee35add00917198fb47e2c75de2e39eae2c6ed9963f4eca2cd"
+    },
+    ".agents/roster/bridge.py": {
+      "sha256": "c0dd7471aaf82ffb7d0eefb344297e4f1434e3b1b85767cbdf5cf36980f03a0b"
+    },
+    ".agents/roster/bridge_arch.py": {
+      "sha256": "73d01f7e0c7f493041ef132bc06077c3a6d5178c7fc1ffa4b9d8a1c937f626fa"
+    },
+    ".agents/roster/bridge_cfg.py": {
+      "sha256": "40a442dac63f93a05ccd5689e44241051b044912a16f43208d26184659befb6f"
+    },
+    ".agents/roster/bridge_ctl.py": {
+      "sha256": "5fc5f06326ab22594f0e0e497eb89c7d431be5b526c0f610ee17086f7fe6e8db"
+    },
+    ".agents/roster/bridge_io.py": {
+      "sha256": "d0ba0da85fb5fb2b200ee10a9385aff629614eff16f0a966569fa26bae24d37c"
+    },
+    ".agents/roster/bridge_policy.py": {
+      "sha256": "e92e016c98f365652f5223912cb6186bfcb0f85cd0376c5f8ccafb1d51e81f98"
+    },
+    ".agents/roster/bridge_read.py": {
+      "sha256": "1647bd60492ce48d061699b3bd8b393493d7e83e06f555a1bf336be691c4410d"
+    },
+    ".agents/roster/bridge_run.py": {
+      "sha256": "3f582a0ec991a5d3772a46ba4dbe3d0ad14344749f2d3313f52d8dff0a94228b"
+    },
+    ".agents/roster/bridge_tools.py": {
+      "sha256": "94c7ac88f5c1209b2b17a9d2a95ebdb10107950b6d8cfd48d70b5f39f59dd359"
+    },
+    ".agents/roster/bridge_wt.py": {
+      "sha256": "0838db2bf3672676c95a5ba9ffaa18af0a531cdf379d56a98d6811975782c373"
+    },
+    ".agents/roster/bridge_xfer.py": {
+      "sha256": "b1e47e7bd66fd9e94ea7a21cb615d37d1007f9278019e30a048e3cc447f74ff2"
+    },
+    ".agents/roster/check.py": {
+      "sha256": "b9f401d7b136faef27f0e3736e2c6a6b33c9ea7b5b6a263f79f44c7bd1a99ba2"
+    },
+    ".agents/roster/check_core.py": {
+      "sha256": "44921d30996b096e15b26d746d8f33354e8f10db897ae4f3733da23aa00b9530"
+    },
+    ".agents/roster/check_policy.py": {
+      "sha256": "449e4c9f4a3084b2b113596d72f06e458de6b51f8d9df320657db1f7ac3d1aba"
+    },
+    ".agents/roster/facts.json": {
+      "sha256": "33e7f0f99732b51a2e268d80be6ea5451221b3d8770f2412ef52499659c921a6"
+    },
+    ".agents/skills/architect/LICENSE": {
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    ".agents/skills/architect/SKILL.md": {
+      "sha256": "d71956af7e1aca8ce2cc6795a3db5c3e7fa9fdb37d382ee2e4b85d79f3e7886a"
+    },
+    ".agents/skills/architect/references/design-red-flags.md": {
+      "sha256": "d0e639e4cc588ec865f930d3a4111faad60987ae36925917e319d7ceca7c69ce"
+    },
+    ".agents/skills/architect/references/rationale-template.md": {
+      "sha256": "6c7f536dbbb4062ccd1ffeb009e692b93f5dc51e9865c08f44216b3033ed2d57"
+    },
+    ".agents/skills/architect/references/runner-prompt.md": {
+      "sha256": "cd270c6bcdde256ccd6b89c4c88927bc990795a4c2ad04a3891583c1ac79f4d8"
+    },
+    ".agents/skills/arena/LICENSE": {
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    ".agents/skills/arena/SKILL.md": {
+      "sha256": "6faa5cc447927c6b1c4e7af719e1f27b79a47576b714781c251725d7a74dc1ac"
+    },
+    ".agents/skills/hillclimb/LICENSE": {
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    ".agents/skills/hillclimb/SKILL.md": {
+      "sha256": "09eca4b209bd237ac2efcf8abdb082149abcbe9d4ac3fb611500f7d055790fc6"
+    },
+    ".agents/skills/hillclimb/references/benchmark-checklist.md": {
+      "sha256": "62dee2d308e4b53e948a4b98288ef88a480ef676219ff66c394103f36e7027dd"
+    },
+    ".agents/skills/how/LICENSE": {
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    ".agents/skills/how/SKILL.md": {
+      "sha256": "8164ea926a82ba57f8762bdc09897b80f1c86e1acf7d1efb87378d95fa81c319"
+    },
+    ".agents/skills/how/references/explainer-prompt.md": {
+      "sha256": "ddb89cebefc24e2b54517a331aedfe045b6971e101f45c71b8cef4cccff45bff"
+    },
+    ".agents/skills/how/references/explorer-prompt.md": {
+      "sha256": "6300128385ee940fd42ecb84b0e623435440a2dc283eae54ee4a52ba56947ba1"
+    },
+    ".agents/skills/interrogate/LICENSE": {
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    ".agents/skills/interrogate/SKILL.md": {
+      "sha256": "a3e6b586fcb9461cf41ea4fb3ad66f140daa49f1ec6a7a7a885f8ac3e14688d9"
+    },
+    ".agents/skills/interrogate/references/code-quality-review.md": {
+      "sha256": "79162fda183eafd40d51661fbb5e151c7ba250f89e506ba17f5bd135dcbd50a8"
+    },
+    ".agents/skills/interrogate/references/lead-judgment.md": {
+      "sha256": "aad6db02a03fd22866852841e13854e9df18bdf028e7fb10c85f532f51a6d344"
+    },
+    ".agents/skills/interrogate/references/reviewer-prompt.md": {
+      "sha256": "f6005cc2b535006fca97a96c5bfda49df57312eedf1ffd8d1aaaf3eb33817c25"
+    },
+    ".agents/skills/interrogate/references/rubric.md": {
+      "sha256": "0f9c6bdb0b96e26dbde5f6407f417e0c02f54080e7a1268d8994f3c3ec6c5ac0"
+    },
+    ".agents/skills/reflect/LICENSE": {
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    ".agents/skills/reflect/SKILL.md": {
+      "sha256": "39747a59734df014433a203f1409218a0e8c4e8b682459ec86efbb61c3688a38"
+    },
+    ".agents/skills/reflect/references/divergent-reviewer.md": {
+      "sha256": "08cd29ff756e5c20481f1609db1fd5fb5e12404dfdc297a6e711051694e6c4ad"
+    },
+    ".agents/skills/reflect/references/judgment-reviewer.md": {
+      "sha256": "3a28b86bd33e03647c2cccd383c93cd46b727680fd63b630d4735b5340906024"
+    },
+    ".agents/skills/reflect/references/synthesizer.md": {
+      "sha256": "2c4123ca71a5b9d0f52c735c9e8f3a347bf6a38dc34cb68dc1f9bb1e59a31244"
+    },
+    ".agents/skills/reflect/references/tooling-reviewer.md": {
+      "sha256": "8cfaa4f2bfbcec7226ebba419045137b9d8aefa225c5faf0203aceebeb6d5737"
+    },
+    ".agents/skills/swarm/LICENSE": {
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    ".agents/skills/swarm/SKILL.md": {
+      "sha256": "ea223c2ecb48ffb245cdc537f3a7e66a3cab582e02be0256902d7c18f73bdcb8"
+    },
+    ".agents/skills/why/LICENSE": {
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    ".agents/skills/why/SKILL.md": {
+      "sha256": "34b83ee2382b99c5f1876100b135e29328195af3f12fd3bdf18450e2d19e049e"
+    },
+    ".agents/skills/why/references/epistemics.md": {
+      "sha256": "d54a2361b2d5973bc3fe2edf62f446d87935974d4b40d47f23b9529f956ca758"
+    },
+    ".agents/skills/why/references/investigator-prompt.md": {
+      "sha256": "c44afba186f899094f3694e6c9d6de5d14ff7c4ce28b787a9f50fc789c9a7fc3"
+    },
+    ".agents/skills/why/references/source-playbook.md": {
+      "sha256": "9ae9dcb9d09111c9facc68510331c5aba4aed9b1b057314ff1fc0e166ad3993a"
+    },
+    ".agents/skills/why/references/sources/code-archaeology.md": {
+      "sha256": "a4a3970e9db448054aed676f3f7feeee667b4b69f0bd57c8fd72b751be687cc7"
+    },
+    ".agents/skills/why/references/sources/databricks.md": {
+      "sha256": "236ede7aab6454662a992db088a5393537a5233a4c26719c93188f9e174488f6"
+    },
+    ".agents/skills/why/references/sources/datadog.md": {
+      "sha256": "b139faac5dc11b8f26c8255dce6033c1a6ac143b038d3dd103f2034c5dbec9cd"
+    },
+    ".agents/skills/why/references/sources/incident-postmortem.md": {
+      "sha256": "bf2661f1a81c37700884a45b77d6289be0c802b065febced31990e6564510839"
+    },
+    ".agents/skills/why/references/sources/linear.md": {
+      "sha256": "01304e7f1badfcfb78babbb0edcadeb3cc8dd3f713793420cdff24ba190f907c"
+    },
+    ".agents/skills/why/references/sources/notion.md": {
+      "sha256": "3bcfa695c49dfad4ac036d5d7181c12585f55ac04f1936198d16ab75a2788997"
+    },
+    ".agents/skills/why/references/sources/sentry.md": {
+      "sha256": "2d4f83048eac1df530b399e2aed75dd7c9c18577b7665420aaeb96d0ceb0b702"
+    },
+    ".agents/skills/why/references/sources/slack.md": {
+      "sha256": "3bc6309f5c7b26ace3b919dbd7f7b048861dd2020f910fe24f656cc74b3b661c"
+    },
+    ".agents/skills/why/references/synthesizer-prompt.md": {
+      "sha256": "11c62671aa7b7a6e3d36929ffe2b59bf95e6ca664eee4d93e6ee527dd3390ddb"
+    },
+    ".claude/agents/architect-runner-cross.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "e5bd930a667c6429dbdee3f6fef6593d4b278a0e4b6c9ff57509fb25ca6eed6e"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "96e46e4d6e09facc728cc2bda45a8d9f0fed6ba24d2d1947d77a944d71a2a876"
+        }
+      },
+      "sha256": "0fdbd4a5890c8e49f4ba9383c59d770d9b2a55d7d85064aa0a479309b334e26a"
+    },
+    ".claude/agents/architect-runner.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "daa029d2c6356b9acf29c3494032425b1417fadf9b5f5067e0ac0d4fe9406c7d"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "96e46e4d6e09facc728cc2bda45a8d9f0fed6ba24d2d1947d77a944d71a2a876"
+        }
+      },
+      "sha256": "7ee35263e4da358e3f72f43ac304915883c392c1ea8273217b59061e38aec582"
+    },
+    ".claude/agents/arena-judge-cross.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "0c1d5128b7ecbbdf52ea72e0403b2c64e629345cba44b958e8ed328761712181"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "af570c62b4715b8468127755c40cd9877d4abba1e8f17b16a8a30b653d854648"
+        }
+      },
+      "sha256": "68e7814ad9977f914384f10c2788df720f494ed6aed0c0bae5ee2ae21d840fde"
+    },
+    ".claude/agents/arena-judge.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "9a9286d2dd91c5dc506a51b3a245d7143f8999628762ecc02ac46d965dbba1e8"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "af570c62b4715b8468127755c40cd9877d4abba1e8f17b16a8a30b653d854648"
+        }
+      },
+      "sha256": "46807d6e9051ab2685338d5d4756f7373382aa029b89d50fcf2aeaf215d18499"
+    },
+    ".claude/agents/arena-runner-cross.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b282828f2d7e4cb3fd4d34188dd879231aca3e3ed492f7de1ff7f9f5e2828ba6"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "061db7c86a01bd43ac39617ec19daded70459e477c9304cf173ccb40b1329da1"
+        }
+      },
+      "sha256": "be91148394c07eae9c22232ceceb84c0a1cd5df12ac38537b4c07526b8f7548a"
+    },
+    ".claude/agents/arena-runner.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b4bc86094b508499a07cff0fefd59261de829471221a4493e362cf4470b8f666"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "061db7c86a01bd43ac39617ec19daded70459e477c9304cf173ccb40b1329da1"
+        }
+      },
+      "sha256": "1889876daa40d9a05b85cf528401a0c6283d8b8ad90590993ef90073cc4be237"
+    },
+    ".claude/agents/bug-fix.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "c1cd63e6112c786537b3a2e0b49fa21ed92a7350ba3eeb5facbf9221a7c38082"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "3080b360ec8b2e0fbb1d060c80814d0d35b90e2f290ef01f968e054bc4d3d1b9"
+        }
+      },
+      "sha256": "d290356b58caeb8d74720e468dbc9e33be1cf492ef8a9d0556dfcb08596db4e1"
+    },
+    ".claude/agents/clerk.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "922d307be004914bd27023e208a3c2c2720cfa5460452f3d50753b160270c0b3"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "1537bde0fea6168884187946602630067b774a89134b2232d3576a71600a7211"
+        }
+      },
+      "sha256": "6ce3703fb9474769e4d9aef435cc93ec60fafc6ae88b272eb39613ee035bea6c"
+    },
+    ".claude/agents/data-pipeline.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "0bad73fdbaa6a7bec3446b45112ba908ee8c25f03375334217a49d85e6274b2d"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "cd5b8509c80504632becccd9fbcaaba5e617721945b251982c74c43cd8373298"
+        }
+      },
+      "sha256": "15176a783d9a986568eda85ffd6318e9528cb7ff7d2e6a6d48716ecc466cae82"
+    },
+    ".claude/agents/feature.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "aaf41b374a29cd47dae4f056744d169b8138ab0250c44d0baf415a81347b1c43"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "6788b74654a6ce1cf7a61b64173be0e5fca1a92f85cc386df470e4b12ccbd8ec"
+        }
+      },
+      "sha256": "5bbff6ed16da37a923db8d0b14bca47f82afe0e74b43521a490efbac99d0f419"
+    },
+    ".claude/agents/hardest-tasks.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "142fe1d7193199c8d236681d800ec6b91277bc1836fa1cb182fa0ff8b23b04ed"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "b5c2e5c3b7053a604eb551df7f7ac17fa4aa8e2f879cc7270d7891c8012e81b9"
+        }
+      },
+      "sha256": "813200916f3297db97f2a55b4359f106b507fb7d1adb46c2ccffc893a1b58dda"
+    },
+    ".claude/agents/hillclimb.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b37f0710c941900dfccdb6da4786dce40e6ecf8d9acef51209e8f71eafb8f199"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "bf53dfb966865045df3a9c279dd3199541efa5979e76c39816ac82b3d7f5a749"
+        }
+      },
+      "sha256": "0543b9e19a7725fe6e9fb8054c2e357d919f50da1171c906291ad56c37e2c503"
+    },
+    ".claude/agents/how-explainer.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "0fecb5ad80f8ddb898f8145eae868e6102065e244de48e57fe2da65ce89b16a9"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "a3af5cac13daf793b979ad06fae0dd849cd2a008cc6339ee80c7805528ac0b45"
+        }
+      },
+      "sha256": "8e3d134f989083fac89d4b8ac5bdea91b294898f70a9647b805ef69597f0a012"
+    },
+    ".claude/agents/how-explorer.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "c3e4b4b1c905c79a26926d61cd45e980faacc07576c157047eac35c3a0033957"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "be78db1b4e51ac57289228051fd63e21765a2bab7a40ec905b62808e4e1cbc5a"
+        }
+      },
+      "sha256": "75f53f336cd9a22c69fd68abbb9cce5572a3cf3f207c8966dcd3e248b69dbc13"
+    },
+    ".claude/agents/interrogate-reviewer-cross.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "6893bd127947c24cabad195e30288954b25a54791b81e7bb24078f4695458ecb"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "8bc7c65268cb375f6f2efd74f4dfd651920e27ca501a581c8f98357a14974c0d"
+        }
+      },
+      "sha256": "12b1a337199012e64b22cd568fbdc3bbf163d85fbbe5214348199d8172e240f0"
+    },
+    ".claude/agents/interrogate-reviewer.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "10de4c2029615693f600c68edf45b719c5d91c4e67cc30e21808aa785aefa988"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "8bc7c65268cb375f6f2efd74f4dfd651920e27ca501a581c8f98357a14974c0d"
+        }
+      },
+      "sha256": "d41149f631d9afcdc060f14065676894c72fe6f567a34dd1c7f46b610a5df61c"
+    },
+    ".claude/agents/judgment-prose.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "34a39c333200aea72920bed1555ebe221b131cd2ca17dfc8fb64bb356783345b"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "a88185cd7d90d002239ff605c1465d8bddf3a63312845355a0a8768f5388514e"
+        }
+      },
+      "sha256": "b8a87655d224c45c55d21f8a0935fda3f6a4c3582be0aae8d00b71bbef9e1287"
+    },
+    ".claude/agents/migration.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "e83c278bc56f20bb905d6e943e32b1af050d17d47d72cff41797bed40600309a"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "c426242cec352a36b8dfca429f2d24d16341be8b634e57a7ed0d883afb1cc780"
+        }
+      },
+      "sha256": "f01dc52f424a614cdebdfe59eed9f5f75bd4f0119472af0fbb24ebd6b6d18e92"
+    },
+    ".claude/agents/perf-issue.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b11e26ad4e9f45e04edc5e04cc56eec966fea1fadf3f937cf325951593cdb811"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "e71a56fa0ef123b35cd797fa58e6d235705669c42492903ad4c387f9b18697c5"
+        }
+      },
+      "sha256": "a41cc92511e3dd69fb9d370026a84c7b57e3ff5a47342413498f743e0e0a23c8"
+    },
+    ".claude/agents/planner.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "d649a7327b2fcd1436ce55bbc7c853df3931bc73542bb5303de879c7ba3d92eb"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "7a259bca2d53e8f4dccb3b8b043da345ab15c90becd28414b8027b5502643725"
+        }
+      },
+      "sha256": "be65c8750ba0928142bb8663b4a9d292083985a90f5575c8ad864ca403f88200"
+    },
+    ".claude/agents/quick-fix.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "ce3e61a075d2e6bb3daafcaaa37f8f6287044196f04ae88093213e312225b74f"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "7f80892e48a8cb4a8f4714fe5118fc69348a8b873a86233b3bb852ee1a33e02c"
+        }
+      },
+      "sha256": "b4b35861775022f217412f760bb7533dd4d31dcaa57032cef556abc4e5f75c17"
+    },
+    ".claude/agents/reflect-reviewer.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "c024c2e4cd3d0779c25689fd76195e9cbe03004751b9e87c3823b09835aa05b2"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "cc19e03a1edb3b4b8d79b778da56afc880bb4736423fb7d2d4ebae31d2cbe842"
+        }
+      },
+      "sha256": "62e56091f1a40e41a48bfa0b5ea09f6ef6a6b6526e9698efbd5bfdd966048ebf"
+    },
+    ".claude/agents/reflect-tooling.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "64655e8469df4236d2790048256f2ad9f6e20a348d4094b9ab8b65a1cd855511"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "87ebd8814b69fbb6eab3a7ab7493eff52adc30991f6ec3d1f4936a58b542a518"
+        }
+      },
+      "sha256": "cac77acff5e31fbd95262ec53262e4ff26c6ca8edaa85aeb27d1f9757129d8e9"
+    },
+    ".claude/agents/security-reviewer.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "9aaaab291186a7b79f1b0984cebf2da228e491591cfed01f3ca7ddca860d1682"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "411ebd6e7798664a37688e61ad35e9c62068afe07e7aa297bf18b02f4f529119"
+        }
+      },
+      "sha256": "46baf0d52b670f5405ca32876c0ff6930df0f0a12d3c0bb34f113cc68b833de8"
+    },
+    ".claude/agents/swarm-worker.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "e179b881d5d7ba6944a6c7c6834fc943191a87064b384b158197314759d6d4c8"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "76fe9e09aac1b63eb2797ebbef9963864ac2d3c3af57c62a55d5bac3828f1052"
+        }
+      },
+      "sha256": "c323e47acaed3a821d49445ceae531c56c18ee974ebc46c64abfdc990557c9a2"
+    },
+    ".claude/agents/verifier.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "640d90eed4aa4a9779a7f6973228760ded66f3df86ac51286b5e00a6775e25e2"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "6faf1351acfb3d75cd873e1f1e18778ea7a96f15e75e0cc87345f4a205c50b1c"
+        }
+      },
+      "sha256": "039c2bac1caabb48c45221bcd7e918d56cb274cc85cba4c75b1c21c0cd4a6ff0"
+    },
+    ".claude/agents/why-investigator.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b624921a44dac97ed84f5fa19199246c905d184867097907f3c38fae9369719b"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "98d89b40825f1b709fc1a3aefeec2ab978cb4e68e7de026275e684230d5564c2"
+        }
+      },
+      "sha256": "887fcc93805559a727f221fbfc7d45e272799209fd06b9741bd3efeadeb3576e"
+    },
+    ".claude/agents/why-synthesizer.md": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "a63184e599be915f60403304b2b63b46aab09e905c0370d4e34e7c83711a95f8"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "98553c314c3af32231ea77d61f6693ae8eb666ecddce8f445efffda66d4dba2e"
+        }
+      },
+      "sha256": "cf1e5e95a77620c086a257eed813ad99f8d33d0bef2573d34538728ed718977a"
+    },
+    ".codex/agents/architect-runner-cross.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "e5bd930a667c6429dbdee3f6fef6593d4b278a0e4b6c9ff57509fb25ca6eed6e"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "96e46e4d6e09facc728cc2bda45a8d9f0fed6ba24d2d1947d77a944d71a2a876"
+        }
+      },
+      "sha256": "7abff417838390b85c6752048a546f8d073bf8d7671df780ee1ca127a90b69ee"
+    },
+    ".codex/agents/architect-runner.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "daa029d2c6356b9acf29c3494032425b1417fadf9b5f5067e0ac0d4fe9406c7d"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "96e46e4d6e09facc728cc2bda45a8d9f0fed6ba24d2d1947d77a944d71a2a876"
+        }
+      },
+      "sha256": "43e8f37a24fdc98b3e087e13e953f33989710b3e531c6ed44a65a406f82abfc4"
+    },
+    ".codex/agents/arena-judge-cross.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "0c1d5128b7ecbbdf52ea72e0403b2c64e629345cba44b958e8ed328761712181"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "af570c62b4715b8468127755c40cd9877d4abba1e8f17b16a8a30b653d854648"
+        }
+      },
+      "sha256": "64a7d311a72cfca9d44082f2ad9b4663b844149d2b173dc69de903bb39d0a558"
+    },
+    ".codex/agents/arena-judge.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "9a9286d2dd91c5dc506a51b3a245d7143f8999628762ecc02ac46d965dbba1e8"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "af570c62b4715b8468127755c40cd9877d4abba1e8f17b16a8a30b653d854648"
+        }
+      },
+      "sha256": "6ffa643a78781a9a50321762ecdc330d1b5e3d73a9aabbd8c4915cfa239cc80e"
+    },
+    ".codex/agents/arena-runner-cross.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b282828f2d7e4cb3fd4d34188dd879231aca3e3ed492f7de1ff7f9f5e2828ba6"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "061db7c86a01bd43ac39617ec19daded70459e477c9304cf173ccb40b1329da1"
+        }
+      },
+      "sha256": "1863a85b5b029dc6d31111f81bc2da8a51e4059566ccdc34d6b862ce4a512fec"
+    },
+    ".codex/agents/arena-runner.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b4bc86094b508499a07cff0fefd59261de829471221a4493e362cf4470b8f666"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "061db7c86a01bd43ac39617ec19daded70459e477c9304cf173ccb40b1329da1"
+        }
+      },
+      "sha256": "6b48f1fd39151f0f1d67402038af5664a53b14c9c2aa3303579a525f71ca841e"
+    },
+    ".codex/agents/bug-fix.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "c1cd63e6112c786537b3a2e0b49fa21ed92a7350ba3eeb5facbf9221a7c38082"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "3080b360ec8b2e0fbb1d060c80814d0d35b90e2f290ef01f968e054bc4d3d1b9"
+        }
+      },
+      "sha256": "45d385080a389c6cd27ac2294f1f534ab19da7c092f3857982d98f4b8e082eb3"
+    },
+    ".codex/agents/clerk.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "922d307be004914bd27023e208a3c2c2720cfa5460452f3d50753b160270c0b3"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "1537bde0fea6168884187946602630067b774a89134b2232d3576a71600a7211"
+        }
+      },
+      "sha256": "89e02c65931c0d83bd3174b0b6968c4a90c77b6a8eaab5f779b2f5a371e50e5d"
+    },
+    ".codex/agents/data-pipeline.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "0bad73fdbaa6a7bec3446b45112ba908ee8c25f03375334217a49d85e6274b2d"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "cd5b8509c80504632becccd9fbcaaba5e617721945b251982c74c43cd8373298"
+        }
+      },
+      "sha256": "1e750def1dc7849c08d63afc309c490d9c3e8256cc8450b1da3d57ff3c95efee"
+    },
+    ".codex/agents/feature.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "aaf41b374a29cd47dae4f056744d169b8138ab0250c44d0baf415a81347b1c43"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "6788b74654a6ce1cf7a61b64173be0e5fca1a92f85cc386df470e4b12ccbd8ec"
+        }
+      },
+      "sha256": "7c76c7d5125efd3d26d0a72a7a263bd5bf824e5a6af05176d912145c70bb3c02"
+    },
+    ".codex/agents/hardest-tasks.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "142fe1d7193199c8d236681d800ec6b91277bc1836fa1cb182fa0ff8b23b04ed"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "b5c2e5c3b7053a604eb551df7f7ac17fa4aa8e2f879cc7270d7891c8012e81b9"
+        }
+      },
+      "sha256": "b3e5159d634b6ba0904ac3118309d9c119dd528d698759a5bedef1eb9d19facb"
+    },
+    ".codex/agents/hillclimb.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b37f0710c941900dfccdb6da4786dce40e6ecf8d9acef51209e8f71eafb8f199"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "bf53dfb966865045df3a9c279dd3199541efa5979e76c39816ac82b3d7f5a749"
+        }
+      },
+      "sha256": "cd3cba5dce0cd9b606e1f33e550bce259cfd1c1bee43e39135be1cb80f94f9e0"
+    },
+    ".codex/agents/how-explainer.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "0fecb5ad80f8ddb898f8145eae868e6102065e244de48e57fe2da65ce89b16a9"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "a3af5cac13daf793b979ad06fae0dd849cd2a008cc6339ee80c7805528ac0b45"
+        }
+      },
+      "sha256": "9a43f7dca691ba1548cc346c3205ecca88dc867db69c42c61c42ac9e00426013"
+    },
+    ".codex/agents/how-explorer.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "c3e4b4b1c905c79a26926d61cd45e980faacc07576c157047eac35c3a0033957"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "be78db1b4e51ac57289228051fd63e21765a2bab7a40ec905b62808e4e1cbc5a"
+        }
+      },
+      "sha256": "0c50f6983fa2de2fa96ebc4722a33913a83fb97cd47b8529d4c4035efe379688"
+    },
+    ".codex/agents/interrogate-reviewer-cross.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "6893bd127947c24cabad195e30288954b25a54791b81e7bb24078f4695458ecb"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "8bc7c65268cb375f6f2efd74f4dfd651920e27ca501a581c8f98357a14974c0d"
+        }
+      },
+      "sha256": "4784b6a7ae6e74ce4cb77114abb000055fcf16b348f75ef91cc3eb90c9884ab5"
+    },
+    ".codex/agents/interrogate-reviewer.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "10de4c2029615693f600c68edf45b719c5d91c4e67cc30e21808aa785aefa988"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "8bc7c65268cb375f6f2efd74f4dfd651920e27ca501a581c8f98357a14974c0d"
+        }
+      },
+      "sha256": "37c64c94a2b309294790591ae7425ba53be60d87365fa6fd4be34ff510d715dc"
+    },
+    ".codex/agents/judgment-prose.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "34a39c333200aea72920bed1555ebe221b131cd2ca17dfc8fb64bb356783345b"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "a88185cd7d90d002239ff605c1465d8bddf3a63312845355a0a8768f5388514e"
+        }
+      },
+      "sha256": "47abadabe3f89064dfadfb9a7687cf002f66419cfa879d42d5804ff50c4c56dd"
+    },
+    ".codex/agents/migration.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "e83c278bc56f20bb905d6e943e32b1af050d17d47d72cff41797bed40600309a"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "c426242cec352a36b8dfca429f2d24d16341be8b634e57a7ed0d883afb1cc780"
+        }
+      },
+      "sha256": "256008bdb6c658df14086e31b51eb3e536b0070b8331955e8ccca5fe212c3f50"
+    },
+    ".codex/agents/perf-issue.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b11e26ad4e9f45e04edc5e04cc56eec966fea1fadf3f937cf325951593cdb811"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "e71a56fa0ef123b35cd797fa58e6d235705669c42492903ad4c387f9b18697c5"
+        }
+      },
+      "sha256": "ef53e314c16a91d68d4ff724c64fa719cba5e3037c0a11d1ec97fbf5b101470a"
+    },
+    ".codex/agents/planner.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "d649a7327b2fcd1436ce55bbc7c853df3931bc73542bb5303de879c7ba3d92eb"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "7a259bca2d53e8f4dccb3b8b043da345ab15c90becd28414b8027b5502643725"
+        }
+      },
+      "sha256": "6288383f1a7364418ec9871fd208f76db6990d2cfdf75452c99d35b2476656e2"
+    },
+    ".codex/agents/quick-fix.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "ce3e61a075d2e6bb3daafcaaa37f8f6287044196f04ae88093213e312225b74f"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "7f80892e48a8cb4a8f4714fe5118fc69348a8b873a86233b3bb852ee1a33e02c"
+        }
+      },
+      "sha256": "744dfa8fcf74c15027e3c74a7415221fb1ff40417f1512e4fffc677dca5d92c9"
+    },
+    ".codex/agents/reflect-reviewer.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "c024c2e4cd3d0779c25689fd76195e9cbe03004751b9e87c3823b09835aa05b2"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "cc19e03a1edb3b4b8d79b778da56afc880bb4736423fb7d2d4ebae31d2cbe842"
+        }
+      },
+      "sha256": "c2bc81c04d3506f0f56e0fdf22d16e484b9a78fd8548ec426719847a6308437a"
+    },
+    ".codex/agents/reflect-tooling.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "64655e8469df4236d2790048256f2ad9f6e20a348d4094b9ab8b65a1cd855511"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "87ebd8814b69fbb6eab3a7ab7493eff52adc30991f6ec3d1f4936a58b542a518"
+        }
+      },
+      "sha256": "3d59763085c0be03ef538383fa22fb5927c20953c4508e8fa932969cd8d164c7"
+    },
+    ".codex/agents/security-reviewer.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "9aaaab291186a7b79f1b0984cebf2da228e491591cfed01f3ca7ddca860d1682"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "411ebd6e7798664a37688e61ad35e9c62068afe07e7aa297bf18b02f4f529119"
+        }
+      },
+      "sha256": "eb761ac823d7a45cf9b0e08c5fc24f831b49273957751bc6c640215800bc5cc8"
+    },
+    ".codex/agents/swarm-worker.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "e179b881d5d7ba6944a6c7c6834fc943191a87064b384b158197314759d6d4c8"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "76fe9e09aac1b63eb2797ebbef9963864ac2d3c3af57c62a55d5bac3828f1052"
+        }
+      },
+      "sha256": "eff39ad95c46cbbcc9a897deed8ec644153405870d8bf407c81494a18f8eabb6"
+    },
+    ".codex/agents/verifier.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "640d90eed4aa4a9779a7f6973228760ded66f3df86ac51286b5e00a6775e25e2"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "6faf1351acfb3d75cd873e1f1e18778ea7a96f15e75e0cc87345f4a205c50b1c"
+        }
+      },
+      "sha256": "8fdb280c8229e03eb47b99eb850ca4478f8a95b9521087b4cae3ecfd18464279"
+    },
+    ".codex/agents/why-investigator.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "b624921a44dac97ed84f5fa19199246c905d184867097907f3c38fae9369719b"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "98d89b40825f1b709fc1a3aefeec2ab978cb4e68e7de026275e684230d5564c2"
+        }
+      },
+      "sha256": "d0bc0241bfc7f351722927ede9ba9cd6498e520f9a9ce7813df66a1a92abaf04"
+    },
+    ".codex/agents/why-synthesizer.toml": {
+      "fields": {
+        "description": {
+          "source": "roster",
+          "written": "a63184e599be915f60403304b2b63b46aab09e905c0370d4e34e7c83711a95f8"
+        },
+        "instructions": {
+          "source": "roster",
+          "written": "98553c314c3af32231ea77d61f6693ae8eb666ecddce8f445efffda66d4dba2e"
+        }
+      },
+      "sha256": "adb18445100314dd8474e18e5cdbbc0d870dcc76bdc38d0eab0ca174907db601"
+    },
+    ".codex/config.toml": {
+      "sha256": "cb5ae4d38b859b51b9429fe199606acaeb181d6428fbb53b67ff8083d965fcb0"
+    }
+  },
+  "use_for": {
+    "CLAUDE.md": {
+      "architect-runner": "Design sketch in its own worktree before code",
+      "architect-runner-cross": "Design sketch in its own worktree before code (second model)",
+      "arena-judge": "Scoring arena candidates, picking a base, naming parts to graft",
+      "arena-judge-cross": "Scoring arena candidates, picking a base, naming parts to graft (second model)",
+      "arena-runner": "One independent arena candidate, built without seeing others",
+      "arena-runner-cross": "One independent arena candidate, built without seeing others (second model)",
+      "bug-fix": "Failing test first, then root-cause fix",
+      "clerk": "PR descriptions, task tracker entries, changelog lines",
+      "data-pipeline": "Data transformation, warehouse, and ingestion changes, with reconciled numbers",
+      "feature": "Specified feature or refactor, with tests",
+      "hardest-tasks": "Hardest, ambiguous, or cross-cutting implementation work",
+      "hillclimb": "One hillclimb attempt: change, measure, report",
+      "how-explainer": "Explaining how a subsystem works, with file:line citations",
+      "how-explorer": "File:line map of a code path for a how question",
+      "interrogate-reviewer": "Adversarial diff or plan review from one assigned angle",
+      "interrogate-reviewer-cross": "Adversarial diff or plan review from one assigned angle (second model)",
+      "judgment-prose": "Design tradeoffs, technical docs, PR narratives, client explanations",
+      "migration": "Database migrations and access policies, with tenant-isolation tests",
+      "perf-issue": "Performance fixes, with before and after measurements",
+      "planner": "Decomposing multi-step work into ordered, verifiable tasks",
+      "quick-fix": "Typo, rename, one-line change, config value, single-fact lookup",
+      "reflect-reviewer": "Reflect review from one lens (judgment, divergent) or as synthesizer",
+      "reflect-tooling": "Tooling-lens reflect review: commands, paths, missed lookups",
+      "security-reviewer": "Tenant isolation, authz, and secrets review; required for migrations",
+      "swarm-worker": "One slice of a parallel fan-out, nothing outside it",
+      "verifier": "Running tests and builds to check work; reports, never fixes",
+      "why-investigator": "Cited raw evidence from one source category for a why question",
+      "why-synthesizer": "Cited account of why something is the way it is"
+    }
+  },
+  "version": 3
+}

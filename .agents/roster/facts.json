@@ -1,0 +1,1039 @@
+{
+  "bridgeMode": {
+    "claude": "bridge",
+    "codex": "bridge"
+  },
+  "cap": 200000,
+  "efforts": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+  ],
+  "models": {
+    "claude-haiku-5-5": "anthropic",
+    "claude-opus-5-5": "anthropic",
+    "claude-sonnet-5-5": "anthropic",
+    "gpt-6-astra": "openai",
+    "gpt-6.1-sol": "openai"
+  },
+  "retiredRoles": [],
+  "retiredWorkflows": [],
+  "roles": {
+    "architect-runner": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-architect-runner-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run architect-runner --task-file .agents/roster/tmp/task-architect-runner-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "panel",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "worktree"
+    },
+    "architect-runner-cross": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-architect-runner-cross-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run architect-runner-cross --task-file .agents/roster/tmp/task-architect-runner-cross-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "panel",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": false,
+      "tools": null,
+      "writes": "worktree"
+    },
+    "arena-judge": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-arena-judge-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run arena-judge --task-file .agents/roster/tmp/task-arena-judge-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "panel",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "commands"
+    },
+    "arena-judge-cross": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-arena-judge-cross-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run arena-judge-cross --task-file .agents/roster/tmp/task-arena-judge-cross-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "panel",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "commands"
+    },
+    "arena-runner": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-arena-runner-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run arena-runner --task-file .agents/roster/tmp/task-arena-runner-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "panel",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "worktree"
+    },
+    "arena-runner-cross": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-arena-runner-cross-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run arena-runner-cross --task-file .agents/roster/tmp/task-arena-runner-cross-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "panel",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": false,
+      "tools": null,
+      "writes": "worktree"
+    },
+    "bug-fix": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-bug-fix-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run bug-fix --task-file .agents/roster/tmp/task-bug-fix-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {}
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "high",
+      "group": "execution",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": false,
+      "tools": null,
+      "writes": "yes"
+    },
+    "clerk": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-clerk-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run clerk --task-file .agents/roster/tmp/task-clerk-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-haiku-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "low",
+      "group": "light",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-haiku-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "docs"
+    },
+    "data-pipeline": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-data-pipeline-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run data-pipeline --task-file .agents/roster/tmp/task-data-pipeline-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {}
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "high",
+      "group": "execution",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": true,
+      "tools": null,
+      "writes": "yes"
+    },
+    "feature": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-feature-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run feature --task-file .agents/roster/tmp/task-feature-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-sonnet-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "medium",
+      "group": "execution",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-sonnet-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "yes"
+    },
+    "hardest-tasks": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-hardest-tasks-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run hardest-tasks --task-file .agents/roster/tmp/task-hardest-tasks-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "heavy",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "yes"
+    },
+    "hillclimb": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-hillclimb-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run hillclimb --task-file .agents/roster/tmp/task-hillclimb-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "high",
+      "group": "execution",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": false,
+      "tools": null,
+      "writes": "worktree"
+    },
+    "how-explainer": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-how-explainer-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run how-explainer --task-file .agents/roster/tmp/task-how-explainer-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "high",
+      "group": "heavy",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "no"
+    },
+    "how-explorer": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-how-explorer-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run how-explorer --task-file .agents/roster/tmp/task-how-explorer-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-sonnet-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "medium",
+      "group": "gather",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-sonnet-5-5",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "no"
+    },
+    "interrogate-reviewer": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-interrogate-reviewer-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run interrogate-reviewer --task-file .agents/roster/tmp/task-interrogate-reviewer-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "panel",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "commands"
+    },
+    "interrogate-reviewer-cross": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-interrogate-reviewer-cross-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run interrogate-reviewer-cross --task-file .agents/roster/tmp/task-interrogate-reviewer-cross-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "panel",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "commands"
+    },
+    "judgment-prose": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-judgment-prose-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run judgment-prose --task-file .agents/roster/tmp/task-judgment-prose-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "high",
+      "group": "heavy",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "yes"
+    },
+    "migration": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-migration-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run migration --task-file .agents/roster/tmp/task-migration-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {}
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "high",
+      "group": "execution",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": false,
+      "tools": null,
+      "writes": "yes"
+    },
+    "perf-issue": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-sonnet-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-perf-issue-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run perf-issue --task-file .agents/roster/tmp/task-perf-issue-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6.1-sol via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {}
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "high",
+      "group": "execution",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6.1-sol",
+      "network": false,
+      "tools": null,
+      "writes": "yes"
+    },
+    "planner": {
+      "bridgeTarget": "codex",
+      "claude": {
+        "bridged": true,
+        "extras": {
+          "frontmatter": {}
+        },
+        "fallback": "claude-opus-5-5",
+        "kind": "foreign",
+        "shimText": "## Bridge to Codex\n\nYou are a thin relay to the Codex CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the Write tool to create the request file `<repo-root>/.agents/roster/tmp/task-planner-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE Bash call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run planner --task-file .agents/roster/tmp/task-planner-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE Bash call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on gpt-6-astra via the codex CLI."
+      },
+      "codex": {
+        "bridged": false,
+        "extras": {
+          "tables": {},
+          "top": {
+            "sandbox_mode": "\"read-only\""
+          }
+        },
+        "kind": "native"
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "plan",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "gpt-6-astra",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "no"
+    },
+    "quick-fix": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-quick-fix-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run quick-fix --task-file .agents/roster/tmp/task-quick-fix-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-haiku-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "low",
+      "group": "light",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-haiku-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "yes"
+    },
+    "reflect-reviewer": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {
+            "disallowedTools": "Write, Edit, NotebookEdit"
+          }
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-reflect-reviewer-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run reflect-reviewer --task-file .agents/roster/tmp/task-reflect-reviewer-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "heavy",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "no"
+    },
+    "reflect-tooling": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {
+            "disallowedTools": "Write, Edit, NotebookEdit"
+          }
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-reflect-tooling-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run reflect-tooling --task-file .agents/roster/tmp/task-reflect-tooling-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-sonnet-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "medium",
+      "group": "gather",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-sonnet-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "no"
+    },
+    "security-reviewer": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-security-reviewer-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run security-reviewer --task-file .agents/roster/tmp/task-security-reviewer-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "xhigh",
+      "group": "heavy",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "commands"
+    },
+    "swarm-worker": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-swarm-worker-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run swarm-worker --task-file .agents/roster/tmp/task-swarm-worker-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-sonnet-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "medium",
+      "group": "execution",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-sonnet-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "yes"
+    },
+    "verifier": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {}
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-verifier-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run verifier --task-file .agents/roster/tmp/task-verifier-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-sonnet-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "medium",
+      "group": "execution",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-sonnet-5-5",
+      "network": false,
+      "tools": "Read, Glob, Grep, Bash",
+      "writes": "commands"
+    },
+    "why-investigator": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {
+            "disallowedTools": "Write, Edit, NotebookEdit"
+          }
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-why-investigator-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run why-investigator --task-file .agents/roster/tmp/task-why-investigator-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-sonnet-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "medium",
+      "group": "gather",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-sonnet-5-5",
+      "network": true,
+      "tools": null,
+      "writes": "no"
+    },
+    "why-synthesizer": {
+      "bridgeTarget": "claude",
+      "claude": {
+        "bridged": false,
+        "extras": {
+          "frontmatter": {
+            "disallowedTools": "Write, Edit, NotebookEdit"
+          }
+        },
+        "kind": "native"
+      },
+      "codex": {
+        "bridged": true,
+        "extras": {
+          "tables": {
+            "sandbox_workspace_write": {
+              "network_access": "true"
+            }
+          },
+          "top": {
+            "sandbox_mode": "\"workspace-write\""
+          }
+        },
+        "fallback": "gpt-6.1-sol",
+        "kind": "foreign",
+        "shimText": "## Bridge to Claude Code\n\nYou are a thin relay to the Claude Code CLI through `.agents/roster/bridge.py`. Do not do the task yourself, do not answer from your own knowledge, and do not alter the task.\n\n1. Use the apply_patch tool (Add File) to create the request file `<repo-root>/.agents/roster/tmp/task-why-synthesizer-<16 hex>.md` with a fresh random 16-character lowercase hex part (<16 hex>). The repo root is the git top level of your working directory; if unsure, run `git rev-parse --show-toplevel` once. The file content is the task, verbatim and unaltered. If the task assigns a directory (an existing git worktree to work in), put `dir: <absolute path>` on the first line and a line containing only `---` before the task; otherwise write only the task.\n2. Then make ONE shell-tool call from the repo root, with no other arguments and no `--dir`: `python3 -I .agents/roster/bridge.py run why-synthesizer --task-file .agents/roster/tmp/task-why-synthesizer-<16 hex>.md` (the same hex as the file you wrote).\n3. If the output ends with a line `STILL RUNNING run-id=<id>`, call `python3 -I .agents/roster/bridge.py wait <id>` (ONE shell-tool call, nothing else) and repeat until the output no longer ends with `STILL RUNNING`. Never read files under `.agents/roster/tmp/` and never summarize partial progress.\n4. Reply with the bridge's final output exactly as printed (the child's output, which already ends with the `exit code: N` line; leave out only the `RUN-ID` line). Do not add your own `exit code` line or any commentary, never edit or \"fix\" the output, never retry with a different model, and never do the task yourself. If the exit code is not 0, report the output verbatim and stop.",
+        "suffix": " Runs on claude-opus-5-5 via the claude CLI."
+      },
+      "editsControlFiles": false,
+      "effort": "high",
+      "group": "heavy",
+      "maxMinutes": 45,
+      "mcp_allow": [],
+      "model": "claude-opus-5-5",
+      "network": false,
+      "tools": null,
+      "writes": "no"
+    }
+  },
+  "runtimeHashes": {
+    "bridge.py": "c0dd7471aaf82ffb7d0eefb344297e4f1434e3b1b85767cbdf5cf36980f03a0b",
+    "bridge_arch.py": "73d01f7e0c7f493041ef132bc06077c3a6d5178c7fc1ffa4b9d8a1c937f626fa",
+    "bridge_cfg.py": "40a442dac63f93a05ccd5689e44241051b044912a16f43208d26184659befb6f",
+    "bridge_ctl.py": "5fc5f06326ab22594f0e0e497eb89c7d431be5b526c0f610ee17086f7fe6e8db",
+    "bridge_io.py": "d0ba0da85fb5fb2b200ee10a9385aff629614eff16f0a966569fa26bae24d37c",
+    "bridge_policy.py": "e92e016c98f365652f5223912cb6186bfcb0f85cd0376c5f8ccafb1d51e81f98",
+    "bridge_read.py": "1647bd60492ce48d061699b3bd8b393493d7e83e06f555a1bf336be691c4410d",
+    "bridge_run.py": "3f582a0ec991a5d3772a46ba4dbe3d0ad14344749f2d3313f52d8dff0a94228b",
+    "bridge_tools.py": "94c7ac88f5c1209b2b17a9d2a95ebdb10107950b6d8cfd48d70b5f39f59dd359",
+    "bridge_wt.py": "0838db2bf3672676c95a5ba9ffaa18af0a531cdf379d56a98d6811975782c373",
+    "bridge_xfer.py": "b1e47e7bd66fd9e94ea7a21cb615d37d1007f9278019e30a048e3cc447f74ff2",
+    "check.py": "b9f401d7b136faef27f0e3736e2c6a6b33c9ea7b5b6a263f79f44c7bd1a99ba2",
+    "check_core.py": "44921d30996b096e15b26d746d8f33354e8f10db897ae4f3733da23aa00b9530",
+    "check_policy.py": "449e4c9f4a3084b2b113596d72f06e458de6b51f8d9df320657db1f7ac3d1aba"
+  },
+  "runtimeProvider": {
+    "claude": "anthropic",
+    "codex": "openai"
+  },
+  "shim": {
+    "claude": {
+      "effort": "low",
+      "model": "claude-haiku-5-5"
+    },
+    "codex": {
+      "effort": "low",
+      "model": "gpt-6.1-sol"
+    }
+  },
+  "shimTools": "Write, Bash",
+  "workflowRequires": {
+    "architect": [
+      "arena"
+    ]
+  },
+  "workflows": [
+    "arena",
+    "architect",
+    "swarm",
+    "interrogate",
+    "hillclimb",
+    "how",
+    "why",
+    "reflect"
+  ]
+}
