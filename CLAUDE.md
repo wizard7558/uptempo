@@ -139,3 +139,65 @@ Skipping either environment leaves that DB out of sync with the code and causes 
 
 - ALWAYS batch ALL file reads/writes/edits in ONE message
 - ALWAYS batch ALL Bash commands in ONE message
+
+<!-- agent-roster:start -->
+## Agent roster and model routing
+
+- Role agents live in `.claude/agents/` (Claude Code) and `.codex/agents/` (Codex) under the same names. Each role has one canonical model and effort (Model column). A runtime runs it natively when the model is from its provider; otherwise the agent file is a thin bridge that calls the other CLI, or falls back to the nearest native model (shown in that runtime's column). Re-run the roster installer instead of hand-editing models or effort.
+- Pick the most specific role for the work. Every migration gets a `security-reviewer` pass, and `verifier` checks execution work before it is accepted.
+- Workflow skills (arena, architect, swarm, interrogate, hillclimb, how, why, reflect) live in `.agents/skills/` (Codex) with symlinks in `.claude/skills/` (Claude Code); each spawns the role agents listed in its `## Agents` section.
+
+| Agent | Group | Model | Claude Code | Codex | Use for |
+|---|---|---|---|---|---|
+| `planner` | plan | `gpt-6-astra · xhigh` | bridge (codex exec) | native | Decomposing multi-step work into ordered, verifiable tasks |
+| `hardest-tasks` | heavy | `claude-opus-5-5 · xhigh` | native | bridge (claude -p) | Hardest, ambiguous, or cross-cutting implementation work |
+| `judgment-prose` | heavy | `claude-opus-5-5 · high` | native | bridge (claude -p) | Design tradeoffs, technical docs, PR narratives, client explanations |
+| `security-reviewer` | heavy | `claude-opus-5-5 · xhigh` | native | bridge (claude -p) | Tenant isolation, authz, and secrets review; required for migrations |
+| `how-explainer` | heavy | `claude-opus-5-5 · high` | native | bridge (claude -p) | Explaining how a subsystem works, with file:line citations |
+| `why-synthesizer` | heavy | `claude-opus-5-5 · high` | native | bridge (claude -p) | Cited account of why something is the way it is |
+| `reflect-reviewer` | heavy | `claude-opus-5-5 · xhigh` | native | bridge (claude -p) | Reflect review from one lens (judgment, divergent) or as synthesizer |
+| `architect-runner` | panel | `claude-opus-5-5 · xhigh` | native | bridge (claude -p) | Design sketch in its own worktree before code |
+| `architect-runner-cross` | panel | `gpt-6.1-sol · xhigh` | bridge (codex exec) | native | Design sketch in its own worktree before code (second model) |
+| `arena-runner` | panel | `claude-opus-5-5 · xhigh` | native | bridge (claude -p) | One independent arena candidate, built without seeing others |
+| `arena-runner-cross` | panel | `gpt-6.1-sol · xhigh` | bridge (codex exec) | native | One independent arena candidate, built without seeing others (second model) |
+| `arena-judge` | panel | `claude-opus-5-5 · xhigh` | native | bridge (claude -p) | Scoring arena candidates, picking a base, naming parts to graft |
+| `arena-judge-cross` | panel | `gpt-6.1-sol · xhigh` | bridge (codex exec) | native | Scoring arena candidates, picking a base, naming parts to graft (second model) |
+| `interrogate-reviewer` | panel | `claude-opus-5-5 · xhigh` | native | bridge (claude -p) | Adversarial diff or plan review from one assigned angle |
+| `interrogate-reviewer-cross` | panel | `gpt-6.1-sol · xhigh` | bridge (codex exec) | native | Adversarial diff or plan review from one assigned angle (second model) |
+| `bug-fix` | execution | `gpt-6.1-sol · high` | bridge (codex exec) | native | Failing test first, then root-cause fix |
+| `perf-issue` | execution | `gpt-6.1-sol · high` | bridge (codex exec) | native | Performance fixes, with before and after measurements |
+| `migration` | execution | `gpt-6.1-sol · high` | bridge (codex exec) | native | Database migrations and access policies, with tenant-isolation tests |
+| `data-pipeline` | execution | `gpt-6.1-sol · high` | bridge (codex exec) | native | Data transformation, warehouse, and ingestion changes, with reconciled numbers |
+| `hillclimb` | execution | `gpt-6.1-sol · high` | bridge (codex exec) | native | One hillclimb attempt: change, measure, report |
+| `feature` | execution | `claude-sonnet-5-5 · medium` | native | bridge (claude -p) | Specified feature or refactor, with tests |
+| `swarm-worker` | execution | `claude-sonnet-5-5 · medium` | native | bridge (claude -p) | One slice of a parallel fan-out, nothing outside it |
+| `verifier` | execution | `claude-sonnet-5-5 · medium` | native | bridge (claude -p) | Running tests and builds to check work; reports, never fixes |
+| `how-explorer` | gather | `claude-sonnet-5-5 · medium` | native | bridge (claude -p) | File:line map of a code path for a how question |
+| `why-investigator` | gather | `claude-sonnet-5-5 · medium` | native | bridge (claude -p) | Cited raw evidence from one source category for a why question |
+| `reflect-tooling` | gather | `claude-sonnet-5-5 · medium` | native | bridge (claude -p) | Tooling-lens reflect review: commands, paths, missed lookups |
+| `clerk` | light | `claude-haiku-5-5 · low` | native | bridge (claude -p) | PR descriptions, task tracker entries, changelog lines |
+| `quick-fix` | light | `claude-haiku-5-5 · low` | native | bridge (claude -p) | Typo, rename, one-line change, config value, single-fact lookup |
+
+### When to use which
+
+| Situation | Use |
+|---|---|
+| Multi-step work that needs decomposing before anyone builds | `planner`, then dispatch its tasks to the named roles |
+| Typo, rename, one-liner, or single-fact lookup | `quick-fix` |
+| Hard, ambiguous, or cross-module implementation | `hardest-tasks`, then `verifier` |
+| Specified feature or refactor | `feature`, then `verifier` |
+| Bug with a known symptom | `bug-fix`, then `verifier` |
+| One slow path with a measurable cost | `perf-issue`, then `verifier` |
+| Push one metric to a target over many attempts | **hillclimb** skill |
+| Database migration or access-policy change | `migration`, then `security-reviewer`, then `verifier` |
+| Data transformation, warehouse, or ingestion change | `data-pipeline`, then `verifier` |
+| How does X work, or where should new code live | **how** skill |
+| Why is X this way, a regression, or a postmortem | **why** skill |
+| Non-trivial design where jumping to code would lock in the wrong shape | **architect** skill |
+| Several plausible shapes for one artifact | **arena** skill |
+| Before merging a risky diff, or when asked to stress-test | **interrogate** skill (adds `security-reviewer` for auth, data access, or secrets) |
+| Many independent slices, races, or coverage sweeps | **swarm** skill |
+| User says reflect, or a long session had repeated corrections (offer, don't auto-run) | **reflect** skill |
+| Tradeoff write-ups, docs, PR narratives | `judgment-prose` |
+| PR descriptions, tracker entries, changelog | `clerk` |
+<!-- agent-roster:end -->
