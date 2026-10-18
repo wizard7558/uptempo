@@ -43,4 +43,13 @@ describe("getSingleTenantSlug", () => {
       vi.useRealTimers();
     }
   });
+
+  it("shares a remembered slug across separately loaded copies of the module", async () => {
+    limit.mockResolvedValue([]);
+    await expect(getSingleTenantSlug()).resolves.toBeNull();
+    vi.resetModules();
+    const other = await import("./single");
+    other.rememberSingleTenantSlug("ada");
+    await expect(getSingleTenantSlug()).resolves.toBe("ada");
+  });
 });

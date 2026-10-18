@@ -4,8 +4,21 @@ import { tenants } from "@/lib/db/schema/tenants";
 
 const NULL_TTL_MS = 5_000;
 
-let cachedSlug: string | null | undefined;
-let nullCachedAt = 0;
+// Next compiles server actions and pages into separate bundles, each with its
+// own copy of this module. Keep the cache on globalThis so a slug remembered by
+// the setup action is seen by the page that redirects `/` right afterwards,
+// instead of that page serving a stale "no tenant" for up to 5 seconds.
+interface SingleSlugCache {
+  slug: string | null | undefined;
+  nullCachedAt: number;
+}
+const globalCache = globalThis as typeof globalThis & {
+  __uptempoSingleSlugCache?: SingleSlugCache;
+};
+const cache: SingleSlugCache = (globalCache.__uptempoSingleSlugCache ??= {
+  slug: undefined,
+  nullCachedAt: 0,
+});
 
 export async function queryFirstTenantSlug(): Promise<string | null> {
   const [row] = await publicDb
@@ -18,24 +31,24 @@ export async function queryFirstTenantSlug(): Promise<string | null> {
 
 /** Found slugs stay for the process. A missing tenant is cached for 5 seconds. */
 export async function getSingleTenantSlug(): Promise<string | null> {
-  if (cachedSlug) return cachedSlug;
-  if (cachedSlug === null && Date.now() - nullCachedAt < NULL_TTL_MS) return null;
+  if (cache.slug) return cache.slug;
+  if (cache.slug === null && Date.now() - cache.nullCachedAt < NULL_TTL_MS) return null;
 
   const slug = await queryFirstTenantSlug();
   if (slug) {
-    cachedSlug = slug;
+    cache.slug = slug;
     return slug;
   }
-  cachedSlug = null;
-  nullCachedAt = Date.now();
+  cache.slug = null;
+  cache.nullCachedAt = Date.now();
   return null;
 }
 
 export function rememberSingleTenantSlug(slug: string): void {
-  cachedSlug = slug;
+  cache.slug = slug;
 }
 
 export function clearSingleTenantSlugCache(): void {
-  cachedSlug = undefined;
-  nullCachedAt = 0;
+  cache.slug = undefined;
+  cache.nullCachedAt = 0;
 }
