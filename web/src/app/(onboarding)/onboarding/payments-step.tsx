@@ -116,6 +116,21 @@ export function PaymentsStep({
     });
   }
 
+  // Self-hosted without a Stripe key: record the skip and move on. The hosted
+  // skip flow shows a "card requirement turned off" note in its own branch,
+  // which isn't rendered here, so advance regardless of that flag.
+  function handleSelfHostedSkip() {
+    startTransition(async () => {
+      const result = await skipStripeForNow();
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      onMarkComplete();
+      onContinue();
+    });
+  }
+
   if (selfHosted) {
     return (
       <div className="space-y-6">
@@ -129,9 +144,18 @@ export function PaymentsStep({
             Back
           </Button>
           <Button
+            disabled={isPending}
             onClick={() => {
-              onMarkComplete();
-              onContinue();
+              if (selfHosted.configured) {
+                onMarkComplete();
+                onContinue();
+                return;
+              }
+              // Stripe isn't configured on this install, so record the same
+              // "skipped" state as the hosted flow. Without it launch is
+              // blocked on the payments prerequisite and the owner can never
+              // publish (and require-card-on-file is turned off).
+              handleSelfHostedSkip();
             }}
           >
             Continue
