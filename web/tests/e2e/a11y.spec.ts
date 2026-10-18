@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { industrySlug, marketingIndustries } from "../../src/lib/marketing/industries";
 
 const PAGES = [
   "/ui-gallery",
@@ -10,6 +11,8 @@ const PAGES = [
   "/q/test-salon",
   "/",
   "/pricing",
+  "/open-source",
+  ...marketingIndustries().map((industry) => `/for/${industrySlug(industry.id)}`),
 ] as const;
 
 const ADMIN_PAGES = new Set(["/schedule", "/clients", "/settings"]);

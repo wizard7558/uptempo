@@ -141,7 +141,7 @@ export function MonthView({
             <div
               key={key}
               className={cn(
-                "flex min-h-0 flex-col overflow-hidden bg-background p-2 transition-colors hover:bg-accent/50 cursor-pointer",
+                "flex min-h-0 flex-col overflow-hidden bg-background p-2 transition-colors hover:bg-muted cursor-pointer",
                 !isCurrentMonth && "text-muted-foreground opacity-50",
                 isCurrentDay && "ring-2 ring-inset ring-primary/30",
               )}

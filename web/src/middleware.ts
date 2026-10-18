@@ -8,6 +8,7 @@ const SINGLE_MODE_HIDDEN = [
   "/signup",
   "/discover",
   "/pricing",
+  "/for",
   "/waitlist",
   "/quiz",
   "/create-my-business",
@@ -54,9 +55,9 @@ function forwardWithTenant(
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Retired hosts and the bookuptempo.com apex 308 to www.bookuptempo.com
-  // before tenant resolution. This runs ahead of the /api early return so
-  // /api/auth follows the canonical host. Webhook paths return null and stay.
+  // The bookuptempo.com apex 308s to www.bookuptempo.com before tenant
+  // resolution. This runs ahead of the /api early return so /api/auth follows
+  // the canonical host. Webhook paths return null and stay.
   const legacyTarget = legacyRedirectTarget(
     request.headers.get("host"),
     pathname,
@@ -74,7 +75,7 @@ export async function middleware(request: NextRequest) {
   const primaryRootDomain = (process.env.ROOT_DOMAIN || "bookuptempo.com").trim();
   // bookuptempo.com is the canonical brand root; it stays recognized as a
   // platform root even when ROOT_DOMAIN is overridden per environment.
-  const rootDomains = new Set([primaryRootDomain, "bookuptempo.com", "byrende.com"]);
+  const rootDomains = new Set([primaryRootDomain, "bookuptempo.com"]);
   const isRootDomain =
     rootDomains.has(hostname) ||
     [...rootDomains].some((domain) => hostname === `www.${domain}`);
@@ -96,8 +97,8 @@ export async function middleware(request: NextRequest) {
 
   let slug: string | null = null;
 
-  // www.bookuptempo.com is the canonical host. Apex and retired hosts are
-  // redirected above. Custom domains are not.
+  // www.bookuptempo.com is the canonical host. The apex is redirected above.
+  // Custom domains are not.
 
   // 2) Custom domain lookup via Edge Config (for salons with their own domains)
   if (

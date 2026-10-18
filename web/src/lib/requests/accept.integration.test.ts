@@ -52,8 +52,8 @@ const TZ = "America/New_York";
  * `slotStart(8)` through `slotStart(18)`, so this day stays clear of them
  * and inside the 28-day horizon.
  */
-const quoteWednesday = () => {
-  const today = localDay(new Date(), TZ);
+const quoteWednesday = (now = new Date()) => {
+  const today = localDay(now, TZ);
   for (let n = 19; n <= 26; n++) {
     const day = addDays(today, n);
     if (dayOfWeekOf(day) === 3) return day;
@@ -61,12 +61,63 @@ const quoteWednesday = () => {
   throw new Error("no Wednesday left in the booking horizon");
 };
 
-/** 14:00 UTC (10:00 EDT / 09:00 EST) on the UTC day `n` days from now, n >= 8. */
-const slotStart = (n: number) => {
-  const d = new Date(Date.now() + n * 86_400_000);
-  d.setUTCHours(14, 0, 0, 0);
-  return d.toISOString();
+/** 10:00 New York time on the local calendar day `n` days after now, n >= 8. */
+const slotStart = (n: number, now = new Date()) => {
+  const day = addDays(localDay(now, TZ), n);
+  return wallClockToDate(day, "10:00", TZ).toISOString();
 };
+
+describe("quote acceptance calendar fixtures", () => {
+  it.each([
+    {
+      boundary: "before UTC midnight",
+      now: "2026-10-16T22:54:00Z",
+      expectedFirstStart: "2026-10-24T14:00:00.000Z",
+      expectedQuoteDay: "2026-11-04",
+    },
+    {
+      boundary: "after UTC midnight while New York is on the prior day",
+      now: "2026-10-17T01:33:00Z",
+      expectedFirstStart: "2026-10-24T14:00:00.000Z",
+      expectedQuoteDay: "2026-11-04",
+    },
+    {
+      boundary: "first occurrence of the repeated DST hour",
+      now: "2026-11-01T05:30:00Z",
+      expectedFirstStart: "2026-11-09T15:00:00.000Z",
+      expectedQuoteDay: "2026-11-25",
+    },
+    {
+      boundary: "second occurrence of the repeated DST hour",
+      now: "2026-11-01T06:30:00Z",
+      expectedFirstStart: "2026-11-09T15:00:00.000Z",
+      expectedQuoteDay: "2026-11-25",
+    },
+  ])("keeps all earlier bookings before the quote date $boundary", ({ now: nowIso, expectedFirstStart, expectedQuoteDay }) => {
+    const now = new Date(nowIso);
+    const today = localDay(now, TZ);
+    const bookingDays = Array.from({ length: 11 }, (_, index) =>
+      localDay(new Date(slotStart(index + 8, now)), TZ),
+    );
+    const expectedBookingDays = Array.from({ length: 11 }, (_, index) => {
+      const day = new Date(`${today}T00:00:00.000Z`);
+      day.setUTCDate(day.getUTCDate() + index + 8);
+      return day.toISOString().slice(0, 10);
+    });
+    const quoteDay = quoteWednesday(now);
+    const quoteOffsetDays =
+      (Date.parse(`${quoteDay}T00:00:00.000Z`) - Date.parse(`${today}T00:00:00.000Z`)) /
+      86_400_000;
+
+    expect(new Date(slotStart(8, now)).toISOString()).toBe(expectedFirstStart);
+    expect(bookingDays).toEqual(expectedBookingDays);
+    expect(bookingDays.every((day) => day < quoteDay)).toBe(true);
+    expect(quoteDay).toBe(expectedQuoteDay);
+    expect(quoteOffsetDays).toBeGreaterThanOrEqual(19);
+    expect(quoteOffsetDays).toBeLessThanOrEqual(26);
+    expect(new Date(`${quoteDay}T00:00:00.000Z`).getUTCDay()).toBe(3);
+  });
+});
 
 /** A request with a sent quote: 240 min x $600 and 30 min x 2 x $50 (270 min, $700). */
 async function sentQuote(opts: { staff?: string | null; client?: string; deposit?: number } = {}) {

@@ -35,6 +35,10 @@ vi.mock("@/lib/booking/session-cookie", () => ({
   getBookingSession: getBookingSessionMock,
 }));
 
+// The providers need a request context; these tests cover the layout's own markup.
+vi.mock("@/components/app-providers", () => ({
+  AppProviders: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 vi.mock("@/components/booking-public/powered-by-badge", () => ({
   PoweredByBadge: ({ show }: { show: boolean }) =>
     show ? <div data-testid="powered-by">Powered by</div> : null,

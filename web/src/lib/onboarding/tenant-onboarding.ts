@@ -4,6 +4,7 @@ import { provisionTenantSchema } from "@/lib/tenant/provision";
 import { getTenantBySlug } from "@/lib/tenant/registry";
 import { withTenantDb } from "@/lib/db/tenant";
 import { trackEvent } from "@/lib/analytics/events";
+import { syncBillableStaff } from "@/lib/billing/billable-staff";
 
 export async function ensureTenantProvisioned(
   slug: string,
@@ -40,6 +41,7 @@ export async function ensureTenantProvisioned(
         });
       }
     });
+    await syncBillableStaff(slug);
 
     trackEvent("salon.provisioned", { slug }, { tenantSlug: slug, userId: ownerUserId });
     return { provisioned: true };

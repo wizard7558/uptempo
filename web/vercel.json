@@ -30,10 +30,6 @@
       "schedule": "0 2 * * 1"
     },
     {
-      "path": "/api/cron/charge-platform-fees",
-      "schedule": "0 6 1 * *"
-    },
-    {
       "path": "/api/cron/materialize-recurrences",
       "schedule": "30 3 * * *"
     },
@@ -48,6 +44,18 @@
     {
       "path": "/api/cron/waitlist-offers",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/report-sms-usage",
+      "schedule": "30 2 * * *"
+    },
+    {
+      "path": "/api/cron/sync-sms-registrations",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/switch-billing",
+      "schedule": "0 14 * * *"
     }
   ]
 }

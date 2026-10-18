@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Loader2 } from "lucide-react";
 import { identifyPostHogUser } from "@/lib/analytics/posthog-provider";
+import { notifyNativeAuthSuccess } from "@/lib/native/push-register";
 
 function safeAppPath(path: string | undefined): string | null {
   if (!path || !path.startsWith("/") || path.startsWith("//")) return null;
@@ -36,6 +37,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
       if (result.error) {
         setError("Invalid email or password");
       } else {
+        notifyNativeAuthSuccess();
         identifyPostHogUser(result.data?.user?.id ?? email, { email });
         router.push(afterLogin);
       }

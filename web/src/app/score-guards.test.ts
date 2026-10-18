@@ -48,4 +48,24 @@ describe("score guards", () => {
     }
     expect(hits, hits.join("\n")).toEqual([]);
   });
+
+  // `--accent` is crimson (or the business color on booking pages) and is
+  // reserved for "now", the selected item, and links. Hover, focus, open,
+  // and loading surfaces use `muted`.
+  it("keeps the accent off hover, focus, and loading surfaces", () => {
+    const NEUTRAL_ACCENT = [
+      /(?:hover|focus|data-\[[^\]]+\]):bg-accent\b/,
+      /\bbg-accent\b[^"]*\banimate-pulse\b|\banimate-pulse\b[^"]*\bbg-accent\b/,
+    ];
+    const hits: string[] = [];
+    for (const file of files(SRC)) {
+      const lines = readFileSync(file, "utf8").split("\n");
+      lines.forEach((line, i) => {
+        if (NEUTRAL_ACCENT.some((re) => re.test(line))) {
+          hits.push(`${path.relative(SRC, file)}:${i + 1}`);
+        }
+      });
+    }
+    expect(hits, hits.join("\n")).toEqual([]);
+  });
 });

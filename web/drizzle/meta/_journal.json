@@ -225,6 +225,48 @@
       "when": 1791820000000,
       "tag": "0031_job_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791866174995,
+      "tag": "0032_card_processing_rate",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791949489534,
+      "tag": "0033_hosted_subscription",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1792015872860,
+      "tag": "0034_sms_usage_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792040800000,
+      "tag": "0035_card_rate_five_percent",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792130040476,
+      "tag": "0036_sms_line_registration",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792171341731,
+      "tag": "0037_billing_switch_notices",
+      "breakpoints": true
     }
   ]
 }

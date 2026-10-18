@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, afterAll, beforeAll, vi } from "vitest";
 import type { ScratchTenant } from "@/lib/scheduling/db-fixtures";
+import { addDays, localDay, wallClockToDate } from "@/lib/scheduling/intervals";
 
 const itDb = process.env.DATABASE_URL ? it : it.skip;
 vi.setConfig({ testTimeout: 120_000 });
@@ -68,6 +69,7 @@ vi.mock("@/lib/stripe/server", () => ({
 }));
 
 let t: ScratchTenant;
+let tz = "America/New_York";
 const ids = {} as Record<string, string>;
 const s = () => `"${t.schema}"`;
 const one = async (q: string) => String((await t.run(q))[0].id);
@@ -82,6 +84,15 @@ afterAll(async () => {
 
 /** A start time `hours` from now, 15-minute aligned. */
 const inHours = (hours: number) => new Date(Math.ceil((Date.now() + hours * HOUR) / 900_000) * 900_000);
+/**
+ * A start time a bookable number of days out: 10:00 in the tenant's time zone, at least three days
+ * ahead, a different day per `n`. Public booking rejects a slot that runs past the end of the local
+ * day's working hours, so a time taken from "now + N hours" fails whenever it lands near local
+ * midnight (the late evening UTC hours, for a New York tenant). Pinning the local wall clock keeps
+ * the bookings valid whatever time the suite runs.
+ */
+const bookableSlot = (n: number) =>
+  wallClockToDate(addDays(localDay(inHours(72), tz), n + 1), "10:00", tz);
 const range = (start: Date) => `tstzrange('${start.toISOString()}','${new Date(start.getTime() + HOUR).toISOString()}','[)')`;
 
 describe("using credits at booking, cancel and checkout against a real tenant schema", () => {
@@ -105,6 +116,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     await t.run(`insert into ${s()}.staff_services (staff_id, service_id) values ('${ids.staff}', '${ids.svc}')`);
     await t.run(`insert into ${s()}.business_settings (deposit_enabled) select 1 where not exists (select 1 from ${s()}.business_settings)`);
     await t.run(`update ${s()}.business_settings set deposit_enabled = 1, cancellation_window_hours = 24`);
+    tz = String((await t.run(`select timezone from ${s()}.business_settings limit 1`))[0].timezone);
   }, 180_000);
 
   /** A client with a pack of `credits` (a purchase ledger row; the trigger keeps the balance). */
@@ -161,7 +173,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
       staffId: ids.staff,
       clientId: client,
       serviceIds: [ids.svc],
-      startTime: inHours(72).toISOString(),
+      startTime: bookableSlot(0).toISOString(),
       useCredit: true,
     });
     expect(res).toMatchObject({ success: true, creditApplied: true });
@@ -181,7 +193,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     const { client, pkg } = await clientWithPack("NoUse", 3);
     state.clientId = client;
     const res = await confirmBooking({
-      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: inHours(73).toISOString(),
+      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(1).toISOString(),
     });
     expect(res).toMatchObject({ success: true, creditApplied: false });
     const id = (res as { booking: { id: string } }).booking.id;
@@ -194,7 +206,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     const { client } = await clientWithPack("NoPack", 0);
     state.clientId = client;
     const res = await confirmBooking({
-      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: inHours(74).toISOString(), useCredit: true,
+      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(2).toISOString(), useCredit: true,
     });
     expect(res).toMatchObject({ success: true, creditApplied: false });
     const id = (res as { booking: { id: string; depositCents: number } }).booking.id;
@@ -210,7 +222,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     const { client: other } = await clientWithPack("Stranger", 0);
     state.clientId = other;
     const res = await confirmBooking({
-      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: inHours(75).toISOString(), useCredit: true,
+      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(3).toISOString(), useCredit: true,
     });
     expect(res).toEqual({ success: false, error: "Sign in to book" });
     expect(await balance(pkg)).toBe(2);
@@ -221,7 +233,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     try {
       expect(await getCreditOption([ids.svc])).toBeNull();
       const off = await confirmBooking({
-        salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: inHours(76).toISOString(), useCredit: true,
+        salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(4).toISOString(), useCredit: true,
       });
       expect(off).toMatchObject({ success: true, creditApplied: false });
       expect(await balance(pkg)).toBe(2);

@@ -40,9 +40,16 @@ export function buildFromAddress(salonName?: string): string {
 type SendEmailInput = {
   /** A single address, or several. */
   to: string | string[];
+  /** Hidden recipients, used when a single notice goes to a business team. */
+  bcc?: string | string[];
   subject: string;
   salonName?: string;
-} & ({ react: ReactElement; html?: string } | { html: string; react?: undefined });
+  /** Provider-level deduplication key for retry-safe notices. */
+  idempotencyKey?: string;
+} & (
+  | { react: ReactElement; html?: string; text?: never }
+  | { html: string; react?: undefined; text?: string }
+);
 
 /**
  * Send an email through the configured provider.
@@ -55,7 +62,7 @@ export async function sendEmail(
 
   try {
     let html = input.html;
-    let text: string | undefined;
+    let text: string | undefined = input.react ? undefined : input.text;
     if (input.react) {
       html = await render(input.react);
       text = await render(input.react, { plainText: true });
@@ -66,9 +73,13 @@ export async function sendEmail(
     return await getEmailProvider().send({
       from,
       to: input.to,
+      ...(input.bcc ? { bcc: input.bcc } : {}),
       subject: input.subject,
       html,
       text,
+      ...(input.idempotencyKey
+        ? { idempotencyKey: input.idempotencyKey }
+        : {}),
     });
   } catch (err) {
     console.error("[Email] Failed to send:", err);

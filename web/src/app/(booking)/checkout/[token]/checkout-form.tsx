@@ -276,7 +276,7 @@ export function CheckoutForm({
           : "Checkout could not be completed",
       );
     }
-  }, [appointmentId, storedValueAppliedCents]);
+  }, [appointmentId, storedValueAppliedCents, token]);
 
   const isMemberBbCheckout =
     eligibleForFullBb && tipCents === 0 && memberBbMode === "member";

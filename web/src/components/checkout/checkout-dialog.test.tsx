@@ -135,4 +135,36 @@ describe("CheckoutDialog project deposit credit", () => {
     await waitFor(() => expect(screen.getByText("Services total")).toBeTruthy());
     expect(screen.queryByRole("checkbox")).toBeNull();
   });
+  describe("done screen card processing", () => {
+    async function checkOutWith(result: Record<string, unknown>) {
+      h.getCheckoutData.mockResolvedValue({ ...data(false, false), project: null });
+      h.completeAppointment.mockResolvedValue({ success: true, ...result });
+      const user = userEvent.setup();
+      renderDialog();
+      await waitFor(() => expect(screen.getByText("Services total")).toBeTruthy());
+      await user.click(screen.getByRole("button", { name: /cash/i }));
+      await user.click(screen.getByRole("button", { name: "Complete Checkout" }));
+      await waitFor(() => expect(screen.getByText("Checkout Complete")).toBeTruthy());
+    }
+
+    it("shows the stored fee and what the business receives", async () => {
+      await checkOutWith({
+        totalCents: 6000,
+        platformFeeCents: 300,
+        processingRateLabel: "5%",
+      });
+      expect(screen.getByText("Card processing: 5% ($3.00)")).toBeTruthy();
+      expect(screen.getByText("You receive: $57.00")).toBeTruthy();
+    });
+
+    it("shows nothing when the charge has no fee", async () => {
+      await checkOutWith({
+        totalCents: 6000,
+        platformFeeCents: 0,
+        processingRateLabel: null,
+      });
+      expect(screen.queryByText(/Card processing/)).toBeNull();
+      expect(screen.queryByText(/You receive/)).toBeNull();
+    });
+  });
 });

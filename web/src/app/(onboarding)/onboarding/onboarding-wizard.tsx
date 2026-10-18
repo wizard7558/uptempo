@@ -3,6 +3,7 @@
 import { useT } from "@/lib/terms/client";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -464,7 +465,13 @@ export function OnboardingWizard({
                 {t("publish.copy")}
               </Button>
               {qr && (
-                <img src={qr} alt={t("publish.qr")} width={240} height={240} />
+                <Image
+                  src={qr}
+                  alt={t("publish.qr")}
+                  width={240}
+                  height={240}
+                  unoptimized
+                />
               )}
               <Button asChild className="w-full">
                 <Link href={homePath}>{t("publish.open")}</Link>

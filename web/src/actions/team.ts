@@ -15,6 +15,7 @@ import { normalizeTeamRole, type TeamRole } from "@/lib/auth/permissions";
 import { auth } from "@/lib/auth/server";
 import { hasModule } from "@/lib/tenant/modules";
 import { withTenantDb } from "@/lib/db/tenant";
+import { syncBillableStaff } from "@/lib/billing/billable-staff";
 import { sendEmail } from "@/lib/email/send";
 import { TeamInviteEmail } from "@/emails/team-invite";
 import { eq, and, desc, lt, asc, inArray } from "drizzle-orm";
@@ -71,6 +72,7 @@ async function insertStaffForTeamMember(params: {
   email: string;
   invitationRole: string;
 }) {
+  let inserted = false;
   await withTenantDb(
     params.tenantSlug,
     async (db, { staff }) => {
@@ -86,8 +88,10 @@ async function insertStaffForTeamMember(params: {
         email: params.email.toLowerCase(),
         ...(params.invitationRole === "assistant" ? { role: "assistant" } : {}),
       });
+      inserted = true;
     },
   );
+  if (inserted) await syncBillableStaff(params.tenantSlug);
 }
 
 function isMissingTeamInvitationsTableError(error: unknown): boolean {

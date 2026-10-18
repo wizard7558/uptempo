@@ -23,6 +23,7 @@ import { RequestWizard } from "@/components/booking-public/request-wizard";
 import { hasModule } from "@/lib/tenant/modules";
 import { hasUpcomingClasses } from "@/lib/classes/public";
 import { ClassScheduleCard } from "./classes/class-schedule";
+import { getBookingVerificationChannel } from "@/lib/booking/verification-channel";
 
 export async function generateMetadata({
   params,
@@ -190,6 +191,7 @@ async function BookingPageContent({
 
   const wizard = (
     <BookingWizard
+      verificationChannel={getBookingVerificationChannel()}
       salonId={salon.id}
       salonSlug={slug}
       salonName={salon.name}

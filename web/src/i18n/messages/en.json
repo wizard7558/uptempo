@@ -70,6 +70,33 @@
         "customFields": "Custom fields"
       }
     },
+    "billing": {
+      "cardProcessingNone": "Card processing: no charge",
+      "cardProcessingHint": "Taken from each card payment before it reaches your bank.",
+      "feeSummaryLine": "Card processing: {label} ({fee})",
+      "feeSummaryNet": "You receive: {net}",
+      "chargesHeader": "Card processing: {label} of card payments",
+      "chargesHeaderNone": "Card processing: no charge",
+      "chargesFeeColumn": "Card processing",
+      "planTitle": "Your plan",
+      "planComped": "Uptempo is free for your business.",
+      "planStaffLine": "{count, plural, one {# {staff}} other {# {staffPlural}}} · {price}/month",
+      "freeUntil": "Free until {date}",
+      "textLine": "Text reminders: {status}",
+      "textLineOff": "Not set up",
+      "textLineShared": "On (shared number)",
+      "textLinePending": "Being reviewed",
+      "textLineActionNeeded": "Needs your attention",
+      "textLineActive": "On",
+      "manageBilling": "Manage billing",
+      "nativePlatformBilling": "Plan changes and platform payment method management are handled on the Uptempo website.",
+      "portalError": "Couldn't open billing. Try again.",
+      "switchNotice": "Your plan changes on {date}.",
+      "switchDetails": "See pricing details",
+      "bannerPastDue": "Your last Uptempo payment didn't go through.",
+      "bannerPaused": "Your Uptempo plan is paused because no card was added.",
+      "bannerCanceled": "Your Uptempo plan is canceled."
+    },
     "bookingRules": {
       "title": "Booking rules",
       "subtitle": "These rules apply to online booking. Your team can still book any time from the calendar.",
@@ -223,6 +250,76 @@
     },
     "notifications": {
       "addressTitle": "{Place} Address"
+    },
+    "textLine": {
+      "title": "Business text line",
+      "unavailable": "Text reminders aren't available yet. Please contact Uptempo support.",
+      "offCopy": "Text reminders cost $4 a month plus 5 cents a text, with a one-time $19 setup. Carriers approve your business first.",
+      "offApproved": "Text reminders are off. Your approved number is {phoneNumber}. Turn it back on without registering again.",
+      "sharedCopy": "Texts send from Uptempo's shared number. Set up your own number for free.",
+      "pendingCopy": "Waiting for carrier approval. Email reminders keep working.",
+      "actionNeededCopy": "Your business registration needs an update. Review the details and try again.",
+      "confirmTextCopy": "Twilio sent a text to {mobile}. Reply YES within 24 hours to confirm.",
+      "activeCopy": "Text reminders are on. Your number is {phoneNumber}.",
+      "setupFirst": "Set up text reminders first.",
+      "setUp": "Set up text reminders",
+      "setUpFree": "Set up your own number for free",
+      "fixAndResubmit": "Fix and resubmit",
+      "sendAgain": "Send it again",
+      "turnOff": "Turn off text reminders",
+      "turnOn": "Turn text reminders back on",
+      "submit": "Submit for carrier approval",
+      "cancel": "Cancel",
+      "working": "Please wait...",
+      "saved": "Your information was submitted for carrier approval.",
+      "confirmationResent": "The confirmation text was sent again.",
+      "turnedOff": "Text reminders are off.",
+      "turnedOn": "Text reminders are on.",
+      "privacy": "Read our privacy policy",
+      "feeDisclosure": "A one-time $19 setup fee will be added to your next invoice. Once approved, the line costs $4 a month plus $0.05 per text.",
+      "resubmitFee": "This resubmission won't add the one-time $19 setup fee again. Once approved, the line costs $4 a month plus $0.05 per text.",
+      "sharedFee": "Your own number setup is free because your business already uses the shared number. Once approved, the line costs $4 a month plus $0.05 per text.",
+      "compedFee": "No one-time setup fee will be added. Your business's comped plan remains free.",
+      "exemptFee": "The one-time setup fee is waived for your business. Once approved, the line costs $4 a month plus $0.05 per text.",
+      "fields": {
+        "legalName": "Legal business name",
+        "businessType": "Business type",
+        "einOptional": "EIN (optional)",
+        "einRequired": "EIN (required to resubmit)",
+        "einHint": "Your full EIN is sent securely for registration and isn't saved. Without an EIN, choose Sole proprietor.",
+        "street": "Business street address",
+        "street2": "Address line 2 (optional)",
+        "city": "City",
+        "state": "State",
+        "postalCode": "ZIP code",
+        "website": "Business website (optional)",
+        "firstName": "Owner first name",
+        "lastName": "Owner last name",
+        "title": "Owner title",
+        "email": "Owner email",
+        "mobile": "Owner mobile number",
+        "feeAgreement": "I understand the setup and monthly text line costs shown above."
+      },
+      "businessTypes": {
+        "soleProprietor": "Sole proprietor",
+        "partnership": "Partnership",
+        "llc": "LLC",
+        "corporation": "Corporation"
+      },
+      "errors": {
+        "single_mode": "Business text lines aren't available in this installation.",
+        "tenant_not_found": "We couldn't find this business. Refresh the page and try again.",
+        "registration_not_configured": "Text line registration isn't available yet. Please contact Uptempo support.",
+        "invalid_input": "Check the business and owner details, then try again.",
+        "unsupported_sole_proprietor": "Without an EIN, choose Sole proprietor and enter a US mobile number.",
+        "confirmation_required": "Reply YES to the confirmation text before continuing.",
+        "registration_in_progress": "Your registration is already being processed. Try again shortly.",
+        "fee_unavailable": "We couldn't add the setup fee to your next invoice. No registration was started. Try again shortly.",
+        "registration_unavailable": "We couldn't start the registration. Your setup fee won't be added again if you retry.",
+        "text_line_not_active": "This text line can't be turned off in its current state.",
+        "registration_not_complete": "This number hasn't finished carrier approval yet.",
+        "billing_sync_retryable": "Your text line status changed, but billing could not be updated yet. Try again shortly."
+      }
     },
     "storefront": {
       "pickupOnly": "Pickup only — clients collect their orders in the {place}."
@@ -1195,6 +1292,23 @@
     "receipt": {
       "prepaidApplied": "{prepaidBalance} applied",
       "smsPrepaidLine": "{prepaidBalance} {amount}"
+    },
+    "billingChange": {
+      "subject": "Your Uptempo price changes on {date}",
+      "preview": "Your Uptempo plan changes on {date}.",
+      "heading": "A pricing update for your business",
+      "currentRate": "Your current card processing rate is {currentRate}.",
+      "fromDate": "Starting {date}, your plan includes:",
+      "staffPrice": "$12 a month for your first {staff}, $6 for each extra, up to $42.",
+      "textPrice": "Text reminders: $4 a month plus 5 cents a text.",
+      "processingRate": "Card processing: 5% of card payments.",
+      "payouts": "Payouts arrive weekly, on Mondays.",
+      "estimateHeading": "Your estimate",
+      "estimate": "Estimated monthly total: {amount}.",
+      "estimateBasis": "Based on {activeProviders, plural, one {# active {staff}} other {# active {staffPlural}}} and {textsObserved} texts observed from {start} through {end} (UTC). Text use can change the total.",
+      "cardAction": "Add a card under Settings, Billing by {date}. If no card is on file, Uptempo will email an invoice with 14 days to pay.",
+      "sharedLineSetup": "If you use the shared text number, you can set up your own text number without a setup charge.",
+      "support": "Questions? Contact us at"
     },
     "intake": {
       "sms": "{placeName}: please review and sign our {place} policies and add a card on file — {url}"
@@ -2403,6 +2517,256 @@
     "checked": "Checked",
     "on": "On",
     "calendar": "Calendar",
-    "empty": "No data for this period"
+    "empty": "No data for this period",
+    "sliderValue": "Demo value"
+  },
+  "marketing": {
+    "meta": {
+      "title": "Uptempo Bookings: booking software for appointment businesses",
+      "description": "A booking page, a team calendar, reminders, and card payments for hair salons, barbershops, nail salons, tattoo studios, massage studios, trainers, and home service businesses."
+    },
+    "nav": {
+      "label": "Main",
+      "home": "Uptempo home",
+      "industries": "Industries",
+      "pricing": "Pricing",
+      "openSource": "Open source",
+      "docs": "Docs",
+      "signIn": "Sign in",
+      "start": "Start free"
+    },
+    "footer": {
+      "tagline": "Booking software for businesses that run on appointments.",
+      "product": "Product",
+      "industries": "Industries",
+      "legal": "Legal",
+      "waitlist": "Join the waitlist",
+      "privacy": "Privacy policy",
+      "terms": "Terms of service",
+      "source": "Source code",
+      "copyright": "© {year} Uptempo."
+    },
+    "home": {
+      "title": "Booking software for businesses that run on appointments",
+      "lead": "Uptempo gives you a booking page, a calendar your whole team can read, reminders, and card payments. It uses your industry's words, so a barbershop sees barbers and a cleaning company sees jobs.",
+      "start": "Start free for {days} days",
+      "pricing": "See pricing",
+      "industriesTitle": "Built for your kind of business",
+      "industriesLead": "Pick your industry when you sign up. Uptempo fills in your services, your words, and the tools you need. You can change any of it later.",
+      "industryLink": "Uptempo for {name}",
+      "bookingTitle": "A booking page your clients can finish",
+      "bookingLead": "Four steps: pick a service, pick a time, add a name and phone number, then confirm and pay. Big buttons, plain words, and it works on any phone.",
+      "bookingAlt": "The booking page of a demo {name} business on a phone",
+      "includedTitle": "Included for every business",
+      "included": {
+        "booking": {
+          "title": "Online booking",
+          "body": "A booking page with your services, prices, and open times. Share the link or put it on your website."
+        },
+        "calendar": {
+          "title": "Team calendar",
+          "body": "Day, week, and month views with a column for each person. Open a booking to check someone in, move it, text them, or cancel."
+        },
+        "reminders": {
+          "title": "Reminders",
+          "body": "Email reminders are included. Text reminders are an add-on."
+        },
+        "payments": {
+          "title": "Deposits and payments",
+          "body": "Take a deposit when someone books and the rest by card at checkout."
+        },
+        "clients": {
+          "title": "Client records",
+          "body": "Notes, visit history, forms, and photos for each client."
+        },
+        "reports": {
+          "title": "Money and reports",
+          "body": "Revenue, expenses, rebooking, and no-shows by day, week, and month, for each service and each person."
+        }
+      },
+      "pricingTitle": "One plan with every feature",
+      "pricingLead": "{base} a month for one person on the calendar and {extra} for each extra person, never more than {cap}. Card processing is 5% of card payments.",
+      "pricingLink": "Work out your price",
+      "openSourceTitle": "Open source",
+      "openSourceLead": "Uptempo is open source under the AGPL-3.0 license. Run it on your own server for free, or let us host it for you.",
+      "openSourceLink": "Run it yourself",
+      "closingTitle": "Get your booking page live today",
+      "closingLead": "Pick your industry, add your services and hours, and share your link."
+    },
+    "demo": {
+      "switcherLabel": "Show a sample booking page for",
+      "heading": {
+        "barber": "Book a fade",
+        "nail_salon": "Book a pedicure",
+        "home_services": "Book a deep clean"
+      },
+      "business": {
+        "barber": "Corner Barbers",
+        "nail_salon": "Polish Nail Bar",
+        "home_services": "Bright Home Cleaning"
+      },
+      "service": "{name}, {duration}, {price}",
+      "note": "This is a sample. Pick a time and press Continue to start your own booking page."
+    },
+    "duration": {
+      "minutes": "{minutes} min",
+      "hours": "{hours} hr",
+      "hoursMinutes": "{hours} hr {minutes} min"
+    },
+    "industry": {
+      "metaTitle": "{title} | Uptempo Bookings",
+      "start": "Start free for {days} days",
+      "pricing": "See pricing",
+      "useCasesTitle": "How {name} use Uptempo",
+      "servicesTitle": "Starter {offeringPlural}",
+      "servicesLead": "These are filled in when you sign up. Rename them, change the prices, or add your own.",
+      "servicesName": "{Offering}",
+      "servicesLength": "Length",
+      "servicesPrice": "Price",
+      "free": "Free",
+      "wordsTitle": "Your words, everywhere",
+      "wordsLead": "Your calendar, booking page, and messages say {staffPlural}, {customerPlural}, and {bookingPlural}. You can rename any of them.",
+      "modulesTitle": "Turned on from the start",
+      "modulesLead": "Every tool is available to every business. These start on for {name}.",
+      "screenshotAlt": "The booking page of a demo {name} business on a phone",
+      "othersTitle": "Other industries"
+    },
+    "industries": {
+      "hair_salon": {
+        "name": "hair salons",
+        "title": "Booking software for hair salons",
+        "lead": "Book cuts, color, and treatments with the right length for each client. Fit another client into processing time, give assistants their own tasks, and sell products and memberships.",
+        "useCases": [
+          "While color processes, the calendar can book another client into the gap.",
+          "Assistant tasks, like a shampoo or a blow-dry, sit on the calendar next to each appointment.",
+          "Each client can have their own appointment length for a service.",
+          "Prepaid balances and memberships for regular clients.",
+          "Sell retail products on your booking page.",
+          "Aftercare messages go out after each visit."
+        ]
+      },
+      "barber": {
+        "name": "barbershops",
+        "title": "Booking software for barbershops",
+        "lead": "Take online bookings and walk-ins in one place. Walk-ins join a live line from a QR code, and your waitlist fills cancelled times.",
+        "useCases": [
+          "At checkout, offer the next visit: same barber, same cut, a few weeks out.",
+          "A walk-in line shows the live wait, and a lobby tablet can run as a check-in kiosk.",
+          "When someone cancels, the waitlist gets a text so the time gets filled.",
+          "Monthly memberships for regulars.",
+          "Sell gift cards and take them at checkout."
+        ]
+      },
+      "nail_salon": {
+        "name": "nail salons",
+        "title": "Booking software for nail salons",
+        "lead": "Let clients book any available tech, add the extras they want, and bring friends. Chairs and stations are tracked, so you never book more pedicures than you have chairs.",
+        "useCases": [
+          "\"Any available tech\" is the first choice, so clients get the soonest open time.",
+          "Add-ons like nail art, removal, and chrome change both the time and the price.",
+          "Pedicure chairs are tracked, so a fifth pedicure never lands on four chairs.",
+          "Groups book together, including a manicure and pedicure with two techs at once.",
+          "Walk-ins join a live line from a QR code.",
+          "Sell gift cards and take them at checkout."
+        ]
+      },
+      "tattoo": {
+        "name": "tattoo studios",
+        "title": "Booking software for tattoo studios",
+        "lead": "Start with a request, not a time slot. Clients describe the piece, you send a quote and a deposit link, and the work is planned across as many sessions as it needs.",
+        "useCases": [
+          "Requests collect placement, size, style, budget, and reference photos.",
+          "Open your books for set dates. Outside them, your page says your books are closed.",
+          "A large piece can span several sessions. The deposit counts toward the work, and the balance stays visible.",
+          "Approve the design with the client before the first session.",
+          "Consent forms record date of birth, check the minimum age, and keep a photo ID private to your team.",
+          "Aftercare messages follow each session."
+        ]
+      },
+      "massage_wellness": {
+        "name": "massage and wellness studios",
+        "title": "Booking software for massage and wellness studios",
+        "lead": "Book the therapist and the room together, leave time to reset between sessions, and sell packages, gift cards, and memberships.",
+        "useCases": [
+          "Treatment rooms are booked with each session, so a massage needs a free therapist and a free room.",
+          "A couples massage books two therapists in one room at the same time.",
+          "Add a turnover buffer after each session.",
+          "Offer 60, 90, and 120-minute versions of a treatment, each with its own price.",
+          "Collect a health history before the first visit.",
+          "Sell packages, gift cards, and memberships."
+        ]
+      },
+      "personal_training": {
+        "name": "personal trainers",
+        "title": "Booking software for personal trainers",
+        "lead": "Sell session packs and memberships, run group classes with a waitlist, and book regular clients at the same time every week.",
+        "useCases": [
+          "Sell session packs. Each booking uses one credit.",
+          "Monthly memberships add credits, and unused credits can roll over.",
+          "Group classes have a set number of spots and a waitlist. When someone cancels, the next person gets a text.",
+          "Book the same time every week, and see conflicts before you save.",
+          "Clients fill out a health questionnaire before the first session."
+        ]
+      },
+      "home_services": {
+        "name": "home service businesses",
+        "title": "Booking software for home service businesses",
+        "lead": "For cleaners, handymen, and other crews who go to the customer. Check the service area, quote from photos, and leave travel time between jobs.",
+        "useCases": [
+          "Customers enter a ZIP code, and booking only continues inside your service area.",
+          "Customers ask for a quote with photos. You send line items and a deposit link, and an accepted quote becomes a job.",
+          "The calendar leaves travel time between jobs, and customers see an arrival window.",
+          "Book a crew of two for one job.",
+          "Send an \"On my way\" text, take before and after photos, and finish a checklist.",
+          "Repeat cleanings every week or every other week."
+        ]
+      }
+    },
+    "pricing": {
+      "metaTitle": "Pricing | Uptempo Bookings",
+      "metaDescription": "$12 a month for one person, $6 for each extra person, never more than $42. Text reminders are $4 a month plus 5 cents a text. Card processing is 5% of card payments.",
+      "title": "Pricing",
+      "lead": "One plan with every feature. You pay for the people on your calendar, and for texts if you want them.",
+      "trial": "Free for {days} days.",
+      "start": "Start free for {days} days",
+      "openSourceTitle": "Run it yourself for free",
+      "openSourceLead": "Uptempo is open source. On your own server there is no monthly price and no card processing charge from us.",
+      "openSourceLink": "Run it yourself for free",
+      "calculator": {
+        "title": "Work out your price",
+        "staff": "People on your calendar",
+        "fewer": "One fewer person",
+        "more": "One more person",
+        "cap": "The price stops going up after {count} people.",
+        "texts": "Text reminders",
+        "textsHint": "{line} a month plus {each} a text, with a one-time {setup} setup.",
+        "textCount": "Texts per month",
+        "total": "Your monthly price",
+        "perMonth": "a month",
+        "staffLine": "{count, plural, one {# person} other {# people}}",
+        "textsLine": "Text reminders",
+        "cardTitle": "Card processing: 5% of card payments",
+        "cardExample": "On $3,000 of card payments: $150"
+      }
+    },
+    "openSource": {
+      "metaTitle": "Open source | Uptempo Bookings",
+      "metaDescription": "Uptempo is open source under the AGPL-3.0 license. Run it on your own server with Docker Compose.",
+      "title": "Run Uptempo yourself",
+      "lead": "The hosted service and the self-hosted app are the same code. The source is public under the GNU Affero General Public License, version 3.0.",
+      "repo": "View the source on GitHub",
+      "quickstartTitle": "Start it with Docker Compose",
+      "quickstartLead": "You need Git and Docker. These four commands start the app, a worker for scheduled jobs, and a Postgres database.",
+      "quickstartAfter": "Then open the site, finish setup, and book at /book/your-business.",
+      "guide": "Read the self-hosting guide",
+      "licenseTitle": "License",
+      "licenseBody": "AGPL-3.0-only. You can use, change, and share Uptempo. If you run a changed version for other people over a network, you must offer them your changed source code.",
+      "compareTitle": "Hosted or self-hosted",
+      "hostedTitle": "Hosted",
+      "hostedBody": "We run it at bookuptempo.com for any number of businesses. Email, text reminders, and the iPhone apps are set up for you.",
+      "hostedLink": "See pricing",
+      "selfTitle": "Self-hosted",
+      "selfBody": "You run it on a machine you control, for one business. There is no monthly price and no card processing charge from Uptempo."
+    }
   }
 }

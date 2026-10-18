@@ -1,5 +1,6 @@
 "use server";
 
+import { destinationRefundParams } from "@/lib/stripe/refund-params";
 import { requireStaff } from "@/lib/auth/rbac";
 
 import { getT } from "@/lib/terms/server";
@@ -362,6 +363,7 @@ export async function waiveCharge(chargeId: string) {
     if (charge.status === "completed" && charge.stripePaymentIntentId) {
       const refund = await getStripe().refunds.create({
         payment_intent: charge.stripePaymentIntentId,
+        ...destinationRefundParams(charge.connectAccountId),
       });
       stripeRefundId = refund.id;
     }
@@ -425,6 +427,7 @@ export async function refundCharge(chargeId: string) {
       const refund = await getStripe().refunds.create({
         payment_intent: charge.stripePaymentIntentId,
         reason: "requested_by_customer",
+        ...destinationRefundParams(charge.connectAccountId),
       });
       refundId = refund.id;
     }
@@ -508,6 +511,7 @@ export async function getChargeLog(
         reason: charges.reason,
         status: charges.status,
         failureReason: charges.failureReason,
+        platformFeeCents: charges.platformFeeCents,
         createdAt: charges.createdAt,
       })
       .from(charges)

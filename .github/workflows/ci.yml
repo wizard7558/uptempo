@@ -113,6 +113,25 @@ jobs:
       - name: Migrate
         run: node scripts/db-prepare.mjs && node scripts/migrate-platform.mjs && pnpm exec tsx scripts/migrate-tenants.ts
 
+      - name: Prepare archive safety test database
+        id: archive-legacy-db
+        env:
+          PGPASSWORD: postgres
+        run: |
+          RUN_ID="$(node -e "process.stdout.write(require('node:crypto').randomBytes(12).toString('hex'))")"
+          DATABASE_NAME="uptempo_archive_test_${RUN_ID}"
+          createdb -h localhost -p 5432 -U postgres "${DATABASE_NAME}"
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
+            -c "COMMENT ON DATABASE \"${DATABASE_NAME}\" IS 'uptempo-archive-disposable:${RUN_ID}'"
+          echo "run_id=${RUN_ID}" >> "${GITHUB_OUTPUT}"
+          echo "database_name=${DATABASE_NAME}" >> "${GITHUB_OUTPUT}"
+
+      - name: Test archive safety against disposable PostgreSQL database
+        env:
+          ARCHIVE_LEGACY_TEST_RUN_ID: ${{ steps.archive-legacy-db.outputs.run_id }}
+          ARCHIVE_LEGACY_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.archive-legacy-db.outputs.database_name }}
+        run: pnpm exec vitest run src/lib/db/archive-legacy-public.test.ts
+
       - name: Test
         run: pnpm exec vitest run
 

@@ -1,9 +1,11 @@
 export interface EmailMessage {
   from: string;
   to: string | string[];
+  bcc?: string | string[];
   subject: string;
   html: string;
   text?: string;
+  idempotencyKey?: string;
 }
 
 export type EmailProviderId = "resend" | "smtp" | "console";

@@ -185,8 +185,8 @@ function AccountFields({
   );
 }
 
-export function SignupForm() {
-  const [industry, setIndustry] = useState<VerticalId | null>(null);
+export function SignupForm({ initialIndustry = null }: { initialIndustry?: VerticalId | null }) {
+  const [industry, setIndustry] = useState<VerticalId | null>(initialIndustry);
   const terms = VERTICALS[industry ?? "general"].terms;
   return (
     <TermsProvider terms={terms}>

@@ -24,9 +24,6 @@ function trustedOriginsForInstall(): string[] {
           // when ROOT_DOMAIN is overridden per environment (e.g. preview).
           "https://bookuptempo.com",
           "https://www.bookuptempo.com",
-          // Rendé-branded iOS builds may still load byrende.com; remove after the Uptempo iOS builds are live.
-          "https://byrende.com",
-          "https://www.byrende.com",
           "http://localhost:3000" /* pragma: allowlist secret */,
           "https://emme-scheduler.vercel.app",
         ];

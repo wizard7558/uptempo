@@ -69,8 +69,10 @@ function normalizeNotificationSettings(
 
 export function NotificationSettingsForm({
   initialSettings,
+  smsSetupRequired = false,
 }: {
   initialSettings: NotificationSettings;
+  smsSetupRequired?: boolean;
 }) {
   const t = useT("settings");
   const [settings, setSettings] = useState<NotificationSettings>(() =>
@@ -123,7 +125,6 @@ export function NotificationSettingsForm({
                 <Label htmlFor="confirmation-greeting">Custom Greeting</Label>
                 <Button
                   variant="ghost"
-                  
                   onClick={() => resetField("confirmationGreeting")}
                   className="text-xs text-muted-foreground"
                 >
@@ -149,7 +150,6 @@ export function NotificationSettingsForm({
                 <Label htmlFor="confirmation-body">Custom Body Text</Label>
                 <Button
                   variant="ghost"
-                  
                   onClick={() => resetField("confirmationBody")}
                   className="text-xs text-muted-foreground"
                 >
@@ -231,8 +231,7 @@ export function NotificationSettingsForm({
                 onValueChange={(val) =>
                   setSettings((prev) => ({
                     ...prev,
-                    reminderHoursBefore2:
-                      val === "none" ? null : Number(val),
+                    reminderHoursBefore2: val === "none" ? null : Number(val),
                   }))
                 }
               >
@@ -255,7 +254,6 @@ export function NotificationSettingsForm({
                 <Label htmlFor="reminder-greeting">Custom Greeting</Label>
                 <Button
                   variant="ghost"
-                  
                   onClick={() => resetField("reminderGreeting")}
                   className="text-xs text-muted-foreground"
                 >
@@ -281,7 +279,6 @@ export function NotificationSettingsForm({
                 <Label htmlFor="reminder-body">Custom Body Text</Label>
                 <Button
                   variant="ghost"
-                  
                   onClick={() => resetField("reminderBody")}
                   className="text-xs text-muted-foreground"
                 >
@@ -313,10 +310,19 @@ export function NotificationSettingsForm({
               <CardTitle>SMS Reminders</CardTitle>
               <CardDescription>
                 Send text message reminders before appointments.
+                {smsSetupRequired ? (
+                  <span id="sms-setup-first" className="mt-1 block">
+                    {t("textLine.setupFirst")}
+                  </span>
+                ) : null}
               </CardDescription>
             </div>
             <Switch
               checked={settings.smsRemindersEnabled === 1}
+              disabled={smsSetupRequired}
+              aria-describedby={
+                smsSetupRequired ? "sms-setup-first" : undefined
+              }
               onCheckedChange={(checked) =>
                 setSettings((prev) => ({
                   ...prev,
@@ -391,7 +397,6 @@ export function NotificationSettingsForm({
                 <Label htmlFor="sms-body">Custom SMS message (optional)</Label>
                 <Button
                   variant="ghost"
-                  
                   onClick={() => resetField("smsReminderBody")}
                   className="text-xs text-muted-foreground"
                 >
@@ -428,6 +433,11 @@ export function NotificationSettingsForm({
           <CardDescription>
             Optional texts when clients book or when forms and aftercare go out.
             Uses the same opt-in and quiet hours rules as reminders.
+            {smsSetupRequired ? (
+              <span id="sms-setup-first-booking" className="mt-1 block">
+                {t("textLine.setupFirst")}
+              </span>
+            ) : null}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -442,6 +452,10 @@ export function NotificationSettingsForm({
             <Switch
               id="sms-confirm-toggle"
               checked={settings.smsConfirmationEnabled === 1}
+              disabled={smsSetupRequired}
+              aria-describedby={
+                smsSetupRequired ? "sms-setup-first-booking" : undefined
+              }
               onCheckedChange={(checked) =>
                 setSettings((prev) => ({
                   ...prev,
@@ -481,6 +495,10 @@ export function NotificationSettingsForm({
             <Switch
               id="sms-aftercare-toggle"
               checked={settings.smsAftercareEnabled === 1}
+              disabled={smsSetupRequired}
+              aria-describedby={
+                smsSetupRequired ? "sms-setup-first-booking" : undefined
+              }
               onCheckedChange={(checked) =>
                 setSettings((prev) => ({
                   ...prev,
@@ -500,6 +518,10 @@ export function NotificationSettingsForm({
             <Switch
               id="sms-forms-toggle"
               checked={settings.smsFormRequestsEnabled === 1}
+              disabled={smsSetupRequired}
+              aria-describedby={
+                smsSetupRequired ? "sms-setup-first-booking" : undefined
+              }
               onCheckedChange={(checked) =>
                 setSettings((prev) => ({
                   ...prev,
@@ -511,15 +533,21 @@ export function NotificationSettingsForm({
 
           <div className="flex items-center justify-between border-t pt-4">
             <div>
-              <Label htmlFor="sms-intake-toggle">Intake (policies + card) links</Label>
+              <Label htmlFor="sms-intake-toggle">
+                Intake (policies + card) links
+              </Label>
               <p className="text-xs text-muted-foreground mt-1">
-                Also text the intake link when you click &quot;Send Intake&quot; on
-                an appointment.
+                Also text the intake link when you click &quot;Send Intake&quot;
+                on an appointment.
               </p>
             </div>
             <Switch
               id="sms-intake-toggle"
               checked={settings.smsIntakeRequestsEnabled === 1}
+              disabled={smsSetupRequired}
+              aria-describedby={
+                smsSetupRequired ? "sms-setup-first-booking" : undefined
+              }
               onCheckedChange={(checked) =>
                 setSettings((prev) => ({
                   ...prev,

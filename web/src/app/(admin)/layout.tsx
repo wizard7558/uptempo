@@ -9,6 +9,9 @@ import { AdminSidebar } from "@/components/layout/admin-sidebar";
 import { getOnboardingState } from "@/actions/onboarding";
 import { listAllBrokenCalendarConnectionsForTenant } from "@/lib/calendar/tenant-connections";
 import { CalendarConnectionBanner } from "@/components/layout/calendar-connection-banner";
+import { BillingBanner, isBillingBannerStatus } from "@/components/layout/billing-banner";
+import { getTenantBySlug } from "@/lib/tenant/registry";
+import { isSingleMode } from "@/lib/config/mode";
 import { listAlertsForTenant, getUnreadAlertCountForTenant } from "@/lib/alerts/for-tenant";
 import { AlertsBell } from "@/components/layout/alerts-bell";
 import { listUserMemberships } from "@/actions/team";
@@ -18,7 +21,7 @@ import { NavProgress } from "@/components/layout/nav-progress";
 import { TermsProvider } from "@/lib/terms/client";
 import { getT, getTerms } from "@/lib/terms/server";
 import { getEnabledModules } from "@/lib/tenant/modules";
-import { NativeBridge } from "@/components/native/native-bridge";
+import { AppProviders } from "@/components/app-providers";
 import { ThemeProvider } from "@/components/theme-provider";
 
 function SidebarChromeFallback({
@@ -100,6 +103,26 @@ async function CalendarConnectionBannerLoader({
   return <CalendarConnectionBanner items={brokenCalendarConnections} />;
 }
 
+async function BillingBannerLoader({
+  role,
+  tenantSlug,
+}: {
+  role: string;
+  tenantSlug: string | null;
+}) {
+  if (isSingleMode() || role !== "owner" || !tenantSlug) return null;
+  try {
+    const tenant = await getTenantBySlug(tenantSlug);
+    if (!tenant || tenant.comped === 1) return null;
+    if (!isBillingBannerStatus(tenant.subscriptionStatus)) return null;
+    return <BillingBanner status={tenant.subscriptionStatus} />;
+  } catch (error) {
+    // Never let a billing read break the dashboard chrome.
+    console.error("[BillingBanner] failed to load:", error);
+    return null;
+  }
+}
+
 export default async function AdminLayout({
   children,
 }: {
@@ -143,6 +166,7 @@ export default async function AdminLayout({
     sidebarCookie === undefined ? true : sidebarCookie !== "false";
 
   return (
+    <AppProviders>
     <ThemeProvider>
     <TermsProvider terms={terms}>
     <SidebarProvider
@@ -170,13 +194,16 @@ export default async function AdminLayout({
         <Suspense fallback={<BannerSkeleton />}>
           <CalendarConnectionBannerLoader tenantSlug={tenantSlug} />
         </Suspense>
+        <Suspense fallback={null}>
+          <BillingBannerLoader role={role} tenantSlug={tenantSlug} />
+        </Suspense>
         <div className="flex-1 overflow-x-hidden overflow-y-auto">
           <div className="mx-auto min-h-0 w-full max-w-[1600px]">{children}</div>
         </div>
       </SidebarInset>
-      <NativeBridge />
     </SidebarProvider>
     </TermsProvider>
     </ThemeProvider>
+    </AppProviders>
   );
 }

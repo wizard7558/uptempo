@@ -1,5 +1,6 @@
 "use server";
 
+import { syncBillableStaff } from "@/lib/billing/billable-staff";
 import { getT } from "@/lib/terms/server";
 import { withTenantDb } from "@/lib/db/tenant";
 import {
@@ -51,6 +52,7 @@ export async function createStaffMember(data: {
         return staffMember;
       });
     });
+    await syncBillableStaff(slug);
 
     revalidatePath("/settings/staff");
     trackEvent("stylist.created", {}, { tenantSlug: slug });
@@ -138,6 +140,7 @@ export async function updateStaffMember(data: {
         .where(and(eq(staff.id, id), eq(staff.isActive, 1)))
         .returning({ id: staff.id });
     });
+    await syncBillableStaff(slug);
 
     if (result.length === 0) {
       return {
@@ -208,6 +211,7 @@ export async function updateStaffGoals(data: {
         .where(and(eq(staff.id, id), eq(staff.isActive, 1)))
         .returning({ id: staff.id });
     });
+    await syncBillableStaff(slug);
     if (result.length === 0) {
       return {
         success: false as const,
@@ -232,6 +236,7 @@ export async function deactivateStaffMember(id: string) {
         .where(eq(staff.id, id))
         .returning({ id: staff.id });
     });
+    await syncBillableStaff(slug);
 
     if (result.length === 0) {
       return {
@@ -336,6 +341,7 @@ export async function setBooksMode(
       .where(and(eq(staff.id, parsed.data.staffId), eq(staff.isActive, 1)))
       .returning({ id: staff.id }),
   );
+  await syncBillableStaff(slug);
   if (rows.length === 0) return { success: false, error: ts("staffBooks.saveFailed") };
   revalidatePath("/settings/staff");
   return { success: true };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useT } from "@/lib/terms/client";
+import { useT, useTerms } from "@/lib/terms/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientProfileForm } from "@/components/booking-public/client-profile-form";
 import { ClientFieldsSection } from "@/components/booking-public/client-fields-section";
@@ -78,6 +78,7 @@ export function AccountHub({
   salonTimezone,
 }: AccountHubProps) {
   const t = useT("booking");
+  const { prepaidBalance } = useTerms();
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8 space-y-5 sm:space-y-6">
       <div>
@@ -96,7 +97,7 @@ export function AccountHub({
         >
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="payment">Payment</TabsTrigger>
-          <TabsTrigger value="beauty-bank">Beauty&nbsp;Bank</TabsTrigger>
+          <TabsTrigger value="stored-value">{prepaidBalance}</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
           <TabsTrigger value="notifications">Alerts</TabsTrigger>
         </TabsList>
@@ -127,7 +128,7 @@ export function AccountHub({
           <CardManagement clientId={clientId} />
         </TabsContent>
 
-        <TabsContent value="beauty-bank" className="mt-4 space-y-6">
+        <TabsContent value="stored-value" className="mt-4 space-y-6">
           <StoredValueSection
             clientId={clientId}
             initialData={storedValue}

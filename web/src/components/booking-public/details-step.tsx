@@ -9,10 +9,13 @@ import { updateClientName } from "@/actions/booking-public";
 import { useT } from "@/lib/terms/client";
 import { MailIcon, LoaderIcon } from "lucide-react";
 import { identifyPostHogUser } from "@/lib/analytics/posthog-provider";
+import { notifyNativeAuthSuccess } from "@/lib/native/push-register";
+import type { BookingVerificationChannel } from "@/lib/booking/verification-channel";
 
 interface IdentityStepProps {
   salonId: string;
   onComplete: (clientId: string, clientName: string, phone?: string) => void;
+  showPhoneField?: boolean;
 }
 
 type StepPhase = "input" | "verify" | "name";
@@ -21,7 +24,7 @@ const fieldClass =
   "min-h-11 rounded-none border-0 border-b border-[var(--line)] px-0 py-3 font-light shadow-none focus-visible:border-[var(--ink)] focus-visible:ring-0";
 
 /** Email sign-in used by requests, classes, packs, and membership. */
-export function IdentityStep({ salonId, onComplete }: IdentityStepProps) {
+export function IdentityStep({ salonId, onComplete, showPhoneField = true }: IdentityStepProps) {
   const [phase, setPhase] = useState<StepPhase>("input");
   const [identifier, setIdentifier] = useState("");
   const [phone, setPhone] = useState("");
@@ -93,6 +96,7 @@ export function IdentityStep({ salonId, onComplete }: IdentityStepProps) {
         setCode("");
         return;
       }
+      notifyNativeAuthSuccess();
       if (data.isReturning) {
         identifyPostHogUser(data.clientId, { email: identifier, name: data.name });
         onComplete(data.clientId, data.name, phone.trim() || undefined);
@@ -150,23 +154,25 @@ export function IdentityStep({ salonId, onComplete }: IdentityStepProps) {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
-        <div className="space-y-2">
-          <label htmlFor="phone" className="text-[13px] font-medium">
-            Mobile number (optional)
-          </label>
-          <Input
-            id="phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="(555) 555-5555"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendCode()}
-            className={fieldClass}
-          />
-          <p className="text-[13px] text-[var(--ink-soft)]">We&apos;ll text your code and appointment reminders here.</p>
-        </div>
+        {showPhoneField && (
+          <div className="space-y-2">
+            <label htmlFor="phone" className="text-[13px] font-medium">
+              Mobile number (optional)
+            </label>
+            <Input
+              id="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(555) 555-5555"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendCode()}
+              className={fieldClass}
+            />
+            <p className="text-[13px] text-[var(--ink-soft)]">We&apos;ll text your code and appointment reminders here.</p>
+          </div>
+        )}
         <Button onClick={handleSendCode} disabled={!identifier.trim() || sending} className="w-full" variant="default">
           {sending && <LoaderIcon className="size-4 animate-spin" />}
           Send Code
@@ -254,6 +260,7 @@ export function IdentityStep({ salonId, onComplete }: IdentityStepProps) {
 
 interface DetailsStepProps {
   salonId: string;
+  verificationChannel?: BookingVerificationChannel;
   clientId: string | null;
   clientName: string | null;
   onComplete: (clientId: string, clientName: string, phone?: string) => void;
@@ -264,6 +271,7 @@ interface DetailsStepProps {
 /** Name and phone for the public book flow. A signed-in client confirms who they are. */
 export function DetailsStep({
   salonId,
+  verificationChannel = "phone",
   clientId,
   clientName,
   onComplete,
@@ -334,6 +342,7 @@ export function DetailsStep({
         setCode("");
         return;
       }
+      notifyNativeAuthSuccess();
       const resolvedName = data.isReturning ? data.name : name.trim();
       identifyPostHogUser(data.clientId, { name: resolvedName });
       onComplete(data.clientId, resolvedName, phone.trim());
@@ -355,6 +364,15 @@ export function DetailsStep({
         <Button type="button" className="w-full" onClick={onContinue}>
           {t("detailsStep.continue")}
         </Button>
+      </div>
+    );
+  }
+
+  if (verificationChannel === "email") {
+    return (
+      <div className="space-y-4">
+        <h2 className="display text-3xl text-[var(--ink)]">{t("detailsStep.title")}</h2>
+        <IdentityStep salonId={salonId} showPhoneField={false} onComplete={onComplete} />
       </div>
     );
   }

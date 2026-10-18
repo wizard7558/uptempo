@@ -1,5 +1,11 @@
 import { getStripe } from "./server";
 
+/** New Connect accounts pay out weekly on Monday (D12). Existing accounts switch in 6.5b. */
+const WEEKLY_PAYOUT_SCHEDULE = {
+  interval: "weekly" as const,
+  weekly_anchor: "monday" as const,
+};
+
 /**
  * Create a Stripe Connect account for a salon tenant using controller
  * properties. The connected account uses an Express-style dashboard with
@@ -34,8 +40,29 @@ export async function createConnectAccount(params: {
     metadata: {
       tenantSlug: params.tenantSlug,
     },
+    settings: {
+      payouts: { schedule: WEEKLY_PAYOUT_SCHEDULE },
+    },
   });
   return { accountId: account.id };
+}
+
+/** Move an existing Connect account to the weekly Monday payout schedule (6.5b). */
+export async function setWeeklyPayouts(accountId: string): Promise<void> {
+  await getStripe().accounts.update(accountId, {
+    settings: {
+      payouts: { schedule: WEEKLY_PAYOUT_SCHEDULE },
+    },
+  }, { timeout: 30_000, maxNetworkRetries: 0 });
+}
+
+function resolveRootDomain(rootDomain?: string): string {
+  return (rootDomain ?? process.env.ROOT_DOMAIN ?? "bookuptempo.com").trim();
+}
+
+/** Absolute URL of Settings, Billing; the return target for Stripe-hosted flows. */
+export function billingSettingsUrl(rootDomain?: string): string {
+  return `https://${resolveRootDomain(rootDomain)}/settings/billing`;
 }
 
 /**
@@ -56,13 +83,12 @@ export async function createOnboardingLink(params: {
    */
   returnPath?: "/onboarding";
 }): Promise<{ url: string }> {
-  const domain =
-    (params.rootDomain ?? process.env.ROOT_DOMAIN ?? "bookuptempo.com").trim();
+  const domain = resolveRootDomain(params.rootDomain);
 
   const webBase =
     params.returnPath === "/onboarding"
       ? `https://${domain}/onboarding`
-      : `https://${domain}/settings/billing`;
+      : billingSettingsUrl(domain);
 
   // Stripe requires https return/refresh URLs (custom schemes are rejected),
   // so for native we point at the bounce endpoint which redirects to the app.

@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm space-y-6 border border-[var(--line)] bg-[var(--ivory-raised)] p-8">
         <div className="space-y-4 text-center mb-4">
           <div className="flex justify-center mb-4">
-            <Image src="/uptempo.svg" alt="Uptempo" width={64} height={64} priority />
+            <Image src="/brand/wordmark.svg" alt="Uptempo" width={190} height={36} priority className="dark:invert" />
           </div>
           <h1 className="display text-3xl text-[var(--ink)]">
             Forgot your password?

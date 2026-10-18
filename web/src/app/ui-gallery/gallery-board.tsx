@@ -208,7 +208,11 @@ function GallerySection({ scheme }: { scheme: "light" | "dark" }) {
             </div>
           ))}
         </div>
-        <Slider defaultValue={[40]} className="max-w-sm" />
+        <Slider
+          defaultValue={[40]}
+          thumbLabels={[t("sliderValue")]}
+          className="max-w-sm"
+        />
         {TAB_VARIANTS.map((variant) => (
           <Tabs key={variant} defaultValue="one">
             <TabsList variant={variant}>

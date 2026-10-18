@@ -3,7 +3,7 @@
 Paste these into App Store Connect → the `com.uptempo.owner` app record.
 
 - **App name:** Uptempo Pro
-- **Subtitle (≤30 chars):** Run your salon schedule
+- **Subtitle (≤30 chars):** Run your service business
 - **Primary category:** Business
 - **Secondary category:** Productivity
 - **Age rating:** 4+
@@ -13,31 +13,31 @@ Paste these into App Store Connect → the `com.uptempo.owner` app record.
 
 **Keywords (≤100 chars, comma-separated):**
 ```
-salon,scheduling,booking,clients,calendar,appointment,stylist,manage,payments,revenue,business
+appointments,scheduling,clients,calendar,services,staff,payments,booking,small business,operations
 ```
 
 **Promotional text (≤170 chars):**
 ```
-Run your salon from your phone. Schedule, clients, payments, and calendar, in one place.
+Manage schedules, appointments, clients, services, and payment activity from your phone.
 ```
 
 **Description:**
 ```
-Uptempo Pro is the companion app for salon owners and staff on the Uptempo platform.
+Uptempo Pro is the companion app for owners and staff at appointment-based businesses.
 
-• See your schedule and manage appointments from anywhere
-• Manage clients, services, and stylists
-• Take payments and track revenue, powered by Stripe
-• Sync with Google Calendar to keep your availability accurate
-• Get notified when new bookings arrive
-• Configure your booking page, policies, and team
+• Review schedules and manage appointments and requests
+• Manage client records, services, and team access
+• Take payments for in-person services and review payment activity through Stripe
+• Connect Google Calendar to coordinate availability
+• Receive new-booking alerts
+• Configure booking pages, policies, and team settings
 
-Built for the people who run the salon. Everything you manage on the Uptempo web dashboard, now on your phone.
+Uptempo Pro brings core scheduling and client tools from the Uptempo dashboard to your phone. Availability, payment setup, and booking options depend on each business.
 ```
 
-**What's New (first release):**
+**What's New:**
 ```
-First release of Uptempo Pro. Manage your salon's schedule, clients, and payments from your phone.
+Expanded Uptempo Pro for appointment-based businesses, with updates to app links and platform billing details.
 ```
 
 ## Screenshots needed

@@ -61,6 +61,8 @@ interface TimeStepProps {
   sampleSchedule?: {
     dates: DateEntry[];
     slots: SlotEntry[];
+    /** yyyy-MM-dd. Pins the calendar's "today" so server and client markup match. */
+    today?: string;
   };
 }
 
@@ -367,6 +369,7 @@ export function TimeStep({
             showOutsideDays={false}
             selected={activeDate ? parseISO(activeDate) : undefined}
             defaultMonth={dates[0] ? parseISO(dates[0].date) : undefined}
+            today={sampleSchedule?.today ? parseISO(sampleSchedule.today) : undefined}
             onDayClick={(day) => {
               const key = format(day, "yyyy-MM-dd");
               if (!enabled.has(key)) return;

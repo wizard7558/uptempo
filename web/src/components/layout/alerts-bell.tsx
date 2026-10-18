@@ -98,7 +98,7 @@ export function AlertsBell({
                   disabled={isPending}
                   aria-label="Dismiss alert"
                   className={cn(
-                    "mt-0.5 shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                    "mt-0.5 shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
                     isPending && "opacity-50",
                   )}
                 >

@@ -231,7 +231,7 @@ export default async function SettingsPage() {
       <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {links.map((link) => (
           <Link key={link.href} href={link.href}>
-            <Card className="h-full cursor-pointer transition-colors hover:bg-accent/50">
+            <Card className="h-full cursor-pointer transition-colors hover:bg-muted">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">

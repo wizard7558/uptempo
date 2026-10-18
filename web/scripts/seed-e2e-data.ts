@@ -147,7 +147,8 @@ async function seed() {
   // (resolveOnboardingRedirect), so the seeded salon must be marked launched.
   await sql`
     UPDATE tenants
-    SET onboarding_steps = ${sql.json({ policies: true, branding: true, launched: true })}
+    SET onboarding_steps = ${sql.json({ policies: true, branding: true, launched: true })},
+        sms_line_status = 'shared'
     WHERE slug = ${TEST_TENANT_SLUG}
   `;
 

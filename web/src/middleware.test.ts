@@ -12,27 +12,25 @@ afterEach(() => {
 });
 
 describe("middleware legacy redirect", () => {
-  it("308-redirects byrende.com/quiz to www.bookuptempo.com preserving the query", async () => {
+  it("does not redirect a detached byrende.com host", async () => {
     const req = new NextRequest("https://byrende.com/quiz?src=flyer", {
       headers: { host: "byrende.com" },
     });
     const res = await middleware(req);
-    expect(res.status).toBe(308);
-    expect(res.headers.get("location")).toBe(
-      "https://www.bookuptempo.com/quiz?src=flyer",
-    );
+    expect(res.status).not.toBe(308);
+    expect(res.headers.get("location")).toBeNull();
   });
 
   it.each(["/book/demo-salon", "/login", "/api/auth/sign-in/email"])(
-    "308-redirects byrende.com%s",
+    "does not redirect www.byrende.com%s",
     async (path) => {
       const res = await middleware(
         new NextRequest(`https://www.byrende.com${path}`, {
           headers: { host: "www.byrende.com" },
         }),
       );
-      expect(res.status).toBe(308);
-      expect(res.headers.get("location")).toBe(`https://www.bookuptempo.com${path}`);
+      expect(res.status).not.toBe(308);
+      expect(res.headers.get("location")).toBeNull();
     },
   );
 
@@ -53,10 +51,10 @@ describe("middleware legacy redirect", () => {
     "/api/twilio/status",
     "/api/cron/send-reminders",
     "/api/loopmessage/webhook",
-  ])("does not redirect %s on www.byrende.com", async (path) => {
+  ])("does not redirect %s on the apex host", async (path) => {
     const res = await middleware(
-      new NextRequest(`https://www.byrende.com${path}`, {
-        headers: { host: "www.byrende.com" },
+      new NextRequest(`https://bookuptempo.com${path}`, {
+        headers: { host: "bookuptempo.com" },
       }),
     );
     expect(res.status).not.toBe(308);

@@ -79,6 +79,8 @@ vi.mock("next/cache", () => ({
   revalidatePath: h.revalidatePath,
   unstable_cache: (fn: () => unknown) => fn,
 }));
+const ensureHostedSubscription = vi.hoisted(() => vi.fn(async () => ({})));
+vi.mock("@/lib/billing/subscriptions", () => ({ ensureHostedSubscription }));
 vi.mock("@/lib/tenant/provision", () => ({ provisionTenantSchema: vi.fn() }));
 vi.mock("@/lib/tenant/registry", () => ({
   getTenantBySlug: vi.fn(async () => h.state.tenant),
@@ -208,6 +210,30 @@ describe("launchSalon", () => {
       success: false,
       error: "Only the salon owner can do this",
     });
+  });
+
+  it("starts the hosted trial for the launching business after success", async () => {
+    const result = await launchSalon();
+    expect(result).toEqual({ success: true });
+    expect(ensureHostedSubscription).toHaveBeenCalledTimes(1);
+    expect(ensureHostedSubscription).toHaveBeenCalledWith("salon-x", {
+      trialDays: 14,
+    });
+  });
+
+  it("does not start a trial when launch is rejected", async () => {
+    h.state.servicesCount = 0;
+    await launchSalon();
+    expect(ensureHostedSubscription).not.toHaveBeenCalled();
+  });
+
+  it("still succeeds when the hosted subscription setup throws", async () => {
+    ensureHostedSubscription.mockRejectedValueOnce(new Error("stripe down"));
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const result = await launchSalon();
+    expect(result).toEqual({ success: true });
+    expect(err).toHaveBeenCalled();
+    err.mockRestore();
   });
 
   it("preserves unknown jsonb keys on write", async () => {

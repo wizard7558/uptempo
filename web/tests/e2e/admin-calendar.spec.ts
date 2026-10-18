@@ -13,13 +13,21 @@ function daytimeZone(now = new Date()): string {
 }
 
 test.describe("admin calendar", () => {
-  test("day, rooms, check-in, text, drag, and the phone agenda", async ({ page }) => {
+  test("day, rooms, check-in, text, drag, and the phone agenda", async ({ page }, testInfo) => {
     test.setTimeout(180_000);
     const sql = postgres(process.env.DATABASE_URL!);
-    const previousZone = daytimeZone();
+    let originalTimezone: string | null = null;
     try {
+      const settings = await sql.unsafe(
+        `SELECT timezone FROM ${SCHEMA}.business_settings LIMIT 1`,
+      );
+      originalTimezone =
+        typeof settings[0]?.timezone === "string" ? settings[0].timezone : null;
+      if (!originalTimezone) throw new Error("Business timezone could not be read");
+
+      const displayTimezone = daytimeZone();
       await sql.unsafe(
-        `UPDATE ${SCHEMA}.business_settings SET timezone = '${previousZone}'`,
+        `UPDATE ${SCHEMA}.business_settings SET timezone = '${displayTimezone}'`,
       );
       await sql.unsafe(`
         INSERT INTO ${SCHEMA}.resources (name, kind, capacity, is_active)
@@ -49,7 +57,7 @@ test.describe("admin calendar", () => {
       }
       expect(foundHost).toBe(true);
       await page.screenshot({
-        path: "/opt/cursor/artifacts/calendar-day-desktop.png",
+        path: testInfo.outputPath("calendar-day-desktop.png"),
         fullPage: false,
       });
 
@@ -97,7 +105,7 @@ test.describe("admin calendar", () => {
       await expect(page.getByTestId("agenda-list")).toBeVisible();
       await expect(page.getByRole("button", { name: /E2E Host Client/ })).toBeVisible();
       await page.screenshot({
-        path: "/opt/cursor/artifacts/calendar-agenda-phone.png",
+        path: testInfo.outputPath("calendar-agenda-phone.png"),
         fullPage: false,
       });
     } finally {
@@ -108,9 +116,12 @@ test.describe("admin calendar", () => {
       await sql.unsafe(
         `UPDATE ${SCHEMA}.appointments SET checked_in_at = NULL WHERE client_id = '${HOST_CLIENT_ID}'`,
       );
-      await sql.unsafe(
-        `UPDATE ${SCHEMA}.business_settings SET timezone = 'America/New_York'`,
-      );
+      if (originalTimezone) {
+        await sql.unsafe(
+          `UPDATE ${SCHEMA}.business_settings SET timezone = $1`,
+          [originalTimezone],
+        );
+      }
       await sql.end();
     }
   });

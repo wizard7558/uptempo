@@ -1,5 +1,8 @@
 import { withTenantDb } from "@/lib/db/tenant";
 import { eq } from "drizzle-orm";
+import { publicDb } from "@/lib/db";
+import { tenants } from "@/lib/db/schema";
+import { isSingleMode } from "@/lib/config/mode";
 import { checkSmsConsent } from "./consent";
 import { getSmsProvider } from "@/lib/providers/sms";
 import { isWithinSendWindow } from "./quiet-hours";
@@ -42,6 +45,26 @@ export async function sendSms({
   if (!provider.enabled) {
     return { success: false, error: "sms_disabled" };
   }
+  let messagingServiceSid: string | undefined;
+  if (!isSingleMode()) {
+    const [tenant] = await publicDb
+      .select({ smsLineStatus: tenants.smsLineStatus, smsMessagingServiceSid: tenants.smsMessagingServiceSid })
+      .from(tenants)
+      .where(eq(tenants.slug, tenantSlug))
+      .limit(1);
+    if (tenant?.smsLineStatus === "shared") {
+      // Shared beta traffic continues through the platform's pooled sender.
+    } else if (tenant?.smsLineStatus === "active" && tenant.smsMessagingServiceSid) {
+      messagingServiceSid = tenant.smsMessagingServiceSid;
+    } else {
+      return { success: false, error: "text_line_off" };
+    }
+    if (messagingServiceSid && provider.id === "loopmessage") {
+      // LoopMessage cannot select the tenant-owned Twilio service for an active
+      // hosted line; fail closed rather than silently using its send route.
+      return { success: false, error: "sms_provider_incompatible" };
+    }
+  }
   const body = toPlainSms(rawBody);
   // Gate 1: Consent check
   const hasConsent = await checkSmsConsent(tenantSlug, to);
@@ -70,6 +93,7 @@ export async function sendSms({
     body,
     statusCallbackUrl: `${getBaseUrl()}/api/twilio/status?tenant=${encodeURIComponent(tenantSlug)}`,
     passthrough: tenantSlug,
+    ...(messagingServiceSid ? { messagingServiceSid } : {}),
   });
 
   if (result.success) {

@@ -3,10 +3,10 @@ import type { CapacitorConfig } from "@capacitor/cli";
 /**
  * Uptempo (client) iOS app — the consumer marketplace.
  *
- * Remote-URL mode: opens the salon discovery screen; clients pick a salon and
- * book at /book/:slug. Stripe payment (PaymentElement/SetupIntent) runs inline
- * in the WebView. The `uptempo-client://` scheme is reserved for any future
- * system-browser returns (registered in Xcode → URL Types).
+ * Remote-URL mode: opens the appointment-business directory; clients choose a
+ * business and book at /book/:slug. Stripe payment (PaymentElement/SetupIntent)
+ * runs inline in the WebView. The `uptempo-client://` scheme handles approved
+ * system-browser return links (registered in Xcode → URL Types).
  */
 const config: CapacitorConfig = {
   appId: "com.uptempo.client",
@@ -17,7 +17,7 @@ const config: CapacitorConfig = {
   backgroundColor: "#F8F6F1",
   zoomEnabled: false,
   server: {
-    url: "https://bookuptempo.com/discover",
+    url: "https://www.bookuptempo.com/discover",
     allowNavigation: ["bookuptempo.com", "*.bookuptempo.com"],
     iosScheme: "https",
   },

@@ -13,7 +13,7 @@ import { getBookingSession } from "@/lib/booking/session-cookie";
 import { getStripe } from "@/lib/stripe/server";
 import { getConnectChargeParams } from "@/lib/stripe/connect-charge-params";
 import { getOrCreateMonthlyPrice } from "@/lib/stripe/membership-prices";
-import { feePercentForTenant } from "@/lib/billing/platform-pricing";
+import { processingFeePercent } from "@/lib/billing/processing-fee";
 import { customAmountError } from "@/lib/membership/custom-amount";
 import {
   appendStoredValueLedger,
@@ -546,7 +546,7 @@ async function createStoredValueSubscriptionAndRecord(params: {
 
   const customerId = await ensureStripeCustomer(slug, clientId);
   const connect = await getConnectChargeParams(slug, effectiveAmountCents);
-  const feePercent = applicationFeePercentForTenant(tenant);
+  const feePercent = processingFeePercent(tenant);
 
   const subParams: Stripe.SubscriptionCreateParams = {
     customer: customerId,
@@ -1008,13 +1008,4 @@ export async function createStoredValueTopUpPaymentIntent(data: {
 
   const pi = await getStripe().paymentIntents.create(intentParams);
   return { success: true as const, clientSecret: pi.client_secret };
-}
-
-// Fee percentage now lives in the shared platform-pricing module (single source
-// of truth for the per-transaction application fee and the billing preview).
-function applicationFeePercentForTenant(tenant: {
-  plan: string;
-  platformFeePercent: number | null;
-}): number {
-  return feePercentForTenant(tenant);
 }

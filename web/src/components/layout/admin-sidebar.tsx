@@ -198,7 +198,7 @@ export function AdminSidebar({
               aria-label="Go to schedule"
               className="flex size-10 items-center justify-center rounded-xl"
             >
-              <Image src="/uptempo.svg" alt="Uptempo" width={32} height={32} />
+              <Image src="/brand/mark.svg" alt="Uptempo" width={32} height={32} className="dark:invert" />
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -231,7 +231,7 @@ export function AdminSidebar({
                     className="flex shrink-0 items-center"
                     aria-label="Go to schedule"
                   >
-                    <Image src="/uptempo.svg" alt="Uptempo" width={32} height={32} />
+                    <Image src="/brand/mark.svg" alt="Uptempo" width={32} height={32} className="dark:invert" />
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-none">
                     <Link

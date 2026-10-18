@@ -11,6 +11,7 @@ import { SuccessView } from "@/components/booking-public/success-view";
 import { getClientPaymentMethod } from "@/actions/stripe";
 import { servicesNeedAddress } from "@/actions/booking-public";
 import { trackClientEvent } from "@/lib/analytics/posthog-provider";
+import type { BookingVerificationChannel } from "@/lib/booking/verification-channel";
 
 export const SLOT_NO_LONGER_FITS_MESSAGE =
   "That time no longer fits your visit. Pick another time.";
@@ -391,6 +392,7 @@ interface BookingWizardProps {
   clientSession: ClientSession | null;
   waitlistEnabled?: boolean;
   clientPhone?: string | null;
+  verificationChannel?: BookingVerificationChannel;
   prefillStaffId?: string;
   prefillServiceIds?: string[];
   prefillStaffName?: string;
@@ -414,6 +416,7 @@ export function BookingWizard({
   clientSession,
   waitlistEnabled = false,
   clientPhone = null,
+  verificationChannel = "phone",
   prefillStaffId,
   prefillServiceIds,
   prefillStaffName,
@@ -662,6 +665,7 @@ export function BookingWizard({
 
         {state.currentStep === "details" && (
           <DetailsStep
+            verificationChannel={verificationChannel}
             salonId={salonId}
             clientId={state.clientId}
             clientName={state.clientName}

@@ -44,6 +44,7 @@ function createMockPublicDb() {
     insert: vi.fn().mockReturnThis(),
     values: vi.fn().mockReturnThis(),
     onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+    returning: vi.fn().mockResolvedValue([{ slug: "test-salon" }]),
     update: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
   };
@@ -367,6 +368,30 @@ describe("Stripe webhook handler integration", () => {
       expect(mockCreditStoredValue).not.toHaveBeenCalled();
       expect(mockGrantMembershipCredits).not.toHaveBeenCalled();
     });
+  });
+
+  it("a hosted plan subscription update returns 200 and never reaches the membership update", async () => {
+    const hostedSub = {
+      id: "sub_host",
+      status: "past_due",
+      metadata: { purpose: "uptempo_hosted_plan", tenantSlug: "test-salon" },
+    };
+    mockStripe.subscriptions.retrieve.mockResolvedValueOnce(hostedSub);
+    mockVerifyWebhookSignature.mockReturnValue(
+      makeStripeEvent("customer.subscription.updated", hostedSub),
+    );
+
+    const response = await POST(
+      createMockRequest("{}", { "stripe-signature": "valid_sig" }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ received: true });
+    expect(mockPublicDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({ subscriptionStatus: "past_due" }),
+    );
+    expect(withTenantDb).not.toHaveBeenCalled();
+    expect(mockDb.update).not.toHaveBeenCalled();
   });
 
   it("returns 200 for unhandled event types", async () => {

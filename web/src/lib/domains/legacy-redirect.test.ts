@@ -3,10 +3,10 @@ import { legacyRedirectTarget, NEW_PRIMARY_ORIGIN } from "./legacy-redirect";
 
 describe("legacyRedirectTarget", () => {
   it.each([
-    ["byrende.com", "/quiz", "?src=flyer"],
-    ["www.byrende.com", "/book/demo-salon", ""],
-    ["byrende.com", "/login", "?next=/schedule"],
-    ["www.byrende.com", "/api/auth/callback/google", "?code=abc"],
+    ["bookuptempo.com", "/quiz", "?src=flyer"],
+    ["bookuptempo.com", "/book/demo-salon", ""],
+    ["bookuptempo.com", "/login", "?next=/schedule"],
+    ["bookuptempo.com", "/api/auth/callback/google", "?code=abc"],
     ["bookuptempo.com", "/waitlist", "?src=expo-2026"],
     ["bookuptempo.com", "/", ""],
   ])(
@@ -19,25 +19,25 @@ describe("legacyRedirectTarget", () => {
   );
 
   it("targets https://www.bookuptempo.com", () => {
-    expect(legacyRedirectTarget("byrende.com", "/book/acme", "?src=flyer")).toBe(
+    expect(legacyRedirectTarget("bookuptempo.com", "/book/acme", "?src=flyer")).toBe(
       "https://www.bookuptempo.com/book/acme?src=flyer",
     );
   });
 
   it("redirects a path that only shares a prefix with an old marketing label", () => {
-    expect(legacyRedirectTarget("byrende.com", "/quizzical", "")).toBe(
+    expect(legacyRedirectTarget("bookuptempo.com", "/quizzical", "")).toBe(
       `${NEW_PRIMARY_ORIGIN}/quizzical`,
     );
   });
 
   it("ignores the port on the host header", () => {
-    expect(legacyRedirectTarget("byrende.com:443", "/login", "")).toBe(
+    expect(legacyRedirectTarget("bookuptempo.com:443", "/login", "")).toBe(
       `${NEW_PRIMARY_ORIGIN}/login`,
     );
   });
 
   it("is case-insensitive on the host", () => {
-    expect(legacyRedirectTarget("ByRende.com", "/dashboard", "")).toBe(
+    expect(legacyRedirectTarget("BookUptempo.com", "/dashboard", "")).toBe(
       `${NEW_PRIMARY_ORIGIN}/dashboard`,
     );
   });
@@ -51,16 +51,15 @@ describe("legacyRedirectTarget", () => {
     "/api/loopmessage/webhook",
     "/.well-known/apple-app-site-association",
     "/apple-app-site-association",
-  ])("leaves callback path %s on the retired host", (pathname) => {
-    expect(legacyRedirectTarget("www.byrende.com", pathname, "")).toBeNull();
+  ])("leaves callback path %s on the apex host", (pathname) => {
     expect(legacyRedirectTarget("bookuptempo.com", pathname, "")).toBeNull();
   });
 
   it("does not treat a nearby path as an exempt callback", () => {
-    expect(legacyRedirectTarget("byrende.com", "/api/stripe-extra", "")).toBe(
+    expect(legacyRedirectTarget("bookuptempo.com", "/api/stripe-extra", "")).toBe(
       `${NEW_PRIMARY_ORIGIN}/api/stripe-extra`,
     );
-    expect(legacyRedirectTarget("byrende.com", "/api/auth/sign-in", "")).toBe(
+    expect(legacyRedirectTarget("bookuptempo.com", "/api/auth/sign-in", "")).toBe(
       `${NEW_PRIMARY_ORIGIN}/api/auth/sign-in`,
     );
   });
@@ -68,6 +67,8 @@ describe("legacyRedirectTarget", () => {
   it.each([
     ["www.bookuptempo.com", "/quiz"],
     ["www.bookuptempo.com", "/book/demo-salon"],
+    ["byrende.com", "/quiz"],
+    ["www.byrende.com", "/login"],
     ["salon.example.com", "/quiz"],
     ["localhost", "/login"],
     [["emme", "scheduler.vercel.app"].join("-"), "/book/demo-salon"],

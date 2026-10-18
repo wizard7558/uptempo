@@ -1,5 +1,6 @@
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 
 vi.mock("./globals.css", () => ({}));
@@ -21,19 +22,6 @@ vi.mock("next/script", () => ({
     children?: React.ReactNode;
   }) =>
     src ? <div data-ga-src={src} /> : <div id={id}>{children}</div>,
-}));
-
-vi.mock("next-intl", () => ({
-  NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-vi.mock("@/lib/analytics/posthog-provider", () => ({
-  PostHogProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-vi.mock("@/components/ui/sonner", () => ({ Toaster: () => null }));
-vi.mock("@/components/ui/tooltip", () => ({
-  TooltipProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 vi.mock("@vercel/analytics/next", () => ({
@@ -76,5 +64,14 @@ describe("RootLayout analytics", () => {
     expect(html).toContain("G-TEST123");
     expect(html).toContain("vercel-analytics");
     expect(html).toContain("vercel-speed");
+  });
+});
+
+describe("RootLayout client weight", () => {
+  it("leaves the app-wide client providers to each route group", () => {
+    // Marketing pages share this layout. Importing the toast, tooltip, or
+    // translation providers here ships the admin UI's client code to them.
+    const source = readFileSync(new URL("./layout.tsx", import.meta.url), "utf8");
+    expect(source).not.toMatch(/Toaster|TooltipProvider|NextIntlClientProvider|PostHogProvider/);
   });
 });

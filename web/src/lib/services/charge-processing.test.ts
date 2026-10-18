@@ -5,7 +5,7 @@ vi.mock("@/lib/stripe/server", () => ({
   getStripe: () => ({ paymentIntents: { create } }),
 }));
 
-import { calculatePlatformFee, processOffSessionCharge } from "./charge-processing";
+import { processOffSessionCharge } from "./charge-processing";
 
 const params = {
   amountCents: 5000,
@@ -64,19 +64,5 @@ describe("idempotency key", () => {
   it("is left off when not given", async () => {
     await processOffSessionCharge(params);
     expect(create.mock.calls[0]).toHaveLength(1);
-  });
-});
-
-describe("calculatePlatformFee", () => {
-  it("is 0 in single mode", () => {
-    vi.stubEnv("UPTEMPO_MODE", "single");
-    expect(
-      calculatePlatformFee(10_000, { plan: "business", platformFeePercent: 2 }),
-    ).toBe(0);
-  });
-
-  it("uses the plan percent in multi mode", () => {
-    vi.stubEnv("UPTEMPO_MODE", "multi");
-    expect(calculatePlatformFee(10_000, { plan: "pro" })).toBe(100);
   });
 });

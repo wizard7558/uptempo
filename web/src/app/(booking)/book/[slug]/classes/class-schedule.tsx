@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DetailsStep } from "@/components/booking-public/details-step";
+import type { BookingVerificationChannel } from "@/lib/booking/verification-channel";
 import { ProgressBar } from "@/components/booking-public/progress-bar";
 import { useT } from "@/lib/terms/client";
 import { formatCurrency } from "@/lib/format";
@@ -60,6 +61,7 @@ export type ClassClient = { clientId: string; clientName: string };
 interface Props {
   salonId: string;
   salonName: string;
+  verificationChannel?: BookingVerificationChannel;
   timezone: string;
   classes: PublicClass[];
   mine: MyClassSpot[];
@@ -96,6 +98,7 @@ function weekDays(weekStart: string): string[] {
 export function ClassSchedule({
   salonId,
   salonName,
+  verificationChannel = "phone",
   timezone,
   classes: initialClasses,
   mine: initialMine,
@@ -332,6 +335,7 @@ export function ClassSchedule({
       <div className="space-y-4">
         <p className="text-sm text-[var(--ink)]">{t("public.flow.detailsLead")}</p>
         <DetailsStep
+          verificationChannel={verificationChannel}
           salonId={salonId}
           clientId={client?.clientId ?? null}
           clientName={client?.clientName ?? null}

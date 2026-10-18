@@ -15,13 +15,21 @@ From the repository root:
 docker compose up -d
 ```
 
-Open the site, complete `/setup` (pick an industry), finish the onboarding wizard, then book at `/book/<your-slug>`.
+Open `http://127.0.0.1:3000`, complete `/setup` (pick an industry), finish the onboarding wizard, then book at `/book/<your-slug>`.
+
+With `SMS_PROVIDER=none`, new booking clients verify by email. The default `EMAIL_PROVIDER=console` writes the code to the web application logs; view them with `docker compose logs -f web`. Configure SMTP or Resend to deliver verification emails.
 
 ## Configuration
 
-`web/env.registry.json` lists every variable. Single-mode installs need `DATABASE_URL`, `APP_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `BOOKING_SESSION_SECRET`, `CRON_SECRET`, and `UPTEMPO_WORKER_TARGET_URL`. `./scripts/init-env.sh` writes a `.env` with generated secrets.
+`web/env.registry.json` lists every variable. Single-mode installs need `DATABASE_URL`, `APP_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `BOOKING_SESSION_SECRET`, `CRON_SECRET`, and `UPTEMPO_WORKER_TARGET_URL`. `./scripts/init-env.sh` writes the repository-root `.env` with generated secrets; run it before using the compose commands.
 
-`node scripts/check-local-bootstrap.mjs --env-only` checks the current mode. A missing variable is printed with its group, for example `- APP_URL (core): required`.
+From the repository root, run this check after generating `.env`:
+
+```sh
+docker compose run --build --rm --no-deps migrate node scripts/check-local-bootstrap.mjs --env-only
+```
+
+This builds the tools image and validates the compose-provided environment without connecting to Postgres. Docker and the generated repository-root `.env` are required. A missing variable is printed with its group, for example `- APP_URL (core): required`.
 
 ## External Postgres
 
@@ -33,7 +41,7 @@ Uploads stay on the `uploads` volume when `STORAGE_PROVIDER=local`. For S3, R2, 
 
 ## Email
 
-`EMAIL_PROVIDER=console` prints mail to the logs. For delivery, set `EMAIL_PROVIDER=smtp` and `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`. Postmark, Amazon SES, and Fastmail all speak SMTP. `EMAIL_PROVIDER=resend` uses `RESEND_API_KEY` instead.
+`EMAIL_PROVIDER=console` writes the full message content, including verification codes, to application logs. It does not deliver email. For actual delivery, set `EMAIL_PROVIDER=smtp` and `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`. Postmark, Amazon SES, and Fastmail all speak SMTP. `EMAIL_PROVIDER=resend` uses `RESEND_API_KEY` instead.
 
 ## Payments
 
@@ -88,4 +96,10 @@ If you modify the code and run it for other people, set `UPTEMPO_SOURCE_URL` to 
 
 ## Troubleshooting
 
-`node scripts/check-local-bootstrap.mjs --env-only` prints the variable and the group that failed. `docker compose logs migrate` shows schema errors. `docker compose logs worker` shows `[worker] ran <id> <status>`.
+After `./scripts/init-env.sh` has generated the repository-root `.env`, run this from the repository root to print any missing variable and its group without connecting to Postgres:
+
+```sh
+docker compose run --build --rm --no-deps migrate node scripts/check-local-bootstrap.mjs --env-only
+```
+
+`docker compose logs migrate` shows schema errors. `docker compose logs worker` shows `[worker] ran <id> <status>`.

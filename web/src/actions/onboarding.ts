@@ -7,6 +7,7 @@ import { user } from "@/lib/db/schema/auth";
 import { tenants } from "@/lib/db/schema/tenants";
 import { VERTICALS, VERTICAL_IDS, type Vertical } from "@/lib/verticals";
 import { isSingleMode } from "@/lib/config/mode";
+import { syncBillableStaff } from "@/lib/billing/billable-staff";
 import { getT } from "@/lib/terms/server";
 import { createTermsT } from "@/lib/terms/translator";
 import { eq, inArray, notInArray, sql } from "drizzle-orm";
@@ -19,6 +20,8 @@ import { slugSchema } from "@/lib/tenant/slug-validation";
 import { withTenantDb } from "@/lib/db/tenant";
 import { SERVICE_TEMPLATES, templateToServiceRow } from "@/lib/onboarding/service-templates";
 import { trackEvent, identifyUser } from "@/lib/analytics/events";
+import { ensureHostedSubscription } from "@/lib/billing/subscriptions";
+import { HOSTED_TRIAL_DAYS } from "@/lib/billing/hosted-pricing";
 import {
   addMembershipAndActivate,
   insertMembership,
@@ -432,6 +435,7 @@ export async function saveBusinessDetails(input: {
       });
     }
   });
+  await syncBillableStaff(tenantSlug);
 
   revalidatePath("/onboarding");
   return { success: true };
@@ -736,6 +740,16 @@ export async function launchSalon(): Promise<
     revalidateTag(onboardingTag(slug));
 
     trackEvent("salon.launched", {}, { tenantSlug: slug });
+
+    // Start the hosted plan trial. A billing problem must never undo a launch.
+    try {
+      await ensureHostedSubscription(slug, { trialDays: HOSTED_TRIAL_DAYS });
+    } catch (billingError) {
+      console.error(
+        `launchSalon: hosted subscription setup failed for ${slug}:`,
+        billingError,
+      );
+    }
     return { success: true };
   } catch (error: unknown) {
     if (error instanceof AuthError) throw error;

@@ -22,6 +22,7 @@ import {
   uploadRequestPhoto,
 } from "@/actions/requests-public";
 import { checkPostalCodePublic } from "@/actions/on-site";
+import type { BookingVerificationChannel } from "@/lib/booking/verification-channel";
 
 const STEPS = ["service", "describe", "details", "send"] as const;
 type RequestStep = (typeof STEPS)[number];
@@ -42,6 +43,7 @@ export interface RequestWizardProps {
   salonId: string;
   salonName: string;
   hasSalonLogo: boolean;
+  verificationChannel?: BookingVerificationChannel;
   clientSession: { clientId: string; clientName: string } | null;
   fields: RequestFieldDef[];
   services: { id: string; name: string }[];
@@ -75,6 +77,7 @@ export function RequestWizard({
   salonId,
   salonName,
   hasSalonLogo,
+  verificationChannel = "phone",
   clientSession,
   fields,
   services,
@@ -353,6 +356,7 @@ export function RequestWizard({
 
       {step === "details" && (
         <DetailsStep
+          verificationChannel={verificationChannel}
           salonId={salonId}
           clientId={client?.clientId ?? null}
           clientName={client?.clientName ?? null}

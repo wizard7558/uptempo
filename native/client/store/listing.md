@@ -3,7 +3,7 @@
 Paste these into App Store Connect → the `com.uptempo.client` app record.
 
 - **App name:** Uptempo
-- **Subtitle (≤30 chars):** Book your salon visits
+- **Subtitle (≤30 chars):** Book service appointments
 - **Primary category:** Lifestyle
 - **Secondary category:** Health & Fitness
 - **Age rating:** 4+
@@ -13,37 +13,38 @@ Paste these into App Store Connect → the `com.uptempo.client` app record.
 
 **Keywords (≤100 chars, comma-separated):**
 ```
-salon,booking,hair,stylist,appointment,beauty,book,schedule,barber,nails,spa,haircut,color
+appointment,booking,schedule,services,wellness,barber,salon,home services,training,tattoo,business
 ```
 
 **Promotional text (≤170 chars):**
 ```
-Find your salon and book in a few taps. Manage appointments, reminders, and your details in one place.
+Find appointment businesses, explore services and available times, and manage bookings, reminders, and your profile in one place.
 ```
 
 **Description:**
 ```
-Uptempo is how you find a salon and book your next appointment.
+Uptempo helps customers find and book with appointment-based businesses.
 
-• Find your salon and browse available services and stylists
-• Book in a few taps and pick the time that works for you
-• Get appointment reminders so you never miss a visit
-• Save your details and payment method for faster checkout
+• Discover participating businesses across personal care, wellness, training, home services, and more
+• Explore services and available providers
+• Choose an available time or send a booking request when the business offers that option
+• Get appointment reminders
+• Save your profile and payment method for faster checkout
 • View, reschedule, or cancel upcoming appointments
-• Manage your membership and account from your phone
+• Review membership and account details when the business offers them
 
-Uptempo connects you with the salons you love. Book the services you want, with the stylist you trust, on a schedule that fits your life.
+Bookings, services, and times depend on each business. Uptempo brings your appointment details together in one place.
 ```
 
-**What's New (first release):**
+**What's New:**
 ```
-First release of Uptempo. Discover salons, book appointments, and manage your visits from your phone.
+Expanded support for appointment-based businesses, with booking notifications and links that return to the right place in the app.
 ```
 
 ## Screenshots needed (per current App Store requirements)
 - 6.9" iPhone (e.g. 15/16 Pro Max) — required
 - 6.5" iPhone — recommended
-Suggested screens: discover/search, a salon's booking flow, time selection,
+Suggested screens: discover/search, a business booking flow, time selection,
 appointment confirmation, account/appointments list.
 
 ## App Privacy (nutrition labels) — declare accurately

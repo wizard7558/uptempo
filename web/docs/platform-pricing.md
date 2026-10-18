@@ -1,109 +1,62 @@
 # Platform Pricing
 
-What a salon pays Uptempo. The model is a **monthly floor with the per-tier
-revenue percentage on top**:
+What a business pays Uptempo on card payments in hosted mode: **one card
+processing rate**, taken from each client card payment before it reaches the
+business's bank. There is no monthly minimum and no per-plan tier. Self-hosting
+(`UPTEMPO_MODE=single`) pays nothing.
 
-```
-monthly platform fee = max($50, tierPercent% × monthly revenue)
-```
+The rate is shown to the business as "Card processing: 5%" and nothing more. It
+is not described as a payment processor's fee.
 
-The $50 floor covers revenue up to the break-even point (floor ÷ percent); above
-that, the salon pays the tier percentage. Percentages stay on the existing
-tiers, with an optional per-tenant override.
+## Configuration
 
-| Plan | Rate | $50 covers up to | Example: $10k/mo |
+| Variable | Default | Valid | Meaning |
 | --- | --- | --- | --- |
-| Starter | 0.5% | $10,000/mo | $50 (floor) |
-| Pro | 1% | $5,000/mo | $100 |
-| Business | 2% | $2,500/mo | $200 |
+| `PLATFORM_PROCESSING_FIXED_CENTS` | `0` | integer 0 to 100 | Fixed cents added to each fee. |
 
-A per-tenant override (`tenants.platform_fee_percent`) wins when set; **`0` is a
-full exemption** — no percentage and no floor.
+The hosted card rate is 500 basis points. `PLATFORM_PROCESSING_RATE_BPS` does not change it. An invalid fixed-cents value logs one error and falls back to 0.
 
 ## Source of truth
 
-`src/lib/billing/platform-pricing.ts` is the single source of truth:
+`src/lib/billing/processing-fee.ts` is the only copy of the math:
 
-- `PLATFORM_MONTHLY_FLOOR_CENTS` — the $50 floor.
-- `PLAN_FEE_PERCENT` — per-plan defaults.
-- `feePercentForTenant(tenant)` — resolves override → plan default → env fallback.
-  The per-transaction Stripe `application_fee` path (`src/actions/membership.ts`)
-  now delegates here, so the fee percentage is defined in exactly one place.
-- `computePlatformFee(percent, revenueCents)` / `platformFeeForTenant(...)` —
-  the `max(floor, percent × revenue)` math, returning a full breakdown
-  (percent fee, charge, whether the floor binds, break-even revenue).
+- `processingRateBps(tenant)` — 0 in single mode or when `tenants.comped = 1`;
+  otherwise 500.
+- `processingFeeCents(amountCents, tenant)` — `round(amount x bps / 10000) +
+  fixed`, capped at `amount - 1`; 0 for a zero amount or zero rate.
+- `processingFeePercent(tenant)` — the rate as a percent, for Stripe's
+  `application_fee_percent` on client membership subscriptions.
+- `processingRateLabel(bps)` — "5%", "0.5%", "3.5%".
 
-Fully unit-tested in `platform-pricing.test.ts`.
+## Where it is applied
 
-## Two ways the fee is realized
+Every client charge reads the fee through `getConnectChargeParams`
+(`src/lib/stripe/connect-charge-params.ts`): checkout (full and remainder), the
+no-show and late-cancellation fees, package sales, booking deposits, stored-value
+top-ups, and gift card purchases. Two paths compute it directly: client
+membership subscriptions (`application_fee_percent`, `src/actions/membership.ts`)
+and storefront product sessions (`application_fee_amount` on the product
+subtotal, `src/lib/services/storefront.ts`). `src/lib/billing/charge-paths.test.ts`
+pins the Stripe call for each.
 
-1. **Per-transaction** — the tier percentage is taken as a Stripe Connect
-   `application_fee` on each appointment/membership charge. This collects the
-   `% × revenue` portion continuously.
-2. **The $50 floor (monthly top-up)** — a monthly job charges the salon the
-   shortfall so they pay at least $50/month: `max(0, $50 − application fees
-   already collected)`. Charged to the salon's card on the platform account; the
-   charge stays with the platform (no Connect transfer). Together these give
-   `max($50, % × revenue)`.
+## Existing businesses
 
-## Live paid billing (per-tenant opt-in)
+Migration `0032_card_processing_rate` adds two columns to `tenants`:
 
-Billing is **off by default** (`tenants.billing_enabled = 0`) so beta salons stay
-free. Flip a salon onto paid billing with:
+- `comped` (default 0) is set to 1 where `platform_fee_percent = 0`, the old
+  exemption. A comped business pays no processing fee.
+- `processing_rate_bps` (null, 0 to 1000) is backfilled with each business's old
+  per-charge rate: `platform_fee_percent x 100`, else the plan default (starter
+  50, pro 100, business 200). It keeps that rate until its billing switch sets it
+  back to null. New businesses have null and follow the env default.
 
-```
-# dev
-npx tsx scripts/set-tenant-billing.ts <slug> on
-npx tsx scripts/set-tenant-billing.ts --list        # see everyone's status
+`plan`, `platform_fee_percent`, `billing_enabled`, `platform_payment_method_id`,
+and `assistant_seats` are frozen and are dropped once every business has moved.
+The `platform_charges` table stays as history; nothing writes to it anymore.
 
-# production (pin the prod DATABASE_URL first)
-npx vercel env pull .env.production.local --environment=production
-set -a && source .env.production.local && set +a && npx tsx scripts/set-tenant-billing.ts <slug> on
-rm .env.production.local
-```
+## Settings
 
-Once enabled, the salon owner sees a **Platform billing** card on Settings →
-Billing to save a card (Stripe SetupIntent + PaymentElement), and their recent
-charges. The monthly cron then bills them.
-
-### Pieces
-
-| Concern | Location |
-| --- | --- |
-| Per-tenant flag + platform customer/card | `tenants.billing_enabled`, `.platform_stripe_customer_id`, `.platform_payment_method_id` |
-| Charge ledger (idempotency) | `platform_charges` table (unique on tenant + period) |
-| Migration | `drizzle/0020_platform_billing.sql` |
-| Billing math | `computeMonthlyBilling()` in `src/lib/billing/platform-pricing.ts` |
-| Reconcile + charge one tenant | `billTenantForPeriod()` in `src/lib/services/platform-billing.ts` |
-| Monthly cron | `src/app/api/cron/charge-platform-fees/route.ts` (`0 6 1 * *`, CRON_SECRET) |
-| Owner actions (setup intent, save card, status) | `src/actions/platform-billing.ts` |
-| Card + history UI | `src/components/settings/platform-billing-card.tsx` |
-| Enable/disable + list | `scripts/set-tenant-billing.ts` |
-| Tests | `src/lib/services/platform-billing.test.ts`, `platform-pricing.test.ts` |
-
-### Idempotency & safety
-
-- One `platform_charges` row per (tenant, period); `succeeded`/`skipped` are
-  terminal, so re-running the cron never double-bills.
-- The Stripe PaymentIntent uses idempotency key `platform-fee:<slug>:<period>`.
-- Off-session charge; failures are recorded (`failed` / `no_payment_method`)
-  rather than throwing, and one tenant failing never blocks the others.
-- The Stripe webhook ignores `purpose: "platform_fee"` PaymentIntents (they're
-  recorded synchronously by the cron).
-
-### Known limitation
-
-`feesCollectedCents` is summed from tenant `charges.platform_fee_cents`
-(appointment/checkout application fees). Membership-subscription application fees
-aren't yet included, so a membership-heavy salon could be topped up slightly more
-toward the floor. Bounded by the $50 floor. Refine later by reading platform
-application fees from the Stripe API per connected account.
-
-## Billing preview
-
-`getPlatformFeePreview()` (`src/actions/billing-preview.ts`) computes the current
-salon's completed-service revenue for the calendar month to date (UTC, sourced
-from appointment line items so cash work counts) and returns the fee breakdown.
-It is surfaced on **Settings → Billing & Payouts** via `PlatformFeePreviewCard`.
-The footer note reflects the salon's state: "no fees charged during your beta"
-until `billing_enabled` is on, then "billed monthly to your card on file."
+Settings, Billing & Payouts shows the business's rate in
+`src/components/settings/processing-rate-card.tsx`: "Card processing: 5%" with
+"Taken from each card payment before it reaches your bank", or "Card processing:
+no charge" for a comped business. The card does not render in single mode.

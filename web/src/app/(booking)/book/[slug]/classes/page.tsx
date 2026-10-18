@@ -9,6 +9,7 @@ import { withTenantDb } from "@/lib/db/tenant";
 import { getT } from "@/lib/terms/server";
 import { listPublicClasses, myClassSpots } from "@/actions/classes-public";
 import { localDay } from "@/lib/scheduling/intervals";
+import { getBookingVerificationChannel } from "@/lib/booking/verification-channel";
 import { ClassSchedule } from "./class-schedule";
 
 export default async function ClassesPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -41,6 +42,7 @@ export default async function ClassesPage({ params }: { params: Promise<{ slug: 
 
   return (
     <ClassSchedule
+      verificationChannel={getBookingVerificationChannel()}
       salonId={salon.id}
       salonName={salon.name}
       timezone={list.timezone}

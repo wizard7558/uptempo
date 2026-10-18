@@ -10,8 +10,7 @@ export type JobDefinition = {
 
 /**
  * Scheduled HTTP jobs, in the same order as `vercel.json` crons.
- * The three jobs after charge-platform-fees were added to the hosted
- * schedule after the original eight-cron inventory.
+ * Jobs added after the original eight-cron inventory join the hosted schedule.
  */
 export const JOBS: readonly JobDefinition[] = [
   {
@@ -59,13 +58,6 @@ export const JOBS: readonly JobDefinition[] = [
     timeoutMs: 300_000,
   },
   {
-    id: "charge-platform-fees",
-    path: "/api/cron/charge-platform-fees",
-    schedule: "0 6 1 * *",
-    timeoutMs: 300_000,
-    requires: ["multi"],
-  },
-  {
     id: "materialize-recurrences",
     path: "/api/cron/materialize-recurrences",
     schedule: "30 3 * * *",
@@ -88,5 +80,26 @@ export const JOBS: readonly JobDefinition[] = [
     path: "/api/cron/waitlist-offers",
     schedule: "*/5 * * * *",
     timeoutMs: 120_000,
+  },
+  {
+    id: "report-sms-usage",
+    path: "/api/cron/report-sms-usage",
+    schedule: "30 2 * * *",
+    timeoutMs: 300_000,
+    requires: ["multi"],
+  },
+  {
+    id: "sync-sms-registrations",
+    path: "/api/cron/sync-sms-registrations",
+    schedule: "*/30 * * * *",
+    timeoutMs: 300_000,
+    requires: ["multi"],
+  },
+  {
+    id: "switch-billing",
+    path: "/api/cron/switch-billing",
+    schedule: "0 14 * * *",
+    timeoutMs: 300_000,
+    requires: ["multi"],
   },
 ];

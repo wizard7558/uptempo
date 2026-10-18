@@ -19,7 +19,8 @@ import { formatLocationFromObject } from "@/lib/booking/format-location-label";
 import { sendEmail } from "@/lib/email/send";
 import { createActionToken } from "@/lib/email/tokens";
 import { getNotificationSettingsForTenant } from "@/lib/notifications/settings";
-import { getAppointment } from "@/actions/appointments";
+import { loadAppointmentForTenant } from "@/lib/appointments/load";
+import { loadFormsForServices } from "@/lib/forms/for-services";
 import { BookingConfirmation } from "@/emails/booking-confirmation";
 
 export async function sendBookingConfirmations(
@@ -27,7 +28,7 @@ export async function sendBookingConfirmations(
   appointmentId: string,
 ): Promise<void> {
   try {
-    const appointment = await getAppointment(appointmentId);
+    const appointment = await loadAppointmentForTenant(slug, appointmentId);
     if (!appointment) return;
     const staffId = appointment.staffId;
     const totalDuration = appointment.services.reduce(
@@ -194,8 +195,8 @@ export async function sendBookingConfirmations(
 
       // Send form request emails for services with assigned forms
       try {
-        const { getFormsForServices } = await import("@/actions/forms");
-        const formsToSend = await getFormsForServices(
+        const formsToSend = await loadFormsForServices(
+          slug,
           appointment.services.map((s) => s.serviceId),
         );
         if (formsToSend.length > 0 && clientEmail) {

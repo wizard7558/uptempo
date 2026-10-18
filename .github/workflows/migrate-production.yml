@@ -1,6 +1,6 @@
 # Applies Drizzle (public) + tenant migrations to production Postgres when migration
-# artifacts change on main. Requires repo secret: PRODUCTION_DATABASE_URL (same value
-# as Vercel Production → DATABASE_URL, e.g. Neon pooled connection string).
+# artifacts change on main. The public production environment must require review
+# and provide PRODUCTION_DATABASE_URL (the Vercel Production database URL).
 #
 # Vercel must not serve that commit until this job succeeds. The production
 # ignored-build step skips a commit that changes these paths. Promote the commit
@@ -28,8 +28,9 @@ concurrency:
 
 jobs:
   migrate:
-    if: github.repository == 'wizard7558/book-uptempo'
+    if: github.repository == 'wizard7558/uptempo'
     runs-on: ubuntu-latest
+    environment: production
     defaults:
       run:
         working-directory: web

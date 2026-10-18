@@ -72,3 +72,13 @@ export async function getShardForSlug(slug: string): Promise<string> {
 export function newTenantShard(): string {
   return process.env.NEW_TENANT_SHARD?.trim() || "primary";
 }
+
+/** Close all cached shard clients for short-lived scripts and integration tests. */
+export async function closeShardClients(): Promise<void> {
+  const activeClients = [...clients.values()];
+  clients.clear();
+  shardBySlug.clear();
+  await Promise.all(
+    activeClients.map((client) => client.sql.end({ timeout: 5 })),
+  );
+}

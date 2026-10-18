@@ -1,10 +1,9 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-    var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -23,15 +22,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
-    }
-
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        // Paint every native layer behind the web content in the app's ivory
-        // (#FCFBF8, matching the site's --background) so nothing shows black —
-        // UIKit's systemBackground default is black in dark mode.
-        let canvas = UIColor(red: 252 / 255, green: 251 / 255, blue: 248 / 255, alpha: 1)
-        window?.backgroundColor = canvas
-        window?.rootViewController?.view.backgroundColor = canvas
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -61,4 +51,93 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
     }
 
+}
+
+/// Owns the single storyboard-backed app window and forwards scene-delivered
+/// links to Capacitor's existing App plugin proxy.
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+
+    var window: UIWindow?
+
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        applyCanvasColor()
+        for context in connectionOptions.urlContexts {
+            forward(urlContext: context)
+        }
+        for userActivity in connectionOptions.userActivities {
+            forward(userActivity: userActivity)
+        }
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        for context in URLContexts {
+            forward(urlContext: context)
+        }
+    }
+
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        forward(userActivity: userActivity)
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        applyCanvasColor()
+    }
+
+    private func forward(urlContext: UIOpenURLContext) {
+        var options: [UIApplication.OpenURLOptionsKey: Any] = [
+            .openInPlace: urlContext.options.openInPlace
+        ]
+        if let sourceApplication = urlContext.options.sourceApplication {
+            options[.sourceApplication] = sourceApplication
+        }
+        _ = ApplicationDelegateProxy.shared.application(
+            UIApplication.shared,
+            open: urlContext.url,
+            options: options
+        )
+    }
+
+    private func forward(userActivity: NSUserActivity) {
+        _ = ApplicationDelegateProxy.shared.application(
+            UIApplication.shared,
+            continue: userActivity,
+            restorationHandler: { _ in }
+        )
+    }
+
+    private func applyCanvasColor() {
+        // Match the site's ivory canvas so dark-mode system surfaces do not
+        // show black behind the remote web content.
+        let canvas = UIColor(red: 252 / 255, green: 251 / 255, blue: 248 / 255, alpha: 1)
+        window?.backgroundColor = canvas
+        window?.rootViewController?.view.backgroundColor = canvas
+    }
+}
+
+/// Installs build-specific native values before Capacitor loads a remote page.
+class AppViewController: CAPBridgeViewController {
+
+    private static let nativeLaunchIdentifier = UUID().uuidString
+
+    override func capacitorDidLoad() {
+        super.capacitorDidLoad()
+
+        #if DEBUG
+        let apnsEnvironment = "sandbox"
+        #else
+        let apnsEnvironment = "production"
+        #endif
+
+        let bootstrap = "window.__APNS_ENV__ = '\(apnsEnvironment)'; window.__UPTEMPO_NATIVE_APP__ = 'owner'; window.__UPTEMPO_NATIVE_LAUNCH_ID__ = '\(Self.nativeLaunchIdentifier)';"
+        let script = WKUserScript(
+            source: bootstrap,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        webView?.configuration.userContentController.addUserScript(script)
+    }
 }

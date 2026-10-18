@@ -27,11 +27,8 @@ export default async function LoginPage({
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm space-y-6 border border-[var(--line)] bg-[var(--ivory-raised)] p-8">
         <div className="mb-8 space-y-4 text-center">
-          <div className="mb-6 flex justify-center">
-            <Image src="/uptempo.svg" alt="Uptempo" width={64} height={64} priority />
-          </div>
-          <h1 className="text-xs font-medium tracking-[0.16em] text-[var(--ink)]">
-            Uptempo
+          <h1 className="mb-6 flex justify-center">
+            <Image src="/brand/wordmark.svg" alt="Uptempo" width={190} height={36} priority className="dark:invert" />
           </h1>
           <p className="text-sm text-[var(--ink-soft)]">
             Sign in to manage your salon

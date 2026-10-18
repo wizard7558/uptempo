@@ -56,6 +56,22 @@ function validToken(value: unknown): value is string {
   return typeof value === "string" && /^[0-9a-fA-F]{32,200}$/.test(value);
 }
 
+/** Return only whether this request has a tenant-resolved app session. */
+export async function GET() {
+  try {
+    const principal = await resolvePrincipal();
+    return NextResponse.json(
+      { authenticated: Boolean(principal) },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch {
+    return NextResponse.json(
+      { authenticated: false },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+}
+
 /** Register (upsert) an APNs device token for the current principal. */
 export async function POST(req: Request) {
   const principal = await resolvePrincipal();

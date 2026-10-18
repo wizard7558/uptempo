@@ -1,5 +1,6 @@
 "use server";
 
+import { destinationRefundParamsForIntent } from "@/lib/stripe/refund-params";
 import { AuthError, requireStaff } from "@/lib/auth/rbac";
 
 import { getEmailT } from "@/lib/terms/email";
@@ -13,7 +14,8 @@ import { calculateAppointmentPrice } from "@/lib/services/policy-engine";
 import { processOffSessionCharge } from "@/lib/services/charge-processing";
 import { createActionToken, verifyActionToken } from "@/lib/email/tokens";
 import { sendEmail } from "@/lib/email/send";
-import { resolveTenantSlugForAppointment } from "@/lib/tenant/registry";
+import { getTenantBySlug, resolveTenantSlugForAppointment } from "@/lib/tenant/registry";
+import { processingRateBps, processingRateLabel } from "@/lib/billing/processing-fee";
 import { CheckoutLinkEmail } from "@/emails/checkout-link";
 import { ReceiptEmail } from "@/emails/receipt";
 import { sendSms } from "@/lib/sms/send";
@@ -417,8 +419,7 @@ export async function completeAppointment(data: {
               if (data.paymentMethod === "new_card" && data.stripePaymentIntentId) {
                 await getStripe().refunds.create({
                   payment_intent: data.stripePaymentIntentId,
-                  reverse_transfer: true,
-                  refund_application_fee: true,
+                  ...(await destinationRefundParamsForIntent(data.stripePaymentIntentId, { undo: true })),
                 });
               }
               return { success: false as const, error: te("giftCards.balanceChanged") };
@@ -432,6 +433,8 @@ export async function completeAppointment(data: {
         let stripePaymentIntentId: string | null = null;
         const failureReason: string | null = null;
         let step4Error: string | null = null;
+        // The application fee actually sent to Stripe: only the card part carries one.
+        let cardFeeCents = 0;
 
         if (remainderCents > 0 && data.paymentMethod === "card_on_file") {
           const [client] = await db
@@ -470,6 +473,7 @@ export async function completeAppointment(data: {
             } else {
               chargeStatus = chargeResult.status as "completed";
               stripePaymentIntentId = chargeResult.stripePaymentIntentId;
+              cardFeeCents = connectParamsRemainder?.platformFeeCents ?? 0;
             }
           }
         } else if (remainderCents > 0 && data.paymentMethod === "new_card") {
@@ -484,6 +488,7 @@ export async function completeAppointment(data: {
               step4Error = "Payment amount does not match balance due";
             } else {
               chargeStatus = "completed";
+              cardFeeCents = pi.application_fee_amount ?? 0;
             }
           }
         } else if (remainderCents > 0 && data.paymentMethod === "cash") {
@@ -510,7 +515,7 @@ export async function completeAppointment(data: {
             status: chargeStatus,
             stripePaymentIntentId,
             failureReason,
-            platformFeeCents: connectParamsFull?.platformFeeCents ?? null,
+            platformFeeCents: cardFeeCents > 0 ? cardFeeCents : null,
             connectAccountId: connectParamsFull?.connectAccountId ?? null,
             storedValueCents: bankAppliedCents,
             depositAppliedCents: depositPaidCents,
@@ -633,10 +638,24 @@ export async function completeAppointment(data: {
           { tenantSlug: slug },
         );
 
+        // The fee Stripe took on the card part (same as stored on the charge row),
+        // and the rate the business is on, for the done screen. No card fee means
+        // the screen shows no card processing line.
+        const storedFeeCents = cardFeeCents;
+        let processingLabel: string | null = null;
+        if (storedFeeCents > 0) {
+          const tenant = await getTenantBySlug(slug);
+          if (tenant) {
+            processingLabel = processingRateLabel(processingRateBps(tenant));
+          }
+        }
+
         return {
           success: true as const,
           chargeId: charge.id,
           totalCents: totalWithTip,
+          platformFeeCents: storedFeeCents,
+          processingRateLabel: processingLabel,
         };
       },
     );

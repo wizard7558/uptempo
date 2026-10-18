@@ -48,7 +48,9 @@ describe("sendEmail", () => {
     expect(getEmailProvider().id).toBe("resend");
     const result = await sendEmail({
       to: "a@b.co",
+      bcc: ["owner@b.co", "admin@b.co"],
       subject: "Hello",
+      idempotencyKey: "billing-notice:test-salon:2026-12-15",
       react: React.createElement("p", null, "Hi there"),
     });
 
@@ -60,12 +62,17 @@ describe("sendEmail", () => {
       from: string;
       to: string;
       subject: string;
+      bcc?: string[];
     };
     expect(arg.html).toContain("Hi there");
     expect(arg.text).toContain("Hi there");
     expect(arg.from).toBe("Uptempo <noreply@bookuptempo.com>");
     expect(arg.to).toBe("a@b.co");
     expect(arg.subject).toBe("Hello");
+    expect(arg.bcc).toEqual(["owner@b.co", "admin@b.co"]);
+    expect(emailsSend.mock.calls[0][1]).toEqual({
+      idempotencyKey: "billing-notice:test-salon:2026-12-15",
+    });
   });
 
   it("selects the console provider and logs when no real key is set", async () => {
@@ -83,10 +90,17 @@ describe("sendEmail", () => {
 
     expect(result).toEqual({ success: true });
     expect(emailsSend).not.toHaveBeenCalled();
-    expect(log).toHaveBeenCalledWith("[Email Dev] Would send email:", {
+    expect(log).toHaveBeenCalledOnce();
+    expect(log).toHaveBeenCalledWith(
+      "[Email Dev] Would send email:",
+      expect.any(String),
+    );
+    const loggedPayload = log.mock.calls[0][1];
+    expect(JSON.parse(String(loggedPayload))).toMatchObject({
       from: "Uptempo <noreply@bookuptempo.com>",
       to: "a@b.co",
       subject: "Hello",
+      html: "<p>x</p>",
     });
   });
 

@@ -7,6 +7,7 @@ import { getBookingBrandingCached } from "@/lib/booking/cached-lookups";
 import { resolveRequestFields } from "./fields";
 import { earliestOpening, loadBooks, openStaffIds } from "./books";
 import { loadSchedulingSettings } from "@/lib/scheduling/load";
+import { getBookingVerificationChannel } from "@/lib/booking/verification-channel";
 import type { RequestWizardProps } from "@/components/booking-public/request-wizard";
 
 /** Everything the public request form needs, loaded for one tenant. */
@@ -67,6 +68,7 @@ export async function loadRequestWizardProps(
   }
 
   return {
+    verificationChannel: getBookingVerificationChannel(),
     salonId: salon.id,
     salonName: salon.name,
     hasSalonLogo: Boolean(branding?.logoUrl?.trim()),

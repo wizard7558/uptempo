@@ -1,19 +1,27 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { Suspense } from "react";
 import { Bodoni_Moda, Geist_Mono, Hanken_Grotesk } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { PostHogProvider } from "@/lib/analytics/posthog-provider";
+import { NativeBridge } from "@/components/native/native-bridge";
 import "./globals.css";
 
 const bodoniModa = Bodoni_Moda({
   variable: "--font-bodoni-moda",
   subsets: ["latin"],
-  style: ["normal", "italic"],
+  style: ["normal"],
   weight: "variable",
+});
+
+// Italic is used on one page below the fold. Declared apart from the upright
+// face so its preload does not compete with the fonts the first paint needs.
+const bodoniModaItalic = Bodoni_Moda({
+  variable: "--font-bodoni-moda-italic",
+  subsets: ["latin"],
+  style: ["italic"],
+  weight: "variable",
+  preload: false,
 });
 
 const hankenGrotesk = Hanken_Grotesk({
@@ -25,12 +33,14 @@ const hankenGrotesk = Hanken_Grotesk({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  // Only code samples use it; a preload would compete with the text fonts.
+  preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "Uptempo Bookings | The all-in-one platform to run your salon",
+  title: "Uptempo Bookings",
   description:
-    "Run your whole salon in one place: 24/7 online booking, smart scheduling with per-client durations, client records, checkout and payments, memberships, and revenue tracking — synced to your calendar.",
+    "Booking software for businesses that run on appointments: a booking page, a team calendar, reminders, and card payments.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -51,6 +61,9 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// Providers (messages, tooltips, toasts, analytics) live in each route group's
+// layout through <AppProviders>, so a public marketing page does not ship the
+// admin UI's client code or every translation namespace.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -78,16 +91,12 @@ export default function RootLayout({
         ) : null}
       </head>
       <body
-        className={`${bodoniModa.variable} ${hankenGrotesk.variable} ${geistMono.variable} antialiased`}
+        className={`${bodoniModa.variable} ${bodoniModaItalic.variable} ${hankenGrotesk.variable} ${geistMono.variable} antialiased`}
       >
-        <NextIntlClientProvider>
-          <PostHogProvider>
-            <TooltipProvider>
-              {children}
-            </TooltipProvider>
-          </PostHogProvider>
-          <Toaster />
-        </NextIntlClientProvider>
+        <Suspense fallback={null}>
+          <NativeBridge />
+        </Suspense>
+        {children}
         {process.env.VERCEL === "1" ? (
           <>
             <Analytics />

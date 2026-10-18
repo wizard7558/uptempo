@@ -1,13 +1,14 @@
 # Uptempo native iOS apps (Capacitor)
 
-Two thin Capacitor shells that wrap the live Next.js site (`bookuptempo.com`) in
-**remote-URL mode** and add the native capabilities Apple requires. The web app
-is unchanged — feature parity is automatic.
+Two Capacitor shells that load the hosted Next.js app in **remote-URL mode**
+and provide native iOS capabilities. Most screens and booking behavior come
+from the hosted web app, so native builds depend on the live site remaining
+available and compatible with the bundled Capacitor plugins.
 
 | App | Dir | Bundle ID | Opens |
 |-----|-----|-----------|-------|
-| Uptempo Pro (owner/staff) | `owner/` | `com.uptempo.owner` | `/login → /admin` |
-| Uptempo (clients) | `client/` | `com.uptempo.client` | `/discover → /book/:slug` |
+| Uptempo Pro (owner/staff) | `owner/` | `com.uptempo.owner` | `https://www.bookuptempo.com/login` |
+| Uptempo (clients) | `client/` | `com.uptempo.client` | `https://www.bookuptempo.com/discover` |
 
 **Surface mapping** (the directory names predate the product names, so note the
 split): `native/owner` ships as **Uptempo Pro** (`com.uptempo.owner`) — the
@@ -27,6 +28,10 @@ bundle IDs, URL schemes, push forwarding (AppDelegate), entitlements
 `ITSAppUsesNonExemptEncryption` are pre-configured. The Capacitor CLI requires
 Node >= 22.
 
+Both iOS targets use a single storyboard-backed UIKit scene. `SceneDelegate`
+forwards cold and warm URL and user-activity callbacks to Capacitor's
+`ApplicationDelegateProxy`; `AppDelegate` continues to forward APNs registration.
+
 ```bash
 cd owner   # or client
 npm install              # restores node_modules the SPM package references
@@ -36,7 +41,7 @@ npx cap open ios         # opens Xcode
 
 ## Xcode configuration (both apps)
 
-Only signing remains (needs the Apple Developer account):
+For a signed build, configure:
 
 1. In Signing & Capabilities, select your **Team** (automatic signing). Xcode
    registers the App ID and enables Push Notifications + Associated Domains
@@ -45,10 +50,15 @@ Only signing remains (needs the Apple Developer account):
    **Associated Domains** (`applinks:bookuptempo.com` and `applinks:www.bookuptempo.com`); add them manually if
    automatic signing didn't pick them up.
 
-The backend already serves the matching AASA at
-`https://bookuptempo.com/.well-known/apple-app-site-association` — set the env
-vars `APPLE_APP_ID_OWNER` / `APPLE_APP_ID_CLIENT` (format `TEAMID.bundleId`) so
-the file lists your real Team ID.
+The hosted AASA route at
+`/.well-known/apple-app-site-association` remains environment-configured.
+Before release, verify that direct HTTPS reads from both the apex and `www`
+hosts return `application/json` without a redirect and list the App Store
+Connect app IDs that match the current bundle IDs. Set `APPLE_APP_ID_OWNER` and
+`APPLE_APP_ID_CLIENT` (format `TEAMID.bundleId`) through the authorized
+deployment configuration; the route keeps those environment values as its
+authority and uses placeholders only when they are unset. Do not infer the
+Apple app record IDs from these source files.
 
 ## APNs (push) backend
 
@@ -61,15 +71,19 @@ APNS_BUNDLE_ID_OWNER=com.uptempo.owner,
 APNS_BUNDLE_ID_CLIENT=com.uptempo.client
 ```
 
-The web app registers the device token automatically on launch
-(`src/components/native/native-bridge.tsx` → `POST /api/push/register`). Debug
-(sandbox) builds should set `window.__APNS_ENV__ = "sandbox"`.
+The native bridge checks the existing owner or booking-client session before
+asking for push permission or registering an APNs token. It retries after a
+successful in-app sign-in and when the app returns to the foreground. Debug
+builds inject the sandbox APNs environment and Release builds inject
+production at document start for each remote page load. Token registration
+uses the existing same-origin session cookie.
 
 ## Icons & splash screens
 
 Source assets live in each app's `assets/` (already generated, App Store-safe —
-1024×1024 icon, no alpha): client = ivory mark on ink, owner = ink mark on ivory
-(so the two listings are visually distinct). After `cap add ios`, generate
+1024×1024 icon, no alpha): client = white mark on ink, owner = ink mark on white
+(so the two listings are visually distinct). The icons are rendered from
+`web/public/brand/` by `npm run brand:build` in `web/`. After `cap add ios`, generate
 the full iOS icon/splash set into the native project:
 
 ```bash
@@ -87,7 +101,7 @@ Per-app listing copy and review notes are in `store/`:
 - `store/listing.md` — name, subtitle, description, keywords, categories, privacy labels
 - `store/review-notes.md` — the App Review notes + demo-account setup checklist
 
-Fill the `[BRACKETED]` placeholders (demo accounts, salon name) before submitting.
+Fill the `[BRACKETED]` placeholders (demo accounts, business name) before submitting.
 
 For the client app's OTP login, set `REVIEW_OTP_EMAIL` + `REVIEW_OTP_CODE`
 (6 digits) in Vercel env — that one demo identifier then verifies with the
@@ -113,11 +127,12 @@ Never commit the `.p8` key or env files — `.gitignore` excludes them.
 
 ## App Store review notes
 
-- **Client app**: bookings are *physical* services → IAP-exempt; Stripe is fine.
-- **Owner app**: do **not** sell subscription tiers in-app (Apple 3.1.1) — plan
-  upgrades happen on the web.
+- **Client app**: checkout is for services delivered in person and uses Stripe.
+- **Owner app**: platform plan and card details are read-only in the app; plan
+  changes and platform payment-method updates are handled on the Uptempo website.
 - Account deletion is in-app (owner: General Settings; client: account → Profile).
-- Push notifications + Universal Links + system-browser OAuth are the native
-  value that carries the apps past Guideline 4.2.
+- Before release, verify push notifications, Universal Links, and system-browser
+  OAuth return flows on the signed device builds. These behaviors are not
+  enabled by a local build alone.
 
 See the full plan at `~/.claude/plans/let-s-make-a-plan-shimmying-meteor.md`.

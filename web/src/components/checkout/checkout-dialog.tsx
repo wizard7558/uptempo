@@ -29,6 +29,7 @@ import { stripePromise } from "@/lib/stripe/client";
 import { Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { RebookPrompt } from "@/components/checkout/rebook-prompt";
+import { ProcessingFeeSummary } from "@/components/billing/processing-fee-summary";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -222,6 +223,10 @@ export function CheckoutDialog({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [completedAmount, setCompletedAmount] = useState<number | null>(null);
+  const [completedFee, setCompletedFee] = useState<{
+    feeCents: number;
+    rateLabel: string;
+  } | null>(null);
   const [receiptSending, setReceiptSending] = useState(false);
   const [receiptDone, setReceiptDone] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
@@ -267,6 +272,7 @@ export function CheckoutDialog({
     setLoading(true);
     setSelectedMethod(null);
     setCompletedAmount(null);
+    setCompletedFee(null);
     setReceiptDone(false);
     setTipCents(0);
     setCustomTipDollars("");
@@ -358,6 +364,14 @@ export function CheckoutDialog({
           `Checkout complete - ${formatPrice(result.totalCents)}`,
         );
         setCompletedAmount(result.totalCents);
+        setCompletedFee(
+          result.platformFeeCents > 0 && result.processingRateLabel
+            ? {
+                feeCents: result.platformFeeCents,
+                rateLabel: result.processingRateLabel,
+              }
+            : null,
+        );
       } else {
         toast.error(result.error ?? "Checkout failed");
       }
@@ -410,6 +424,13 @@ export function CheckoutDialog({
                 {formatPrice(completedAmount)} charged
               </p>
             </div>
+            {completedFee && (
+              <ProcessingFeeSummary
+                amountCents={completedAmount}
+                feeCents={completedFee.feeCents}
+                rateLabel={completedFee.rateLabel}
+              />
+            )}
             {!receiptDone && (
               <>
                 <Separator />

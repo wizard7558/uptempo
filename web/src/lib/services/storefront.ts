@@ -6,19 +6,12 @@ import { getTenantTerms } from "@/lib/tenant/industry";
 import { createTermsT } from "@/lib/terms/translator";
 import { getStripe } from "@/lib/stripe/server";
 import { getBaseUrl } from "@/lib/utils";
-import { feePercentForTenant } from "@/lib/billing/platform-pricing";
+import { processingFeeCents } from "@/lib/billing/processing-fee";
+import { isSingleMode } from "@/lib/config/mode";
 
 /**
- * Storefront checkout (client-facing retail).
- *
- * Money flow mirrors the rest of the app: a destination charge on the platform
- * account routed to the salon's Connect account, with the tier revenue
- * percentage taken as `application_fee_amount` on the product subtotal (tax and
- * shipping are passed through to the salon untouched).
- *
- * Sales tax is a salon-configured flat rate (`salon_policies.retail_tax_bps`)
- * added as its own line item — deliberate v1 simplicity over Stripe Tax
- * registration; see docs/storefront.md.
+ * Storefront checkout. The card processing fee is `processingFeeCents` on the
+ * product subtotal. Tax and shipping are not part of that base.
  */
 
 export const MAX_QTY_PER_ITEM = 10;
@@ -47,14 +40,14 @@ export interface OrderPricing {
 
 /**
  * Pure pricing math: subtotal from server-side prices, flat tax on the
- * subtotal, flat shipping when shipping, platform fee (percent of subtotal
- * only). Throws on an empty cart.
+ * subtotal, flat shipping when shipping. The fee is whatever `feeOnSubtotal`
+ * returns for that subtotal. Throws on an empty cart.
  */
 export function priceOrder(opts: {
   items: PricedCartItem[];
   taxBps: number;
   shippingCents: number;
-  feePercent: number;
+  feeOnSubtotal?: (subtotalCents: number) => number;
 }): OrderPricing {
   const items = opts.items.filter((i) => i.quantity > 0);
   if (items.length === 0) throw new Error("Cart is empty");
@@ -67,11 +60,9 @@ export function priceOrder(opts: {
   const taxCents = Math.round((subtotalCents * taxBps) / 10_000);
   const shippingCents = Math.max(0, Math.round(opts.shippingCents || 0));
   const totalCents = subtotalCents + taxCents + shippingCents;
-  const feePercent =
-    Number.isFinite(opts.feePercent) && opts.feePercent > 0
-      ? opts.feePercent
-      : 0;
-  const platformFeeCents = Math.round((subtotalCents * feePercent) / 100);
+  const quoted = opts.feeOnSubtotal?.(subtotalCents) ?? 0;
+  const platformFeeCents =
+    Number.isFinite(quoted) && quoted > 0 ? Math.round(quoted) : 0;
 
   return { items, subtotalCents, taxCents, shippingCents, totalCents, platformFeeCents };
 }
@@ -167,7 +158,7 @@ export async function createStorefrontCheckoutSession(opts: {
     items: priced,
     taxBps,
     shippingCents,
-    feePercent: feePercentForTenant(tenant),
+    feeOnSubtotal: (subtotalCents) => processingFeeCents(subtotalCents, tenant),
   });
 
   const baseUrl = getBaseUrl();
@@ -205,7 +196,9 @@ export async function createStorefrontCheckoutSession(opts: {
     success_url: `${baseUrl}/store/${slug}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/store/${slug}`,
     payment_intent_data: {
-      transfer_data: { destination: tenant.stripeConnectAccountId },
+      ...(isSingleMode()
+        ? {}
+        : { transfer_data: { destination: tenant.stripeConnectAccountId } }),
       ...(pricing.platformFeeCents > 0
         ? { application_fee_amount: pricing.platformFeeCents }
         : {}),
