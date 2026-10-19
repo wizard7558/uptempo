@@ -18,7 +18,8 @@ import { tstzrange } from "@/lib/db/custom-types";
 
 /**
  * Creates all tenant-scoped table definitions parameterized by a pgSchema instance.
- * Tables mirror the public schema definitions but without salon_id columns,
+ * Each business is isolated by its schema, so these tables do not need a
+ * separate business identifier column.
  * since the schema itself IS the tenant context.
  */
 export function createTenantTables(schema: PgSchema) {
@@ -42,13 +43,13 @@ export function createTenantTables(schema: PgSchema) {
     /** How the price renders on the public booking page: 'show' = exact, 'starting' = "From $X", 'hidden' = no price. */
     priceDisplay: text("price_display").notNull().default("show"),
     /**
-     * Per-service deposit override. NULL = inherit the salon's global deposit rule.
+     * Per-service deposit override. NULL = inherit the business's global deposit rule.
      * 'none' = never require a deposit. 'percent'/'fixed' = override with `depositAmount`
      * (percent points, e.g. 25, or cents, e.g. 5000).
      */
     depositType: text("deposit_type"),
     depositAmount: integer("deposit_amount"),
-    /** When 1, booking this service triggers an auto assistant task for the stylist's default assistant */
+    /** When 1, booking this service triggers an auto assistant task for the staff member's default assistant */
     assistantWorkflow: integer("assistant_workflow").notNull().default(0),
     /** Optional task catalog row for auto task label / type */
     assistantTaskTypeId: uuid("assistant_task_type_id"),
@@ -152,16 +153,16 @@ export function createTenantTables(schema: PgSchema) {
   const staff = schema.table("staff", {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: text("user_id"), // Links to public.user.id
-    email: text("email"), // Contact email for the stylist
+    email: text("email"), // Contact email for the staff member
     /** Contact phone (admin-facing only, not surfaced to clients). */
     phone: text("phone"),
     displayName: text("display_name").notNull(),
     photoUrl: text("photo_url"),
     bio: text("bio"),
     role: text("role").notNull().default("provider"), // "provider" | "assistant"
-    /** Assistant staff member paired with this stylist for auto assistant tasks */
+    /** Assistant staff member paired with this staff member for auto assistant tasks */
     defaultAssistantId: uuid("default_assistant_id"),
-    /** Capacity Coach goal: hours/week the stylist wants to work (null = unset). */
+    /** Capacity Coach goal: hours/week the staff member wants to work (null = unset). */
     targetHoursPerWeek: integer("target_hours_per_week"),
     /** Capacity Coach goal: take-home they want to average per hour, in cents. */
     targetHourlyEarningsCents: integer("target_hourly_earnings_cents"),
@@ -186,14 +187,14 @@ export function createTenantTables(schema: PgSchema) {
       serviceId: uuid("service_id")
         .notNull()
         .references(() => services.id, { onDelete: "cascade" }),
-      /** Per-stylist overrides; NULL = use the catalog default on `services`. */
+      /** Per-staff overrides; NULL = use the catalog default on `services`. */
       priceCents: integer("price_cents"),
       durationMinutes: integer("duration_minutes"),
       activeMinutes: integer("active_minutes"),
       processingMinutes: integer("processing_minutes"),
-      /** Stylist-specific display name (e.g. "Riley's signature haircut"). */
+      /** Staff-specific display name (e.g. "Riley's signature haircut"). */
       customName: text("custom_name"),
-      /** Soft toggle: 0 = stylist hides this service without unlinking. */
+      /** Soft toggle: 0 = staff member hides this service without unlinking. */
       isOffered: integer("is_offered").notNull().default(1),
       createdAt: timestamp("created_at", { withTimezone: true })
         .defaultNow()
@@ -344,7 +345,7 @@ export function createTenantTables(schema: PgSchema) {
     pushReminderSentAt2: timestamp("push_reminder_sent_at_2", {
       withTimezone: true,
     }),
-    /** At booking time: first-ever booking for client in salon vs returning */
+    /** At booking time: first-ever booking for client in business vs returning */
     clientStatusAtBooking: text("client_status_at_booking"),
     /** Set when this appointment is one member of a group booking. */
     bookingGroupId: uuid("booking_group_id").references(() => bookingGroups.id, {
@@ -759,7 +760,7 @@ export function createTenantTables(schema: PgSchema) {
    * APNs device tokens for native iOS push notifications. Polymorphic owner:
    * `client` (booking app, owner_id = clients.id) or `user` (owner/staff app,
    * owner_id = public user id). Tenant-scoped so the reminder cron can join
-   * tokens to appointments within the salon.
+   * tokens to appointments within the business.
    */
   const deviceTokens = schema.table(
     "device_tokens",
@@ -783,7 +784,7 @@ export function createTenantTables(schema: PgSchema) {
     ],
   );
 
-  /** Internal busy blocks (between clients) — same stylist + location lane as appointments overlap rules */
+  /** Internal busy blocks (between clients) — same staff member + location lane as appointments overlap rules */
   const timeBlocks = schema.table(
     "time_blocks",
     {
@@ -1304,7 +1305,7 @@ export function createTenantTables(schema: PgSchema) {
     smsIntakeRequestsEnabled: integer("sms_intake_requests_enabled")
       .notNull()
       .default(0),
-    /** Salon policies prose shown to clients to review and sign during intake */
+    /** Business policies prose shown to clients to review and sign during intake */
     policyText: text("policy_text"),
     /** Who may self-book online: 'both' | 'existing_only' | 'new_only'. */
     onlineBookingAudience: text("online_booking_audience")
@@ -1318,13 +1319,13 @@ export function createTenantTables(schema: PgSchema) {
     depositDurationThresholdMinutes: integer(
       "deposit_duration_threshold_minutes",
     ),
-    /** Beauty Bank credits expire this many months after they're earned; null = never expire. */
+    /** Stored value credits expire this many months after they're earned; null = never expire. */
     storedValueExpiryMonths: integer("stored_value_expiry_months"),
     /** Storefront sales tax in basis points (725 = 7.25%); 0 = no tax collected. */
     retailTaxBps: integer("retail_tax_bps").notNull().default(0),
     /** Flat shipping rate for storefront orders (cents); null = pickup only. */
     retailShipFlatCents: integer("retail_ship_flat_cents"),
-    /** Salon-wide target service revenue for a calendar month (cents); null = no goal set. */
+    /** Business-wide target service revenue for a calendar month (cents); null = no goal set. */
     monthlyRevenueGoalCents: integer("monthly_revenue_goal_cents"),
     /** Walk-in line: 1 = accepting new people. */
     queueOpen: integer("queue_open").notNull().default(0),
@@ -1344,7 +1345,7 @@ export function createTenantTables(schema: PgSchema) {
       .notNull(),
   });
 
-  /** Custom, salon-defined service categories (defaults seeded on provision). */
+  /** Custom, business-defined service categories (defaults seeded on provision). */
   const serviceCategories = schema.table(
     "service_categories",
     {
@@ -1458,7 +1459,7 @@ export function createTenantTables(schema: PgSchema) {
       failureReason: text("failure_reason"),
       platformFeeCents: integer("platform_fee_cents"),
       connectAccountId: text("connect_account_id"),
-      /** Portion of amount paid from Beauty Bank stored value */
+      /** Portion of amount paid from stored value */
       storedValueCents: integer("stored_value_cents"),
       /** Gratuity included in amount_cents (service + tip) */
       tipCents: integer("tip_cents"),
@@ -1820,7 +1821,7 @@ export function createTenantTables(schema: PgSchema) {
         .notNull()
         .references(() => clients.id),
       appointmentId: uuid("appointment_id").references(() => appointments.id),
-      /** Snapshot of salonPolicies.policyText at send-time (so future edits don't change historical signatures) */
+      /** Snapshot of the business policy text at send-time (so future edits don't change historical signatures) */
       policyText: text("policy_text").notNull(),
       signedName: text("signed_name"),
       signedAt: timestamp("signed_at", { withTimezone: true }),
@@ -1878,7 +1879,7 @@ export function createTenantTables(schema: PgSchema) {
   });
 
   /**
-   * In-app alerts surfaced to the salon owner in the dashboard (bell menu).
+   * In-app alerts surfaced to the business owner in the dashboard (bell menu).
    * Generic by design (`type` discriminates the source) but currently produced
    * by the Capacity Coach evaluator. `dedupeKey` makes re-evaluation idempotent
    * (upsert), and `data` carries the structured payload the UI renders.
@@ -1910,7 +1911,7 @@ export function createTenantTables(schema: PgSchema) {
   );
 
   /**
-   * Retail products the salon sells (storefront). Managed by the stylist in the
+   * Retail products the business sells (storefront). Managed by the staff member in the
    * admin; `tags` drive client-facing recommendations, and
    * `is_active` controls storefront visibility.
    */

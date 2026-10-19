@@ -20,7 +20,7 @@ import {
   type CatalogExecutor,
   type DomainCompatibilityInspection,
   type DomainCompatibilityState,
-} from "../src/lib/tenant/domain-compatibility-repair";
+} from "../src/lib/tenant/migrations/0060-domain-compatibility-repair";
 import { sql } from "drizzle-orm";
 import type { TenantMigration } from "../src/lib/tenant/migrations";
 

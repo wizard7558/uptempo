@@ -22,9 +22,9 @@ async function runRepair(slugsToCheck: string[], apply: boolean) {
   const { publicDb } = await import("@/lib/db");
   const { tenants } = await import("@/lib/db/schema");
   const { eq, inArray } = await import("drizzle-orm");
-  const { migrations, LATEST_SCHEMA_VERSION } = await import("./migrations");
+  const { migrations, LATEST_SCHEMA_VERSION } = await import("./index");
   const repairMigrations = migrations.filter((migration) => migration.version >= 33);
-  const { inspectTenantSchema, runRepairCommand } = await import("../../../scripts/repair-tenant-schemas");
+  const { inspectTenantSchema, runRepairCommand } = await import("../../../../scripts/repair-tenant-schemas");
 
   const result = await runRepairCommand({
     apply,
@@ -73,7 +73,7 @@ async function tenantVersion(slug: string): Promise<number> {
 }
 
 async function dropTestTenants() {
-  const { dropTenantSchema } = await import("./provision");
+  const { dropTenantSchema } = await import("../provision");
   for (const slug of slugs) {
     try {
       await dropTenantSchema(slug);
@@ -94,9 +94,9 @@ afterAll(async () => {
 
 describe("migration 0060 repair inspection (PostgreSQL integration)", () => {
   itDb("repairs a genuine v59 tenant once, then reports v60 present without replay", async () => {
-    const { provisionTenantSchema } = await import("./provision");
-    const { migrations } = await import("./migrations");
-    const { inspectTenantSchema } = await import("../../../scripts/repair-tenant-schemas");
+    const { provisionTenantSchema } = await import("../provision");
+    const { migrations } = await import("./index");
+    const { inspectTenantSchema } = await import("../../../../scripts/repair-tenant-schemas");
     const slug = makeSlug("v59");
     await provisionTenantSchema({ name: "Repair v59", slug, throughVersion: 59 });
     const [record] = await (await import("@/lib/db")).publicDb
@@ -123,9 +123,9 @@ describe("migration 0060 repair inspection (PostgreSQL integration)", () => {
   }, 180_000);
 
   itDb("recognizes fresh v60 and resolves pre-0040 markers from the ordinary staff table", async () => {
-    const { provisionTenantSchema } = await import("./provision");
-    const { migrations, LATEST_SCHEMA_VERSION } = await import("./migrations");
-    const { inspectTenantSchema } = await import("../../../scripts/repair-tenant-schemas");
+    const { provisionTenantSchema } = await import("../provision");
+    const { migrations, LATEST_SCHEMA_VERSION } = await import("./index");
+    const { inspectTenantSchema } = await import("../../../../scripts/repair-tenant-schemas");
     const { tenants } = await import("@/lib/db/schema");
     const { publicDb } = await import("@/lib/db");
     const { eq } = await import("drizzle-orm");
@@ -142,9 +142,9 @@ describe("migration 0060 repair inspection (PostgreSQL integration)", () => {
   }, 180_000);
 
   itDb("defers v60 inspection for a legitimate pre-0040 schema until repairs run in one transaction", async () => {
-    const { provisionTenantSchema } = await import("./provision");
-    const { migrations, LATEST_SCHEMA_VERSION, TENANT_BASELINE_VERSION } = await import("./migrations");
-    const { inspectTenantSchema } = await import("../../../scripts/repair-tenant-schemas");
+    const { provisionTenantSchema } = await import("../provision");
+    const { migrations, LATEST_SCHEMA_VERSION, TENANT_BASELINE_VERSION } = await import("./index");
+    const { inspectTenantSchema } = await import("../../../../scripts/repair-tenant-schemas");
     const { tenants } = await import("@/lib/db/schema");
     const { publicDb } = await import("@/lib/db");
     const { eq } = await import("drizzle-orm");
@@ -170,7 +170,7 @@ describe("migration 0060 repair inspection (PostgreSQL integration)", () => {
   }, 240_000);
 
   itDb("reports wrong view, disabled or missing trigger, and stale alias as manual without writes", async () => {
-    const { provisionTenantSchema } = await import("./provision");
+    const { provisionTenantSchema } = await import("../provision");
     const cases = ["wrong-view", "wrong-function", "disabled-trigger", "missing-trigger", "stale-alias"] as const;
     for (const testCase of cases) {
       const slug = makeSlug(testCase.replaceAll("-", ""));
@@ -220,7 +220,7 @@ describe("migration 0060 repair inspection (PostgreSQL integration)", () => {
   }, 240_000);
 
   itDb("rolls back the whole transaction and keeps schema_version when the 0060 assertion fails", async () => {
-    const { provisionTenantSchema } = await import("./provision");
+    const { provisionTenantSchema } = await import("../provision");
     const { schemaName } = await provisionTenantSchema({ name: "Repair rollback", slug: makeSlug("rollback"), throughVersion: 59 });
     const slug = slugs.at(-1)!;
     const staffId = randomUUID();

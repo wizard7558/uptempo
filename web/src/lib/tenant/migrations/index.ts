@@ -154,7 +154,7 @@ export const LATEST_SCHEMA_VERSION =
   migrations.length > 0 ? migrations[migrations.length - 1].version : 1;
 
 /**
- * Schema version produced by the hand-written baseline DDL in provision.ts.
+ * Schema version produced by the hand-written baseline DDL in baseline.ts.
  * The baseline already includes the objects from migrations 0002-0006, so
  * provisioning applies every registry migration with a version above this.
  */
