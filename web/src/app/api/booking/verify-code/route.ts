@@ -118,29 +118,8 @@ export async function POST(req: NextRequest) {
         if (created.success) {
           clientId = created.id;
           clientName = name || "Guest";
-        } else if (phone) {
-          // The supplied phone may already belong to an existing client (e.g. a
-          // returning customer who originally booked by phone). Log them into
-          // that record — and attach this verified email — instead of failing.
-          const byPhone = await findClientByPhoneForTenant(tenantSlug, phone);
-          if (!byPhone) {
-            return NextResponse.json(
-              { error: "Failed to create client" },
-              { status: 500 },
-            );
-          }
-          clientId = byPhone.id;
-          clientName = byPhone.name;
-          isReturning = true;
-          if (!byPhone.email) {
-            await withTenantDb(tenantSlug, async (db, { clients }) => {
-              await db
-                .update(clients)
-                .set({ email: identifier, updatedAt: new Date() })
-                .where(eq(clients.id, byPhone.id));
-            });
-          }
         } else {
+          // The email OTP does not establish ownership of another client's phone record.
           return NextResponse.json(
             { error: "Failed to create client" },
             { status: 500 },
