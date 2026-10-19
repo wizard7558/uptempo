@@ -10,8 +10,8 @@ import { visitWord } from "@/lib/schedule/visit-status";
 
 export interface AppointmentData {
   id: string;
-  /** Stylist column this appointment belongs to. Used by edit-services to
-   * resolve per-stylist pricing. */
+  /** Staff column this appointment belongs to. Used by edit-services to
+   * resolve per-staff pricing. */
   staffId: string;
   clientId: string;
   clientName: string;

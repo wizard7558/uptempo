@@ -30,7 +30,7 @@ export function CurrentTimeMarker({
 
   if (!isToday) return null;
 
-  // The marker is mounted as a sibling of the stylist columns, so its
+  // The marker is mounted as a sibling of the staff columns, so its
   // coordinate space starts at the top of the column headers. Offset by the
   // header height so the marker lines up with each column's grid (where
   // appointments and hour gridlines actually live).

@@ -254,8 +254,8 @@ export function ScheduleView({
 
   /**
    * Drag-to-reschedule from the week view. The week view doesn't aggregate by
-   * stylist (every column is a day, not a stylist), so we keep the
-   * appointment's existing stylist and only change the date+time.
+   * staff member (every column is a day, not a staff member), so we keep the
+   * appointment's existing staff member and only change the date+time.
    */
   function handleWeekDragReschedule(
     appointmentId: string,

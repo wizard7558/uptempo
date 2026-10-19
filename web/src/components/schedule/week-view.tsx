@@ -53,7 +53,7 @@ interface WeekViewProps {
   onDayClick: (date: Date) => void;
   /** Tap an appointment block → open the existing detail dialog. */
   onAppointmentSelect: (appointment: AppointmentData) => void;
-  /** Drag an appointment to a new day + minute-of-day. Stylist stays the same. */
+  /** Drag an appointment to a new day + minute-of-day. Staff member stays the same. */
   onDragReschedule: (
     appointmentId: string,
     appointment: AppointmentData,

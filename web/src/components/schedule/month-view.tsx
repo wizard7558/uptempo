@@ -68,7 +68,7 @@ export function MonthView({
 
       const data = await getScheduleData(staffIds, gridStart, gridEnd);
 
-      // Flatten all stylists' appointments into a single array
+      // Flatten all staff appointments into a single array
       const allAppointments: DayAppointment[] = [];
       for (const appts of Object.values(data.appointments)) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

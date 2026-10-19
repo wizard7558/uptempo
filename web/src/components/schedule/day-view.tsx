@@ -130,10 +130,10 @@ export function DayView({
     [showAssistants, assistants],
   );
 
-  /** Combined picker entries on mobile: stylists first, then assistants. */
+  /** Combined picker entries on mobile: staff first, then assistants. */
   const mobileColumns = useMemo(
     () => [
-      ...staff.map((s) => ({ kind: "stylist" as const, value: s })),
+      ...staff.map((s) => ({ kind: "staff" as const, value: s })),
       ...visibleAssistants.map((a) => ({
         kind: "assistant" as const,
         value: a,
@@ -162,7 +162,7 @@ export function DayView({
 
   const visibleStaff = useMemo(() => {
     if (!isMobile) return staff;
-    return selectedColumn?.kind === "stylist" ? [selectedColumn.value] : [];
+    return selectedColumn?.kind === "staff" ? [selectedColumn.value] : [];
   }, [isMobile, staff, selectedColumn]);
 
   const renderedAssistants = useMemo(() => {
