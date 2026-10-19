@@ -65,7 +65,7 @@ describe("remaining admin copy follows industry terms", () => {
     const props = {
       token: "t",
       email: "a@b.co",
-      salonName: "Fade Co",
+      businessName: "Fade Co",
       role: "provider",
       canJoinAsSignedInUser: true,
     };

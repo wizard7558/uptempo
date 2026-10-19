@@ -63,11 +63,11 @@ export async function notifyCalendarConnectionError(params: {
   await sendEmail({
     to: owner.email,
     subject: emailT("calendar.subject", { platform: platformName }),
-    salonName: branding.salonName,
+    businessName: branding.businessName,
     react: (
       <CalendarDisconnectEmail
         t={emailT}
-        salonName={branding.salonName}
+        businessName={branding.businessName}
         staffName={staffName}
         platformLabel={platformName}
         settingsUrl={settingsUrl}

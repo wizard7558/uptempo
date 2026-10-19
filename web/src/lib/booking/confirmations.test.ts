@@ -56,7 +56,7 @@ vi.mock("@/lib/terms/email", () => ({
 }));
 vi.mock("@/lib/email/branding", () => ({
   getEmailBranding: async () => ({
-    salonName: "Demo Barber",
+    businessName: "Demo Barber",
     logoUrl: null,
     brandColor: null,
   }),
@@ -122,7 +122,7 @@ describe("sendBookingConfirmations with no session", () => {
     expect(loadAppointmentForTenant).toHaveBeenCalledWith(SLUG, APPT_ID);
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ to: "casey@example.test", salonName: "Demo Barber" }),
+      expect.objectContaining({ to: "casey@example.test", businessName: "Demo Barber" }),
     );
     expect(sendSms).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -15,7 +15,7 @@ describe("ReceiptEmail", () => {
     const html = await render(
       ReceiptEmail({
         t,
-        salonName: "North Co",
+        businessName: "North Co",
         clientName: "Ana",
         lineItems: [{ label: "Cut", amountCents: 6000 }],
         tipCents: 0,
@@ -26,7 +26,7 @@ describe("ReceiptEmail", () => {
     const text = await render(
       ReceiptEmail({
         t,
-        salonName: "North Co",
+        businessName: "North Co",
         clientName: "Ana",
         lineItems: [{ label: "Cut", amountCents: 6000 }],
         tipCents: 0,

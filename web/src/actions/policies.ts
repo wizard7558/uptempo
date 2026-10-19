@@ -228,7 +228,7 @@ export async function sendIntakeRequest(input: { appointmentId: string }) {
       getEmailBranding(slug),
       getEmailT(slug, "emails"),
     ]);
-    const businessName = branding.salonName;
+    const businessName = branding.businessName;
 
     if (client.email) {
       const { IntakeRequestEmail } = await import("@/emails/intake-request");
@@ -237,13 +237,13 @@ export async function sendIntakeRequest(input: { appointmentId: string }) {
         subject: emailT("intakeMail.subject", { business: businessName }),
         react: IntakeRequestEmail({
           t: emailT,
-          salonName: businessName,
+          businessName: businessName,
           clientName: client.name,
           intakeUrl,
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
         }),
-        salonName: businessName,
+        businessName: businessName,
       });
     }
 
@@ -353,7 +353,7 @@ export async function getIntakeByToken(
     signedAt: ctx.sig.signedAt,
     clientId: ctx.sig.clientId,
     clientName: ctx.client.name,
-    businessName: branding.salonName,
+    businessName: branding.businessName,
     logoUrl: branding.logoUrl,
   };
 }

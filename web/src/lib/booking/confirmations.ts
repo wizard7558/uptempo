@@ -129,7 +129,7 @@ export async function sendBookingConfirmations(
         getEmailBranding(slug),
         getEmailT(slug, "emails"),
       ]);
-      const salonName = emailBranding.salonName;
+      const businessName = emailBranding.businessName;
 
       // Generate action tokens
       const cancelToken = createActionToken(appointment.id, "cancel");
@@ -146,10 +146,10 @@ export async function sendBookingConfirmations(
 
       await sendEmail({
         to: clientEmail,
-        subject: emailT("confirmation.subject", { business: salonName }),
+        subject: emailT("confirmation.subject", { business: businessName }),
         react: BookingConfirmation({
           t: emailT,
-          salonName,
+          businessName,
           clientName: appointment.client?.name ?? "there",
           staffName,
           services: serviceNames,
@@ -167,7 +167,7 @@ export async function sendBookingConfirmations(
           logoUrl: emailBranding.logoUrl,
           brandColor: emailBranding.brandColor,
         }),
-        salonName,
+        businessName,
       });
 
       if (settings.smsConfirmationEnabled === 1 && appointment.client?.phone) {
@@ -226,7 +226,7 @@ export async function sendBookingConfirmations(
               subject: emailT("form.subject", { form: form.name }),
               react: FormRequestEmail({
                 t: emailT,
-                salonName,
+                businessName,
                 clientName: appointment.client?.name ?? "there",
                 formName: form.name,
                 formDescription: form.description,
@@ -234,7 +234,7 @@ export async function sendBookingConfirmations(
                 logoUrl: emailBranding.logoUrl,
                 brandColor: emailBranding.brandColor,
               }),
-              salonName,
+              businessName,
             });
 
             if (
@@ -244,7 +244,7 @@ export async function sendBookingConfirmations(
               const { sendSms } = await import("@/lib/sms/send");
               await sendSms({
                 to: appointment.client.phone,
-                body: `${salonName}: please complete "${form.name}": ${formUrl}`,
+                body: `${businessName}: please complete "${form.name}": ${formUrl}`,
                 tenantSlug: slug,
                 clientId: appointment.client.id,
                 appointmentId: appointmentId,

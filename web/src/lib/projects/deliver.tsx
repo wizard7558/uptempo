@@ -29,11 +29,11 @@ export async function deliverDesign(slug: string, r: DesignRecipient): Promise<v
     try {
       await sendEmail({
         to: r.email,
-        subject: t("design.subject", { business: branding.salonName }),
-        salonName: branding.salonName,
+        subject: t("design.subject", { business: branding.businessName }),
+        businessName: branding.businessName,
         react: (
           <DesignReadyEmail
-            businessName={branding.salonName}
+            businessName={branding.businessName}
             t={t}
             link={link}
             logoUrl={branding.logoUrl}
@@ -53,7 +53,7 @@ export async function deliverDesign(slug: string, r: DesignRecipient): Promise<v
         tenantSlug: slug,
         clientId: r.clientId,
         messageType: "design",
-        body: t("design.sms", { business: branding.salonName, link }),
+        body: t("design.sms", { business: branding.businessName, link }),
       });
     } catch (err) {
       console.error("[projects] design sms failed:", err);

@@ -28,7 +28,7 @@ interface SendSmsResult {
  * Send an SMS with consent and quiet hours gates.
  *
  * Gate 1: Checks SMS consent for the recipient phone in the tenant.
- * Gate 2: Checks salon timezone for quiet hours (8 AM - 9 PM).
+ * Gate 2: Checks business timezone for quiet hours (8 AM - 9 PM).
  *
  * If both gates pass, sends via Twilio Messaging Service and logs
  * the message in the sms_messages table.
@@ -72,8 +72,8 @@ export async function sendSms({
     return { success: false, error: "no_consent" };
   }
 
-  // Gate 2: Quiet hours check — get salon timezone from policies
-  const salonTimezone = await withTenantDb(
+  // Gate 2: Quiet hours check — get business timezone from policies
+  const businessTimezone = await withTenantDb(
     tenantSlug,
     async (db, { businessSettings }) => {
       const [policy] = await db
@@ -84,7 +84,7 @@ export async function sendSms({
     },
   );
 
-  if (!isWithinSendWindow(salonTimezone)) {
+  if (!isWithinSendWindow(businessTimezone)) {
     return { success: false, error: "quiet_hours" };
   }
 

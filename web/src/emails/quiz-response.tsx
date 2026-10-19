@@ -17,7 +17,7 @@ export interface QuizResponseEmailProps {
   t: EmailT;
   answers: Array<{ question: string; answer: string }>;
   submittedAt: string;
-  salonName?: string;
+  businessName?: string;
   logoUrl?: string | null;
 }
 
@@ -25,11 +25,11 @@ export function QuizResponseEmail({
   t,
   answers,
   submittedAt,
-  salonName = PLATFORM_PRODUCT_NAME,
+  businessName = PLATFORM_PRODUCT_NAME,
   logoUrl,
 }: QuizResponseEmailProps) {
   return (
-    <EmailLayout businessName={salonName} previewText={t("quiz.preview")} logoUrl={logoUrl} t={t}>
+    <EmailLayout businessName={businessName} previewText={t("quiz.preview")} logoUrl={logoUrl} t={t}>
       <Text style={emailHeading}>{t("quiz.heading")}</Text>
       <Text style={emailMuted}>{t("quiz.submitted", { when: submittedAt })}</Text>
       <Text style={emailMuted}>{t("quiz.note")}</Text>

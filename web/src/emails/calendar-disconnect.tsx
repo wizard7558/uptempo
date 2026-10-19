@@ -4,7 +4,7 @@ import { emailButtonStyle, emailCenter, emailFine, emailHeading, emailText, type
 
 interface CalendarDisconnectEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   staffName: string;
   platformLabel: string;
   settingsUrl: string;
@@ -14,7 +14,7 @@ interface CalendarDisconnectEmailProps {
 
 export function CalendarDisconnectEmail({
   t,
-  salonName,
+  businessName,
   staffName,
   platformLabel,
   settingsUrl,
@@ -23,7 +23,7 @@ export function CalendarDisconnectEmail({
 }: CalendarDisconnectEmailProps) {
   return (
     <EmailLayout
-      businessName={salonName}
+      businessName={businessName}
       previewText={t("calendar.preview", { platform: platformLabel, staffName })}
       logoUrl={logoUrl}
       t={t}
@@ -37,7 +37,7 @@ export function CalendarDisconnectEmail({
           {t("calendar.cta")}
         </Button>
       </Section>
-      <Text style={emailFine}>{t("calendar.note", { business: salonName })}</Text>
+      <Text style={emailFine}>{t("calendar.note", { business: businessName })}</Text>
     </EmailLayout>
   );
 }

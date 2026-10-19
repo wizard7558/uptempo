@@ -345,7 +345,7 @@ export async function POST(req: Request) {
             const pm = await getStripe().paymentMethods.retrieve(paymentMethodId);
             if (client.email) {
               const tenant = await getTenantBySlug(tenantSlug);
-              const salonName = tenant?.name ?? undefined;
+              const businessName = tenant?.name ?? undefined;
               const emailT = await getEmailT(tenantSlug, "emails");
 
               await sendEmail({
@@ -357,7 +357,7 @@ export async function POST(req: Request) {
                   React.createElement("p", null, emailT("cardSaved.policyNote")),
                   React.createElement("p", null, "You can manage your card at any time from your account page."),
                 ),
-                salonName,
+                businessName,
               });
             }
           } catch (emailErr) {

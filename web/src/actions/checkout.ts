@@ -575,7 +575,7 @@ export async function completeAppointment(data: {
               getEmailT(slug, "emails"),
               getEmailBranding(slug),
             ]);
-            const salonName = branding.salonName;
+            const businessName = branding.businessName;
 
             const policies = await getNotificationSettingsForTenant(slug);
 
@@ -586,16 +586,16 @@ export async function completeAppointment(data: {
               );
               await sendEmailFn({
                 to: clientData.email,
-                subject: emailT("aftercare.subject", { business: salonName }),
+                subject: emailT("aftercare.subject", { business: businessName }),
                 react: AftercareEmail({
                   t: emailT,
-                  salonName,
+                  businessName,
                   clientName: clientData.name,
                   templates: aftercareList,
                   logoUrl: branding.logoUrl,
                   brandColor: branding.brandColor,
                 }),
-                salonName,
+                businessName,
               });
             }
 
@@ -609,7 +609,7 @@ export async function completeAppointment(data: {
                 168,
               );
               const url = `${getBaseUrl()}/aftercare/${data.appointmentId}?token=${encodeURIComponent(token)}`;
-              const smsBody = `${salonName}: your aftercare instructions — ${url}`;
+              const smsBody = `${businessName}: your aftercare instructions — ${url}`;
               await sendSms({
                 to: clientData.phone,
                 body: smsBody,
@@ -949,14 +949,14 @@ export async function sendCheckoutLink(appointmentId: string) {
     getEmailT(slug, "emails"),
     getEmailBranding(slug),
   ]);
-  const salonName = branding.salonName;
+  const businessName = branding.businessName;
 
   const result = await sendEmail({
     to: data.clientEmail,
-    subject: emailT("checkout.subject", { business: salonName }),
+    subject: emailT("checkout.subject", { business: businessName }),
     react: CheckoutLinkEmail({
       t: emailT,
-      salonName,
+      businessName,
       clientName: data.clientName,
       staffName: data.staffName,
       services: data.services,
@@ -966,7 +966,7 @@ export async function sendCheckoutLink(appointmentId: string) {
       logoUrl: branding.logoUrl,
       brandColor: branding.brandColor,
     }),
-    salonName,
+    businessName,
   });
 
   return { success: result.success };
@@ -1193,7 +1193,7 @@ export async function sendReceipt(data: {
       getEmailT(slug, "emails"),
       getEmailBranding(slug),
     ]);
-    const salonName = branding.salonName;
+    const businessName = branding.businessName;
     const paidAtLabel = format(
       charge.createdAt instanceof Date
         ? charge.createdAt
@@ -1230,10 +1230,10 @@ export async function sendReceipt(data: {
       }
       const r = await sendEmail({
         to: client.email,
-        subject: emailT("receiptMail.subject", { business: salonName }),
+        subject: emailT("receiptMail.subject", { business: businessName }),
         react: ReceiptEmail({
           t: emailT,
-          salonName,
+          businessName,
           clientName: client.name,
           lineItems,
           tipCents,
@@ -1242,7 +1242,7 @@ export async function sendReceipt(data: {
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
         }),
-        salonName,
+        businessName,
       });
       return r.success
         ? ({ success: true as const } as const)
@@ -1261,7 +1261,7 @@ export async function sendReceipt(data: {
       )
       .join("; ");
     const bodyLines = [
-      `${salonName} — receipt (${paidAtLabel})`,
+      `${businessName} — receipt (${paidAtLabel})`,
       `Total ${fmt(charge.amountCents)}`,
       svcPart.slice(0, 220) + (svcPart.length > 220 ? "…" : ""),
     ];

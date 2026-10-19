@@ -72,7 +72,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
           </h1>
           <p className="text-sm text-[var(--ink-soft)]">
             You&apos;ve been invited to join{" "}
-            <strong>{result.salonName}</strong> as a{" "}
+            <strong>{result.businessName}</strong> as a{" "}
             <strong>{roleLabel}</strong>
           </p>
         </div>
@@ -81,7 +81,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
           <AcceptInviteForm
             token={token}
             email={result.invitation.email}
-            salonName={result.salonName}
+            businessName={result.businessName}
             role={result.invitation.role}
             canJoinAsSignedInUser={canJoinAsSignedInUser}
             isSignedInWrongEmail={

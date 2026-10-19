@@ -6,7 +6,7 @@ import { getTenantBySlug } from "@/lib/tenant/registry";
 import { normalizeLogoUrlForEmail } from "@/lib/email/normalize-logo-url";
 
 export interface EmailBranding {
-  salonName: string;
+  businessName: string;
   logoUrl: string | null;
   brandColor: string;
 }
@@ -14,7 +14,7 @@ export interface EmailBranding {
 export async function getEmailBranding(slug: string): Promise<EmailBranding> {
   const tenant = await getTenantBySlug(slug);
   // The business can be removed between the send decision and this read.
-  const salonName = tenant?.name ?? (await getEmailT(slug, "emails"))("fallbacks.ourPlaceTitle");
+  const businessName = tenant?.name ?? (await getEmailT(slug, "emails"))("fallbacks.ourPlaceTitle");
 
   let logoUrl: string | null = null;
   let brandColor = DEFAULT_BOOKING_THEME.brandColor;
@@ -39,5 +39,5 @@ export async function getEmailBranding(slug: string): Promise<EmailBranding> {
     );
   }
 
-  return { salonName, logoUrl: normalizeLogoUrlForEmail(logoUrl), brandColor };
+  return { businessName, logoUrl: normalizeLogoUrlForEmail(logoUrl), brandColor };
 }

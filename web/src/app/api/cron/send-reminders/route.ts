@@ -98,7 +98,7 @@ async function sendRemindersForTenant(
     getEmailT(tenantSlug, "emails"),
     getEmailBranding(tenantSlug),
   ]);
-  const salonName = branding.salonName;
+  const businessName = branding.businessName;
 
   // Query upcoming appointments for this tenant
   const hoursAhead = settings.reminderHoursBefore;
@@ -165,9 +165,9 @@ async function sendRemindersForTenant(
 
       const result = await sendEmail({
         to: appt.clientEmail,
-        subject: emailT("reminder.subject", { business: salonName }),
+        subject: emailT("reminder.subject", { business: businessName }),
         react: BookingReminder({
-          salonName,
+          businessName,
           clientName: appt.clientName ?? "there",
           staffName: appt.staffName,
           t: emailT,
@@ -187,7 +187,7 @@ async function sendRemindersForTenant(
           customGreeting: settings.reminderGreeting,
           customBody: settings.reminderBody,
         }),
-        salonName,
+        businessName,
       });
 
       if (result.success) {
@@ -285,9 +285,9 @@ async function sendRemindersForTenant(
 
         const result = await sendEmail({
           to: appt.clientEmail,
-          subject: emailT("reminder.subject", { business: salonName }),
+          subject: emailT("reminder.subject", { business: businessName }),
           react: BookingReminder({
-            salonName,
+            businessName,
             clientName: appt.clientName ?? "there",
             staffName: appt.staffName,
             t: emailT,
@@ -307,7 +307,7 @@ async function sendRemindersForTenant(
             customGreeting: settings.reminderGreeting,
             customBody: settings.reminderBody,
           }),
-          salonName,
+          businessName,
         });
 
         if (result.success) {

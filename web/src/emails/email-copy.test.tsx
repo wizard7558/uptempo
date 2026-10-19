@@ -33,7 +33,6 @@ function templateFns(mod: object) {
 function fixture(t: Awaited<ReturnType<typeof getEmailT>>): Record<string, unknown> {
   return {
     t,
-    salonName: "North Co",
     businessName: "North Co",
     clientName: "Ana",
     staffName: "Sam",

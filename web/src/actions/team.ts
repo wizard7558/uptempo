@@ -192,7 +192,7 @@ export async function sendInvitation(data: {
       expiresAt,
     });
 
-    // Get inviter name and salon name for the email
+    // Get inviter name and business name for the email
     const [inviter] = await publicDb
       .select({ name: user.name })
       .from(user)
@@ -210,7 +210,7 @@ export async function sendInvitation(data: {
       getEmailBranding(slug),
     ]);
     const inviterName = inviter?.name ?? emailT("fallbacks.yourPlaceTeam");
-    const salonName = tenant?.name ?? branding.salonName;
+    const businessName = tenant?.name ?? branding.businessName;
     const staffLabel = (await getTenantTerms(slug)).staff.one;
 
     // Build accept URL
@@ -219,17 +219,17 @@ export async function sendInvitation(data: {
     // Send invitation email
     await sendEmail({
       to: data.email.toLowerCase(),
-      subject: emailT("team.subject", { business: salonName }),
+      subject: emailT("team.subject", { business: businessName }),
       react: TeamInviteEmail({
         t: emailT,
-        salonName,
+        businessName,
         inviterName,
         roleLabel: teamRoleLabel(data.role, staffLabel),
         acceptUrl,
         logoUrl: branding.logoUrl,
         brandColor: branding.brandColor,
       }),
-      salonName,
+      businessName,
     });
 
     revalidatePath("/settings/team");
@@ -423,7 +423,7 @@ export async function getInvitationByToken(token: string): Promise<{
     role: string;
     tenantSlug: string;
   };
-  salonName: string;
+  businessName: string;
 } | null> {
   const [invitation] = await publicDb
     .select({
@@ -452,7 +452,7 @@ export async function getInvitationByToken(token: string): Promise<{
   // Check if already used/revoked
   if (invitation.status !== "pending") return null;
 
-  // Get salon name
+  // Get business name
   const [tenant] = await publicDb
     .select({ name: tenants.name })
     .from(tenants)
@@ -466,7 +466,7 @@ export async function getInvitationByToken(token: string): Promise<{
       role: invitation.role,
       tenantSlug: invitation.tenantSlug,
     },
-    salonName: tenant?.name ?? invitation.tenantSlug,
+    businessName: tenant?.name ?? invitation.tenantSlug,
   };
 }
 

@@ -9,7 +9,7 @@ const sendSms = vi.fn();
 vi.mock("@/lib/email/send", () => ({ sendEmail: (...a: unknown[]) => sendEmail(...a) }));
 vi.mock("@/lib/sms/send", () => ({ sendSms: (...a: unknown[]) => sendSms(...a) }));
 vi.mock("@/lib/email/branding", () => ({
-  getEmailBranding: async () => ({ salonName: "Ink Co", logoUrl: null }),
+  getEmailBranding: async () => ({ businessName: "Ink Co", logoUrl: null }),
 }));
 vi.mock("@/lib/terms/email", () => ({
   getEmailT: async (_slug: string, ns: string) => createTermsT(VERTICALS.tattoo.terms, ns),

@@ -15,7 +15,7 @@ import {
 
 interface AftercareEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   clientName: string;
   templates: Array<{
     name: string;
@@ -28,20 +28,20 @@ interface AftercareEmailProps {
 
 export function AftercareEmail({
   t,
-  salonName,
+  businessName,
   clientName,
   templates,
   logoUrl,
 }: AftercareEmailProps) {
   return (
     <EmailLayout
-      businessName={salonName}
-      previewText={t("aftercare.preview", { business: salonName })}
+      businessName={businessName}
+      previewText={t("aftercare.preview", { business: businessName })}
       logoUrl={logoUrl}
       t={t}
     >
       <Text style={emailHeading}>{t("aftercare.greeting", { name: clientName })}</Text>
-      <Text style={emailMuted}>{t("aftercare.body", { business: salonName })}</Text>
+      <Text style={emailMuted}>{t("aftercare.body", { business: businessName })}</Text>
 
       {templates.map((template, index) => (
         <Section key={template.name} style={templateSection}>

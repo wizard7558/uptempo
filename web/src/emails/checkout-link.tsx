@@ -5,7 +5,7 @@ import { emailButtonStyle, emailCenter, emailFine, emailHeading, emailMuted, typ
 
 interface CheckoutLinkEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   clientName: string;
   staffName: string;
   services: string[];
@@ -18,7 +18,7 @@ interface CheckoutLinkEmailProps {
 
 export function CheckoutLinkEmail({
   t,
-  salonName,
+  businessName,
   clientName,
   staffName,
   services,
@@ -30,8 +30,8 @@ export function CheckoutLinkEmail({
 }: CheckoutLinkEmailProps) {
   return (
     <EmailLayout
-      businessName={salonName}
-      previewText={t("checkout.preview", { business: salonName })}
+      businessName={businessName}
+      previewText={t("checkout.preview", { business: businessName })}
       logoUrl={logoUrl}
       t={t}
     >

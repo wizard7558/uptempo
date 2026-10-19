@@ -17,7 +17,7 @@ import {
 
 interface FormRequestEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   clientName: string;
   formName: string;
   formDescription?: string | null;
@@ -28,7 +28,7 @@ interface FormRequestEmailProps {
 
 export function FormRequestEmail({
   t,
-  salonName,
+  businessName,
   clientName,
   formName,
   formDescription,
@@ -38,7 +38,7 @@ export function FormRequestEmail({
 }: FormRequestEmailProps) {
   return (
     <EmailLayout
-      businessName={salonName}
+      businessName={businessName}
       previewText={t("form.preview", { form: formName })}
       logoUrl={logoUrl}
       t={t}

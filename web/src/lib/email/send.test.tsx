@@ -50,6 +50,7 @@ describe("sendEmail", () => {
       to: "a@b.co",
       bcc: ["owner@b.co", "admin@b.co"],
       subject: "Hello",
+      businessName: "Ada Salon",
       idempotencyKey: "billing-notice:test-salon:2026-12-15",
       react: React.createElement("p", null, "Hi there"),
     });
@@ -66,7 +67,7 @@ describe("sendEmail", () => {
     };
     expect(arg.html).toContain("Hi there");
     expect(arg.text).toContain("Hi there");
-    expect(arg.from).toBe("Uptempo <noreply@bookuptempo.com>");
+    expect(arg.from).toBe("Ada Salon via Uptempo <noreply@bookuptempo.com>");
     expect(arg.to).toBe("a@b.co");
     expect(arg.subject).toBe("Hello");
     expect(arg.bcc).toEqual(["owner@b.co", "admin@b.co"]);

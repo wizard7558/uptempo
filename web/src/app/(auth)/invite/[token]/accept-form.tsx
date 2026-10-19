@@ -17,7 +17,7 @@ import { useT } from "@/lib/terms/client";
 interface AcceptInviteFormProps {
   token: string;
   email: string;
-  salonName: string;
+  businessName: string;
   role: string;
   canJoinAsSignedInUser?: boolean;
   isSignedInWrongEmail?: boolean;
@@ -26,7 +26,7 @@ interface AcceptInviteFormProps {
 export function AcceptInviteForm({
   token,
   email,
-  salonName,
+  businessName,
   role,
   canJoinAsSignedInUser = false,
   isSignedInWrongEmail = false,
@@ -130,7 +130,7 @@ export function AcceptInviteForm({
         )}
         <p className="text-sm text-muted-foreground text-center">
           You&apos;re signed in as <strong>{email}</strong>. Join{" "}
-          <strong>{salonName}</strong> with this account?
+          <strong>{businessName}</strong> with this account?
         </p>
         <Button
           type="button"

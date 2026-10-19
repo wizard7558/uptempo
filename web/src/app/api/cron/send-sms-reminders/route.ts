@@ -179,7 +179,7 @@ async function sendReminderWindow(
       const rescheduleToken = createActionToken(appt.id, "reschedule");
       const rescheduleUrl = `${baseUrl}/reschedule/${rescheduleToken}`;
 
-      // Format date/time in salon timezone
+      // Format date/time in business timezone
       const apptDate = new TZDate(appt.during.start, tz);
       const dateStr = format(apptDate, "EEEE, MMMM d");
       const timeStr = format(apptDate, "h:mm a");

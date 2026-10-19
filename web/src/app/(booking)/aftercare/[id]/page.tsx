@@ -106,7 +106,7 @@ export default async function AftercarePage({
   const html = await render(
     AftercareEmail({
       t: emailT,
-      salonName: branding.salonName,
+      businessName: branding.businessName,
       clientName: row.clientName,
       templates,
       logoUrl: branding.logoUrl,

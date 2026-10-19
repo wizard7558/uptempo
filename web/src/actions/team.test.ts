@@ -64,6 +64,7 @@ vi.mock("@/lib/terms/server", () => ({
 import { requireRole } from "@/lib/auth/rbac";
 import {
   acceptInvitation,
+  getInvitationByToken,
   joinBusinessFromInvitation,
   sendInvitation,
 } from "./team";
@@ -84,6 +85,17 @@ function invitationRows(role: string) {
     [{ name: "Salon X" }],
   ];
 }
+
+describe("getInvitationByToken", () => {
+  it("returns the business name for invitation display", async () => {
+    h.selectQueue = [...invitationRows("provider")];
+
+    await expect(getInvitationByToken("tok")).resolves.toMatchObject({
+      invitation: { tenantSlug: "salon-x" },
+      businessName: "Salon X",
+    });
+  });
+});
 
 describe("invitation accept normalizes the role", () => {
   beforeEach(() => {
