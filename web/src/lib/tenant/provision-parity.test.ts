@@ -78,4 +78,60 @@ describe("tenant provisioning parity (integration)", () => {
     },
     60000,
   );
+
+  itDb(
+    "fresh v60 provisioning matches baseline-6 provisioning migrated through the full registry",
+    async () => {
+      const { provisionTenantSchema } = await import("./provision");
+      const { migrateTenant } = await import("./migrations/runner");
+      const { publicDb } = await import("@/lib/db");
+      const { tenants } = await import("@/lib/db/schema");
+      const { schemaFingerprint } = await import("./schema-fingerprint");
+      const { LATEST_SCHEMA_VERSION, TENANT_BASELINE_VERSION } = await import("./migrations");
+      const { eq } = await import("drizzle-orm");
+
+      const nonce = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      const freshSlug = `parityfresh${nonce}`;
+      const migratedSlug = `paritybase${nonce}`;
+      testSlugs.push(freshSlug, migratedSlug);
+
+      const fresh = await provisionTenantSchema({ name: "Parity Fresh v60", slug: freshSlug });
+      const baseline = await provisionTenantSchema({
+        name: "Parity Baseline 6",
+        slug: migratedSlug,
+        throughVersion: TENANT_BASELINE_VERSION,
+      });
+      expect(fresh.schemaName).toBe(`tenant_${freshSlug}`);
+      expect(baseline.schemaName).toBe(`tenant_${migratedSlug}`);
+
+      const before = await publicDb
+        .select({ schemaVersion: tenants.schemaVersion })
+        .from(tenants)
+        .where(eq(tenants.slug, migratedSlug));
+      expect(before[0]?.schemaVersion).toBe(TENANT_BASELINE_VERSION);
+
+      const migrated = await migrateTenant(migratedSlug, TENANT_BASELINE_VERSION);
+      expect(migrated.error).toBeUndefined();
+      expect(migrated.toVersion).toBe(LATEST_SCHEMA_VERSION);
+
+      for (const slug of [freshSlug, migratedSlug]) {
+        const [row] = await publicDb
+          .select({ schemaVersion: tenants.schemaVersion })
+          .from(tenants)
+          .where(eq(tenants.slug, slug));
+        expect(row?.schemaVersion).toBe(LATEST_SCHEMA_VERSION);
+      }
+
+      const freshFingerprint = await schemaFingerprint(fresh.schemaName);
+      const migratedFingerprint = await schemaFingerprint(baseline.schemaName);
+      for (const fingerprint of [freshFingerprint, migratedFingerprint]) {
+        expect(fingerprint.length).toBeGreaterThan(0);
+        expect(fingerprint.some((line) => line.startsWith("col "))).toBe(true);
+        expect(fingerprint.some((line) => line.startsWith("con "))).toBe(true);
+        expect(fingerprint.some((line) => line.startsWith("idx "))).toBe(true);
+      }
+      expect(migratedFingerprint).toEqual(freshFingerprint);
+    },
+    60000,
+  );
 });

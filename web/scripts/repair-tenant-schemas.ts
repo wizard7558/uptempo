@@ -14,11 +14,15 @@
  * transaction per tenant, and tenants.schema_version is left at LATEST.
  * Uses only the DATABASE_URL from .env.local / .env.
  */
-import { config } from "dotenv";
 import { COLUMN_RENAMES_0040, TABLE_RENAMES_0040 } from "../src/lib/tenant/migrations/0040-domain-renames";
-
-config({ path: ".env.local" });
-config({ path: ".env" });
+import {
+  inspectDomainCompatibilityRepair,
+  type CatalogExecutor,
+  type DomainCompatibilityInspection,
+  type DomainCompatibilityState,
+} from "../src/lib/tenant/domain-compatibility-repair";
+import { sql } from "drizzle-orm";
+import type { TenantMigration } from "../src/lib/tenant/migrations";
 
 const FIRST_REPAIRED_VERSION = 33;
 
@@ -198,20 +202,50 @@ export const MARKERS: Record<number, Marker[]> = {
   59: [{ kind: "column", table: "appointments", column: "checked_in_at" }],
 };
 
-type State = "present" | "missing" | "partial";
+export type RepairState = DomainCompatibilityState | "unknown";
 
-interface TenantReport {
+export interface RepairTenantInfo {
   slug: string;
   status: string;
   schemaVersion: number;
+  dbShard?: string | null;
+}
+
+export interface TenantReport extends RepairTenantInfo {
   schemaExists: boolean;
-  states: Map<number, State>;
+  states: Map<number, RepairState>;
   partialDetail: Map<number, string[]>;
+  deferred: Set<number>;
   applied: number[];
-  /** True when 0040 has already renamed this schema (staff exists, stylists does not). */
+  /** True when the canonical ordinary staff table proves migration 0040 is complete. */
   renamed0040: boolean;
   error?: string;
 }
+
+export interface RepairTransaction extends CatalogExecutor {
+  lockTenant(slug: string): Promise<RepairTenantInfo | null>;
+  applyMigration(migration: TenantMigration, schema: string): Promise<void>;
+  setSchemaVersion(slug: string, version: number): Promise<void>;
+}
+
+export interface RepairBackend extends CatalogExecutor {
+  listTenants(): Promise<RepairTenantInfo[]>;
+  inspectTenant(tenant: RepairTenantInfo, executor: CatalogExecutor): Promise<TenantReport>;
+  transaction<T>(operation: (tx: RepairTransaction) => Promise<T>): Promise<T>;
+}
+
+export interface RepairRunResult {
+  reports: TenantReport[];
+  missingBefore: Map<string, number[]>;
+  exitCode: 0 | 1;
+  coverageFailures: number[];
+}
+
+type RepairInspector = (executor: CatalogExecutor, schema: string) => Promise<DomainCompatibilityInspection>;
+
+const SPECIAL_INSPECTORS: ReadonlyMap<number, RepairInspector> = new Map([
+  [60, inspectDomainCompatibilityRepair],
+]);
 
 function label(m: Marker): string {
   if (m.kind === "index") return `index ${m.name}`;
@@ -219,7 +253,7 @@ function label(m: Marker): string {
   return m.kind === "table" ? m.table : `${m.table}.${m.column}`;
 }
 
-/** Pre-0040 marker names, resolved on a schema that 0040 has already renamed. */
+/** Pre-0040 marker names, resolved on a schema with the canonical 0040 table rename. */
 export function resolveRepairMarker(mk: Marker, version: number, renamed0040: boolean): Marker {
   if (!renamed0040 || version >= 40 || mk.kind === "index" || mk.kind === "absent_column") return mk;
   const table = tableAlias.get(mk.table) ?? mk.table;
@@ -246,202 +280,442 @@ export function markerPresent(
   return cols.has(key);
 }
 
-async function main() {
-  if (!process.env.DATABASE_URL) {
-    console.error("[repair-tenants] DATABASE_URL is not set (.env.local). Aborting.");
-    process.exit(1);
+/** Registry coverage includes marker-backed migrations and the explicit v60 catalog inspector. */
+export function uncoveredRepairVersions(
+  migrations: readonly Pick<TenantMigration, "version">[],
+): number[] {
+  return migrations
+    .filter((migration) => migration.version >= FIRST_REPAIRED_VERSION)
+    .map((migration) => migration.version)
+    .filter((version) => {
+      if (SPECIAL_INSPECTORS.has(version)) return false;
+      return !Array.isArray(MARKERS[version]) || MARKERS[version].length === 0;
+    });
+}
+
+function missingCoverage(
+  migrations: readonly Pick<TenantMigration, "version">[],
+): number[] {
+  return uncoveredRepairVersions(migrations);
+}
+
+function rows(result: unknown): Array<Record<string, unknown>> {
+  if (Array.isArray(result)) return result as Array<Record<string, unknown>>;
+  if (result && typeof result === "object") {
+    const resultRows = (result as { rows?: unknown }).rows;
+    if (Array.isArray(resultRows)) return resultRows as Array<Record<string, unknown>>;
+    if (Symbol.iterator in result) return Array.from(result as Iterable<Record<string, unknown>>);
   }
-  const apply = process.argv.includes("--apply");
+  return [];
+}
 
-  const { sql } = await import("drizzle-orm");
-  const { publicDb } = await import("../src/lib/db");
-  const { tenants } = await import("../src/lib/db/schema");
-  const { migrations, LATEST_SCHEMA_VERSION } = await import(
-    "../src/lib/tenant/migrations"
-  );
-  const { eq } = await import("drizzle-orm");
+function value(row: Record<string, unknown>, key: string): string {
+  const item = row[key];
+  return item == null ? "" : String(item);
+}
 
-  const toCheck = migrations.filter((m) => m.version >= FIRST_REPAIRED_VERSION);
-  for (const m of toCheck) {
-    if (!MARKERS[m.version]) {
-      console.error(
-        `[repair-tenants] No marker query defined for migration ${m.version}; add it to MARKERS.`,
-      );
-      process.exit(1);
-    }
-  }
+function newReport(tenant: RepairTenantInfo): TenantReport {
+  return {
+    ...tenant,
+    schemaExists: false,
+    states: new Map(),
+    partialDetail: new Map(),
+    deferred: new Set(),
+    applied: [],
+    renamed0040: false,
+  };
+}
 
-  console.log(
-    `[repair-tenants] mode=${apply ? "APPLY" : "DRY RUN"} checking migrations ${FIRST_REPAIRED_VERSION}-${LATEST_SCHEMA_VERSION}`,
-  );
+function setAttention(report: TenantReport, version: number, detail: string[]) {
+  report.partialDetail.set(version, detail.slice(0, 24));
+}
 
-  const allTenants = await publicDb
-    .select({
-      slug: tenants.slug,
-      status: tenants.status,
-      schemaVersion: tenants.schemaVersion,
-    })
-    .from(tenants)
-    .orderBy(tenants.slug);
+function isAttention(report: TenantReport): boolean {
+  return [...report.states.values()].some((state) => state === "partial" || state === "blocked" || state === "unknown");
+}
 
-  async function inspect(t: {
-    slug: string;
-    status: string;
-    schemaVersion: number;
-  }): Promise<TenantReport> {
-    const schemaName = `tenant_${t.slug}`;
-    const report: TenantReport = {
-      ...t,
-      schemaExists: false,
-      states: new Map(),
-      partialDetail: new Map(),
-      applied: [],
-      renamed0040: false,
-    };
-    const rows = Array.from(
-      (await publicDb.execute(
-        sql`SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = ${schemaName}`,
-      )) as Iterable<Record<string, unknown>>,
-    );
-    report.schemaExists = rows.length > 0;
-    const cols = new Set(rows.map((r) => `${r.table_name}.${r.column_name}`));
-    const tbls = new Set(rows.map((r) => r.table_name as string));
-    const idxRows = Array.from(
-      (await publicDb.execute(
-        sql`SELECT indexname FROM pg_indexes WHERE schemaname = ${schemaName}`,
-      )) as Iterable<Record<string, unknown>>,
-    );
-    const idxs = new Set(idxRows.map((r) => r.indexname as string));
-    const renamed0040 = tbls.has("staff") && !tbls.has("stylists");
-    report.renamed0040 = renamed0040;
-    for (const m of toCheck) {
-      const markers = MARKERS[m.version].map((mk) =>
-        resolveRepairMarker(mk, m.version, renamed0040),
-      );
-      const present = markers.filter((mk) => markerPresent(mk, cols, idxs, tbls));
-      const state: State =
-        present.length === markers.length
-          ? "present"
-          : present.length === 0
-            ? "missing"
-            : "partial";
-      report.states.set(m.version, state);
-      if (state === "partial") {
-        report.partialDetail.set(
-          m.version,
-          markers.filter((mk) => !present.includes(mk)).map(label),
-        );
-      }
-    }
+function missingVersions(report: TenantReport, migrations: readonly TenantMigration[]): number[] {
+  return migrations
+    .filter((migration) => report.states.get(migration.version) === "missing")
+    .map((migration) => migration.version);
+}
+
+function attentionVersions(report: TenantReport): number[] {
+  return [...report.states.entries()]
+    .filter(([, state]) => state === "partial" || state === "blocked" || state === "unknown")
+    .map(([version]) => version);
+}
+
+function tenantSchema(slug: string): string | null {
+  const schema = `tenant_${slug}`;
+  return /^tenant_[a-z0-9_-]+$/.test(schema) && schema.length <= 63 ? schema : null;
+}
+
+function describeShard(shard: string | null | undefined): string {
+  if (shard === null || shard === undefined) return "<missing>";
+  if (shard.trim() === "") return "<blank>";
+  return JSON.stringify(shard.slice(0, 64));
+}
+
+/** Inspects marker migrations plus v60 without opening a database connection itself. */
+export async function inspectTenantSchema(
+  tenant: RepairTenantInfo,
+  executor: CatalogExecutor,
+  migrations: readonly TenantMigration[],
+): Promise<TenantReport> {
+  const report = newReport(tenant);
+  const schema = tenantSchema(tenant.slug);
+  if (!schema) {
+    report.error = "invalid tenant schema name; refusing inspection";
     return report;
   }
 
-  const reports: TenantReport[] = [];
-  const before = new Map<string, number[]>();
+  const relationRows = rows(await executor.execute(sql`
+    SELECT c.relname AS name, c.relkind::text AS kind
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = ${schema}
+  `));
+  const columnRows = rows(await executor.execute(sql`
+    SELECT table_name, column_name
+    FROM information_schema.columns WHERE table_schema = ${schema}
+  `));
+  const indexRows = rows(await executor.execute(sql`
+    SELECT indexname FROM pg_indexes WHERE schemaname = ${schema}
+  `));
+  report.schemaExists = relationRows.length > 0;
+  if (!report.schemaExists) return report;
 
-  for (const t of allTenants) {
-    let report = await inspect(t);
-    const missing = () =>
-      toCheck
-        .map((m) => m.version)
-        .filter((v) => report.states.get(v) === "missing");
-    before.set(t.slug, missing());
+  const cols = new Set(columnRows.map((row) => `${value(row, "table_name")}.${value(row, "column_name")}`));
+  const relations = new Set(relationRows.map((row) => value(row, "name")));
+  const ordinaryTables = new Set(
+    relationRows.filter((row) => value(row, "kind") === "r").map((row) => value(row, "name")),
+  );
+  const idxs = new Set(indexRows.map((row) => value(row, "indexname")));
+  // v60 intentionally adds a stylists VIEW. The ordinary canonical staff table is the 0040 signal.
+  report.renamed0040 = ordinaryTables.has("staff");
+
+  let v60Inspection: DomainCompatibilityInspection | undefined;
+  if (report.renamed0040 && migrations.some((migration) => migration.version === 60)) {
+    v60Inspection = await SPECIAL_INSPECTORS.get(60)!(executor, schema);
+  }
+
+  for (const migration of migrations) {
+    if (migration.version < FIRST_REPAIRED_VERSION) continue;
+    if (migration.version === 60) {
+      if (!report.renamed0040) {
+        // Old stylists tables are normal before 0040. Inspect v60 after rename prerequisites
+        // have run in the same repair transaction, immediately before deciding on migration 60.
+        report.states.set(60, "missing");
+        report.deferred.add(60);
+      } else if (v60Inspection) {
+        report.states.set(60, v60Inspection.state);
+        if (v60Inspection.state === "partial" || v60Inspection.state === "blocked") {
+          setAttention(report, 60, [...v60Inspection.objects, ...v60Inspection.reasons]);
+        }
+      }
+      continue;
+    }
+    const markers = MARKERS[migration.version].map((marker) =>
+      resolveRepairMarker(marker, migration.version, report.renamed0040),
+    );
+    const present = markers.filter((marker) => markerPresent(marker, cols, idxs, relations));
+    const state: RepairState = present.length === markers.length
+      ? "present"
+      : present.length === 0
+        ? "missing"
+        : "partial";
+    report.states.set(migration.version, state);
+    if (state === "partial") {
+      setAttention(report, migration.version, markers.filter((marker) => !present.includes(marker)).map(label));
+    }
+  }
+  return report;
+}
+
+class RepairTransactionAbort extends Error {}
+
+function replaceReport(target: TenantReport, source: TenantReport) {
+  target.schemaVersion = source.schemaVersion;
+  target.dbShard = source.dbShard;
+  target.schemaExists = source.schemaExists;
+  target.states = source.states;
+  target.partialDetail = source.partialDetail;
+  target.deferred = source.deferred;
+  target.renamed0040 = source.renamed0040;
+}
+
+function throwForAttention(report: TenantReport) {
+  if (!isAttention(report)) return;
+  const versions = attentionVersions(report);
+  const error = new RepairTransactionAbort(
+    `manual attention required for migration${versions.length === 1 ? "" : "s"} ${versions.join(", ")}; skipped all tenant apply work`,
+  );
+  throw error;
+}
+
+/** Applies repairs only after a read-only preflight and a locked, fresh transactional recheck. */
+export async function runRepairCommand(options: {
+  apply: boolean;
+  migrations: readonly TenantMigration[];
+  latestSchemaVersion: number;
+  backend: RepairBackend;
+}): Promise<RepairRunResult> {
+  const toCheck = [...options.migrations]
+    .filter((migration) => migration.version >= FIRST_REPAIRED_VERSION)
+    .sort((a, b) => a.version - b.version);
+  const coverageFailures = missingCoverage(toCheck);
+  if (coverageFailures.length > 0) {
+    return { reports: [], missingBefore: new Map(), exitCode: 1, coverageFailures };
+  }
+
+  const allTenants = await options.backend.listTenants();
+  const reports: TenantReport[] = [];
+  const missingBefore = new Map<string, number[]>();
+
+  for (const tenant of allTenants) {
+    const report = newReport(tenant);
+    missingBefore.set(tenant.slug, []);
+    if (tenant.dbShard !== "primary") {
+      report.error = `unsupported database shard ${describeShard(tenant.dbShard)}; primary-only repair was not attempted`;
+      reports.push(report);
+      continue;
+    }
+    if (!tenantSchema(tenant.slug)) {
+      report.error = "invalid tenant schema name; refusing inspection and repair";
+      reports.push(report);
+      continue;
+    }
+    if (tenant.schemaVersion > options.latestSchemaVersion) {
+      report.error = `schema_version ${tenant.schemaVersion} exceeds supported version ${options.latestSchemaVersion}`;
+      reports.push(report);
+      continue;
+    }
+
+    try {
+      const inspected = await options.backend.inspectTenant(tenant, options.backend);
+      replaceReport(report, inspected);
+    } catch (error) {
+      report.error = `inspection failed: ${(error as Error).message}`;
+      reports.push(report);
+      continue;
+    }
+    const before = missingVersions(report, toCheck);
+    missingBefore.set(tenant.slug, before);
 
     if (!report.schemaExists) {
       report.error = "schema not found";
-    } else if (apply && missing().length > 0) {
-      if (t.schemaVersion < FIRST_REPAIRED_VERSION - 1) {
-        report.error = `schema_version ${t.schemaVersion} < ${FIRST_REPAIRED_VERSION - 1}; run migrate:tenants first`;
-      } else if (report.renamed0040 && missing().some((v) => v < 40)) {
-        report.error =
-          "pre-0040 migration missing on a renamed schema (its SQL uses pre-0040 names); manual review";
+    } else if (isAttention(report)) {
+      const versions = attentionVersions(report);
+      report.error = `manual attention required for migration${versions.length === 1 ? "" : "s"} ${versions.join(", ")}; skipped all tenant apply work`;
+    } else if (options.apply && before.length > 0) {
+      if (tenant.schemaVersion < FIRST_REPAIRED_VERSION - 1) {
+        report.error = `schema_version ${tenant.schemaVersion} < ${FIRST_REPAIRED_VERSION - 1}; run migrate:tenants first`;
+      } else if (report.renamed0040 && before.some((version) => version < 40)) {
+        report.error = "pre-0040 migration missing on a renamed schema (its SQL uses pre-0040 names); manual review";
       } else {
-        const schemaName = `tenant_${t.slug}`;
-        const versions = missing();
+        const schema = tenantSchema(tenant.slug)!;
+        const applied: number[] = [];
+        let committedVerification: TenantReport | undefined;
+        let transactionCommitted = false;
         try {
-          await publicDb.transaction(async (tx) => {
-            await tx.execute(
-              sql`SELECT 1 FROM ${tenants} WHERE ${tenants.slug} = ${t.slug} FOR UPDATE`,
-            );
-            for (const m of toCheck.filter((x) => versions.includes(x.version))) {
-              for (const stmt of m.up(schemaName)) {
-                await tx.execute(stmt);
-              }
+          await options.backend.transaction(async (tx) => {
+            const locked = await tx.lockTenant(tenant.slug);
+            if (!locked) throw new RepairTransactionAbort("tenant row disappeared before apply");
+            if (locked.dbShard !== "primary") {
+              throw new RepairTransactionAbort(`unsupported database shard ${describeShard(locked.dbShard)} after row lock`);
             }
-            await tx
-              .update(tenants)
-              .set({ schemaVersion: LATEST_SCHEMA_VERSION, updatedAt: new Date() })
-              .where(eq(tenants.slug, t.slug));
+            if (locked.schemaVersion > options.latestSchemaVersion) {
+              throw new RepairTransactionAbort(`schema_version ${locked.schemaVersion} exceeds supported version ${options.latestSchemaVersion}`);
+            }
+            if (locked.schemaVersion < FIRST_REPAIRED_VERSION - 1) {
+              throw new RepairTransactionAbort(`schema_version ${locked.schemaVersion} < ${FIRST_REPAIRED_VERSION - 1}; run migrate:tenants first`);
+            }
+
+            let fresh = await options.backend.inspectTenant(locked, tx);
+            if (!fresh.schemaExists) throw new RepairTransactionAbort("schema not found after row lock");
+            throwForAttention(fresh);
+            if (fresh.renamed0040 && missingVersions(fresh, toCheck).some((version) => version < 40)) {
+              throw new RepairTransactionAbort("pre-0040 migration missing on a renamed schema (its SQL uses pre-0040 names); manual review");
+            }
+
+            for (const migration of toCheck) {
+              if (fresh.states.get(migration.version) !== "missing") continue;
+              if (migration.version === 60) {
+                // Reinspect after all preceding repairs, under the same lock/transaction.
+                fresh = await options.backend.inspectTenant(locked, tx);
+                if (!fresh.renamed0040) {
+                  throw new RepairTransactionAbort("migration 0040 prerequisites were not established before 0060");
+                }
+                throwForAttention(fresh);
+                const v60State = fresh.states.get(60);
+                if (v60State === "present") continue;
+                if (v60State !== "missing") {
+                  throw new RepairTransactionAbort("migration 0060 preflight did not return an eligible missing state");
+                }
+              }
+              await tx.applyMigration(migration, schema);
+              applied.push(migration.version);
+            }
+
+            const verified = await options.backend.inspectTenant(locked, tx);
+            throwForAttention(verified);
+            const unresolved = toCheck
+              .filter((migration) => verified.states.get(migration.version) !== "present")
+              .map((migration) => migration.version);
+            if (unresolved.length > 0) {
+              const error = new RepairTransactionAbort(`post-apply verification failed for migrations ${unresolved.join(", ")}`);
+              throw error;
+            }
+            committedVerification = verified;
+            await tx.setSchemaVersion(tenant.slug, options.latestSchemaVersion);
           });
-          report = await inspect(t);
-          report.applied = versions;
-        } catch (err) {
-          report.error = `apply failed (rolled back): ${(err as Error).message}`;
+          transactionCommitted = true;
+        } catch (error) {
+          // Intermediate reports belong to a transaction that rolled back.
+          report.error = `apply failed (rolled back): ${(error as Error).message}`;
+        }
+
+        if (transactionCommitted) {
+          if (committedVerification) replaceReport(report, committedVerification);
+          report.schemaVersion = options.latestSchemaVersion;
+          report.applied = applied;
+          try {
+            const latestTenant = { ...tenant, schemaVersion: options.latestSchemaVersion };
+            const after = await options.backend.inspectTenant(latestTenant, options.backend);
+            replaceReport(report, after);
+            report.schemaVersion = options.latestSchemaVersion;
+            report.applied = applied;
+            if (isAttention(report) || !toCheck.every((migration) => report.states.get(migration.version) === "present")) {
+              report.error = `transaction committed with schema_version ${options.latestSchemaVersion}; post-commit verification did not confirm every repaired migration`;
+            }
+          } catch (error) {
+            for (const migration of toCheck) {
+              report.states.set(migration.version, "unknown");
+              setAttention(report, migration.version, ["transaction committed; post-commit verification unavailable"]);
+            }
+            report.schemaVersion = options.latestSchemaVersion;
+            report.applied = applied;
+            report.error = `transaction committed with schema_version ${options.latestSchemaVersion}; post-commit verification unavailable: ${(error as Error).message}`;
+          }
         }
       }
     }
     reports.push(report);
   }
 
-  // Per-tenant detail
-  console.log("\nPer-tenant detail:");
-  for (const r of reports) {
-    const miss = toCheck
-      .map((m) => m.version)
-      .filter((v) => r.states.get(v) === "missing");
-    const partial = [...r.partialDetail.entries()];
-    console.log(`- ${r.slug} [${r.status}] schema_version=${r.schemaVersion}`);
-    if (!r.schemaExists) console.log("    schema does not exist");
+  return {
+    reports,
+    missingBefore,
+    exitCode: reports.some((report) => report.error || isAttention(report)) ? 1 : 0,
+    coverageFailures: [],
+  };
+}
+
+function printResult(result: RepairRunResult, apply: boolean, migrations: readonly TenantMigration[]) {
+  console.log(`\nPer-tenant detail:`);
+  for (const report of result.reports) {
+    console.log(`- ${report.slug} [${report.status}] schema_version=${report.schemaVersion} shard=${describeShard(report.dbShard)}`);
+    if (!report.schemaExists) console.log("    schema does not exist or was not inspected");
     else {
-      const was = before.get(r.slug) ?? [];
+      const was = result.missingBefore.get(report.slug) ?? [];
+      const now = missingVersions(report, migrations);
       console.log(`    missing before: ${was.length ? was.join(", ") : "none"}`);
-      if (r.applied.length) console.log(`    applied: ${r.applied.join(", ")}`);
-      console.log(`    missing now: ${miss.length ? miss.join(", ") : "none"}`);
+      if (report.applied.length) console.log(`    applied: ${report.applied.join(", ")}`);
+      console.log(`    missing now: ${now.length ? now.join(", ") : "none"}`);
     }
-    for (const [v, objs] of partial) {
-      console.log(
-        `    MANUAL REVIEW: migration ${v} partially present; absent: ${objs.join(", ")}`,
-      );
+    for (const [version, objects] of report.partialDetail) {
+      const state = report.states.get(version);
+      const label = state === "blocked" ? "BLOCKED" : "MANUAL REVIEW";
+      console.log(`    ${label}: migration ${version}; ${objects.join(", ")}`);
     }
-    if (r.error) console.log(`    ERROR: ${r.error}`);
+    for (const version of report.deferred) {
+      console.log(`    migration ${version}: inspection deferred until migration 0040 establishes canonical tables in the apply transaction`);
+    }
+    if (report.error) console.log(`    ERROR: ${report.error}`);
   }
 
-  // Summary table
   console.log("\nSummary:");
-  const rows = reports.map((r) => {
-    const fmt = (vs: number[]) => (vs.length ? vs.join(",") : "-");
-    const now = toCheck
-      .map((m) => m.version)
-      .filter((v) => r.states.get(v) === "missing");
+  const rows = result.reports.map((report) => {
+    const fmt = (versions: number[]) => versions.length ? versions.join(",") : "-";
     return {
-      tenant: r.slug,
-      status: r.status,
-      schema_version: r.schemaVersion,
-      missing_before: fmt(before.get(r.slug) ?? []),
-      applied: fmt(r.applied),
-      missing_now: fmt(now),
-      manual_review: fmt([...r.partialDetail.keys()]),
-      error: r.error ?? "",
+      tenant: report.slug,
+      status: report.status,
+      shard: describeShard(report.dbShard),
+      schema_version: report.schemaVersion,
+      missing_before: fmt(result.missingBefore.get(report.slug) ?? []),
+      applied: fmt(report.applied),
+      needs_attention: fmt(attentionVersions(report)),
+      error: report.error ?? "",
     };
   });
   console.table(rows);
-
-  const totalMissing = rows.filter((r) => r.missing_now !== "-").length;
-  const totalPartial = rows.filter((r) => r.manual_review !== "-").length;
-  const errors = rows.filter((r) => r.error).length;
-  console.log(
-    `Tenants checked: ${rows.length}; with missing migrations: ${totalMissing}; needing manual review: ${totalPartial}; errors: ${errors}`,
-  );
-  if (!apply && totalMissing > 0) {
-    console.log("Dry run only. Re-run with --apply to repair.");
+  const totalMissing = result.reports.filter((report) => missingVersions(report, migrations).length > 0).length;
+  const totalAttention = result.reports.filter(isAttention).length;
+  const errors = result.reports.filter((report) => report.error).length + result.coverageFailures.length;
+  console.log(`Tenants checked: ${rows.length}; with missing migrations: ${totalMissing}; needing manual review: ${totalAttention}; errors: ${errors}`);
+  if (!apply && totalMissing > 0) console.log("Dry run only. Re-run with --apply to repair.");
+  if (result.coverageFailures.length > 0) {
+    console.error(`[repair-tenants] No marker query or special inspector defined for migration${result.coverageFailures.length === 1 ? "" : "s"} ${result.coverageFailures.join(", ")}; refusing tenant scan.`);
   }
-  process.exit(errors > 0 ? 1 : 0);
+}
+
+async function main() {
+  const { config } = await import("dotenv");
+  config({ path: ".env.local" });
+  config({ path: ".env" });
+  if (!process.env.DATABASE_URL) {
+    console.error("[repair-tenants] DATABASE_URL is not set (.env.local). Aborting.");
+    process.exit(1);
+  }
+  const apply = process.argv.includes("--apply");
+  const { publicDb, closePublicDb } = await import("../src/lib/db");
+  const { tenants } = await import("../src/lib/db/schema");
+  const { migrations, LATEST_SCHEMA_VERSION } = await import("../src/lib/tenant/migrations");
+  const { eq } = await import("drizzle-orm");
+  const repairMigrations = migrations.filter((migration) => migration.version >= FIRST_REPAIRED_VERSION);
+
+  const backend: RepairBackend = {
+    execute: (query) => publicDb.execute(query),
+    inspectTenant: (tenant, executor) => inspectTenantSchema(tenant, executor, repairMigrations),
+    listTenants: () => publicDb.select({
+      slug: tenants.slug,
+      status: tenants.status,
+      schemaVersion: tenants.schemaVersion,
+      dbShard: tenants.dbShard,
+    }).from(tenants).orderBy(tenants.slug),
+    transaction: (operation) => publicDb.transaction(async (transaction) => operation({
+      execute: (query) => transaction.execute(query),
+      lockTenant: async (slug) => {
+        const [row] = await transaction.select({
+          slug: tenants.slug,
+          status: tenants.status,
+          schemaVersion: tenants.schemaVersion,
+          dbShard: tenants.dbShard,
+        }).from(tenants).where(eq(tenants.slug, slug)).for("update");
+        return row ?? null;
+      },
+      applyMigration: async (migration, schema) => {
+        for (const statement of migration.up(schema)) await transaction.execute(statement);
+      },
+      setSchemaVersion: async (slug, version) => {
+        await transaction.update(tenants)
+          .set({ schemaVersion: version, updatedAt: new Date() })
+          .where(eq(tenants.slug, slug));
+      },
+    })),
+  };
+
+  console.log(`[repair-tenants] mode=${apply ? "APPLY" : "DRY RUN"} checking migrations ${FIRST_REPAIRED_VERSION}-${LATEST_SCHEMA_VERSION}`);
+  const result = await runRepairCommand({ apply, migrations: repairMigrations, latestSchemaVersion: LATEST_SCHEMA_VERSION, backend });
+  printResult(result, apply, repairMigrations);
+  await closePublicDb();
+  process.exit(result.exitCode);
 }
 
 const entry = process.argv[1] ?? "";
 if (entry.includes("repair-tenant-schemas")) {
-  main().catch((err) => {
-    console.error(err);
+  main().catch((error) => {
+    console.error(error);
     process.exit(1);
   });
 }
