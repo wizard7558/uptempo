@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => ({
   tenant: null as Record<string, unknown> | null,
@@ -50,21 +50,19 @@ vi.mock("@/lib/billing/subscriptions", () => ({
 
 import { ensureTextLineSetupFee } from "./text-line-setup-fee";
 
-const originalFake = process.env.PAYMENTS_FAKE;
-
 beforeEach(() => {
+  vi.unstubAllEnvs();
   vi.clearAllMocks();
   h.writes.length = 0;
-  process.env.PAYMENTS_FAKE = "0";
+  vi.stubEnv("PAYMENTS_FAKE", "0");
   h.getStripe.mockImplementation(() => {
     throw new Error("Stripe must stay lazy for exempt and already-paid rows");
   });
   h.customer.mockResolvedValue("cus_unused");
 });
 
-afterAll(() => {
-  if (originalFake === undefined) delete process.env.PAYMENTS_FAKE;
-  else process.env.PAYMENTS_FAKE = originalFake;
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("ensureTextLineSetupFee Stripe laziness", () => {
@@ -86,6 +84,8 @@ describe("ensureTextLineSetupFee Stripe laziness", () => {
   });
 
   it("does not construct Stripe for a row with a durable paid marker", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("PAYMENTS_FAKE", "1");
     h.tenant = {
       slug: "test-salon",
       name: "Test Salon",
@@ -103,5 +103,46 @@ describe("ensureTextLineSetupFee Stripe laziness", () => {
     });
     expect(h.getStripe).not.toHaveBeenCalled();
     expect(h.customer).not.toHaveBeenCalled();
+  });
+
+  it("keeps the Stripe setup-fee refusal in production when fake payments are requested", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("PAYMENTS_FAKE", "1");
+    h.tenant = {
+      slug: "test-salon",
+      name: "Test Salon",
+      comped: 0,
+      smsLineStatus: "off",
+      smsRegistration: {},
+      platformStripeCustomerId: "cus_1",
+    };
+    const stripe = {
+      invoiceItems: {
+        list: vi.fn().mockResolvedValue({ data: [], has_more: false }),
+        create: vi.fn().mockRejectedValue(new Error("Stripe refused setup fee")),
+      },
+    };
+    h.getStripe.mockReturnValue(stripe);
+
+    await expect(ensureTextLineSetupFee("test-salon")).resolves.toEqual({
+      ok: false,
+      error: "setup_fee_unavailable",
+    });
+    expect(h.getStripe).toHaveBeenCalledTimes(1);
+    expect(stripe.invoiceItems.list).toHaveBeenCalledTimes(1);
+    expect(stripe.invoiceItems.create).toHaveBeenCalledTimes(1);
+    expect(stripe.invoiceItems.create).toHaveBeenCalledWith(
+      expect.objectContaining({ customer: "cus_1", amount: 1900 }),
+      expect.objectContaining({
+        idempotencyKey: "text-line-setup-fee:test-salon",
+        maxNetworkRetries: 0,
+      }),
+    );
+    expect(h.writes.at(-1)).not.toMatchObject({
+      smsRegistration: expect.objectContaining({
+        setupFeeState: "added",
+        setupFeeInvoiceItemId: expect.stringMatching(/^ii_fake_/),
+      }),
+    });
   });
 });

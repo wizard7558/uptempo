@@ -245,11 +245,11 @@ export function CheckoutDialog({
 
   const isOpen = appointmentId !== null;
 
-  const giftActive = gift !== null && selectedMethod !== "beauty_bank";
+  const giftActive = gift !== null && selectedMethod !== "stored_value";
   const amounts = useMemo(() => {
     if (!checkoutData) return null;
     return computeCheckoutAmounts({
-      payingFullFromPrepaid: selectedMethod === "beauty_bank" && tipCents === 0,
+      payingFullFromPrepaid: selectedMethod === "stored_value" && tipCents === 0,
       totalCents: checkoutData.totalCents,
       tipCents,
       partialBankAppliedCents: checkoutData.storedValueAppliedCents,
@@ -263,7 +263,7 @@ export function CheckoutDialog({
   const cardChargeWithTip = amounts?.remainderCents ?? 0;
 
   useEffect(() => {
-    if (selectedMethod === "beauty_bank" && tipCents > 0) {
+    if (selectedMethod === "stored_value" && tipCents > 0) {
       setSelectedMethod(null);
     }
   }, [tipCents, selectedMethod]);
@@ -583,7 +583,7 @@ export function CheckoutDialog({
               ))}
               <Separator />
               {!checkoutData.creditCovered &&
-                selectedMethod === "beauty_bank" &&
+                selectedMethod === "stored_value" &&
                 checkoutData.memberDiscountPercent > 0 &&
                 checkoutData.fullBbDiscountedTotalCents <
                   checkoutData.totalCents && (
@@ -603,14 +603,14 @@ export function CheckoutDialog({
               {checkoutData.storedValueBalanceCents > 0 && !checkoutData.creditCovered && (
                 <div className="flex items-center justify-between text-sm text-primary">
                   <span>
-                    {selectedMethod === "beauty_bank"
+                    {selectedMethod === "stored_value"
                       ? t("checkoutDialog.fullPay")
                       : t("checkoutDialog.partial")}
                   </span>
                   <span>
                     -
                     {formatPrice(
-                      selectedMethod === "beauty_bank"
+                      selectedMethod === "stored_value"
                         ? checkoutData.fullBbDiscountedTotalCents
                         : checkoutData.storedValueAppliedCents,
                     )}
@@ -623,7 +623,7 @@ export function CheckoutDialog({
                   {formatPrice(
                     checkoutData.creditCovered
                       ? 0
-                      : selectedMethod === "beauty_bank"
+                      : selectedMethod === "stored_value"
                         ? checkoutData.fullBbDiscountedTotalCents
                         : checkoutData.totalCents,
                   )}
@@ -641,7 +641,7 @@ export function CheckoutDialog({
                   {formatPrice(
                     checkoutData.creditCovered
                       ? (amounts?.totalWithTip ?? tipCents)
-                      : (selectedMethod === "beauty_bank"
+                      : (selectedMethod === "stored_value"
                           ? checkoutData.fullBbDiscountedTotalCents
                           : checkoutData.totalCents) + tipCents,
                   )}
@@ -739,7 +739,7 @@ export function CheckoutDialog({
 
             <Separator />
 
-            {checkoutData.giftCardsEnabled && selectedMethod !== "beauty_bank" && (
+            {checkoutData.giftCardsEnabled && selectedMethod !== "stored_value" && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">{tg("checkout.title")}</h4>
                 {gift ? (
@@ -839,7 +839,7 @@ export function CheckoutDialog({
                 hasCardOnFile={checkoutData.client.hasCardOnFile}
                 selectedMethod={selectedMethod}
                 onSelect={(method) => {
-                  if (method === "beauty_bank") setGift(null);
+                  if (method === "stored_value") setGift(null);
                   setSelectedMethod(method);
                 }}
                 disabled={submitting}
@@ -879,7 +879,7 @@ export function CheckoutDialog({
               </Elements>
             )}
 
-            {/* Submit button for card_on_file, cash, or beauty_bank */}
+            {/* Submit button for card_on_file, cash, or stored value */}
             {selectedMethod &&
               selectedMethod !== "new_card" && (
                 <Button
@@ -892,7 +892,7 @@ export function CheckoutDialog({
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Processing...
                     </>
-                  ) : selectedMethod === "beauty_bank" ? (
+                  ) : selectedMethod === "stored_value" ? (
                     t("checkoutDialog.completeWithPrepaid", {
                       amount: formatPrice(
                         checkoutData.fullBbDiscountedTotalCents,

@@ -121,6 +121,29 @@ describe("CheckoutDialog project deposit credit", () => {
     });
   });
 
+  it("sends the selected stored-value method to completeAppointment", async () => {
+    h.getCheckoutData.mockResolvedValue({
+      ...data(false, false),
+      storedValueBalanceCents: 40_000,
+      storedValueAppliedCents: 40_000,
+      fullBbDiscountedTotalCents: 36_000,
+      eligibleForFullBb: true,
+      hasActiveMembership: true,
+      memberDiscountPercent: 10,
+    });
+    const user = userEvent.setup();
+    renderDialog();
+    await waitFor(() => expect(screen.getByText("Services total")).toBeTruthy());
+    await user.click(screen.getByRole("button", { name: /pay fully with/i }));
+    await user.click(screen.getByRole("button", { name: /complete with/i }));
+    await waitFor(() => expect(h.completeAppointment).toHaveBeenCalledTimes(1));
+    expect(h.completeAppointment.mock.calls[0][0]).toMatchObject({
+      appointmentId: APPT,
+      paymentMethod: "stored_value",
+      tipCents: 0,
+    });
+  });
+
   it("starts unchecked, with no credit applied, when more sessions are booked", async () => {
     h.getCheckoutData.mockImplementation(async (_id: string, final?: boolean) => data(final === true, false));
     renderDialog();

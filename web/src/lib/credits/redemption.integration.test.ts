@@ -386,7 +386,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     // Paying "from the prepaid balance" cannot dip into it for a covered visit.
     const b = await appt(client, 2);
     await redeem(client, b);
-    expect(await completeAppointment({ appointmentId: b, paymentMethod: "beauty_bank" })).toMatchObject({ success: true, totalCents: 0 });
+    expect(await completeAppointment({ appointmentId: b, paymentMethod: "stored_value" })).toMatchObject({ success: true, totalCents: 0 });
     expect(await t.run(`select id from ${s()}.stored_value_transactions where client_id = '${client}'`)).toHaveLength(0);
   });
 

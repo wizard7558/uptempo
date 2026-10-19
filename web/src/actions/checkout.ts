@@ -234,9 +234,9 @@ export async function getCheckoutData(appointmentId: string, finalProjectSession
  */
 export async function completeAppointment(data: {
   appointmentId: string;
-  paymentMethod: "card_on_file" | "new_card" | "cash" | "beauty_bank" | "gift_card";
+  paymentMethod: "card_on_file" | "new_card" | "cash" | "stored_value" | "gift_card";
   stripePaymentIntentId?: string;
-  /** Gratuity in cents (added on top of service total; Beauty Bank applies to services only). */
+  /** Gratuity in cents (added on top of service total; stored value applies to services only). */
   tipCents?: number;
   /** Multi-session projects: apply the project's whole deposit credit (this is its last session). */
   finalProjectSession?: boolean;
@@ -285,7 +285,7 @@ export async function completeAppointment(data: {
         // Step 2: Line items with prices (all members of a group)
         const apptServices = set.services;
 
-        // Step 3: Calculate total, optional tip, and Beauty Bank application (server-side)
+        // Step 3: Calculate total, optional tip, and stored value application (server-side)
         const totalCents = calculateAppointmentPrice(apptServices);
         const tipCents = Math.min(
           Math.max(0, Math.round(Number(data.tipCents ?? 0))),
@@ -312,7 +312,7 @@ export async function completeAppointment(data: {
         // A credit-covered visit takes nothing from the prepaid balance (computeCheckoutAmounts
         // zeroes it), so the prepaid-balance eligibility checks do not apply.
         const te = await getT("errors", slug);
-        if (data.paymentMethod === "beauty_bank" && !set.creditCovered) {
+        if (data.paymentMethod === "stored_value" && !set.creditCovered) {
           if (tipCents > 0) {
             return {
               success: false as const,
@@ -332,7 +332,7 @@ export async function completeAppointment(data: {
             };
           }
         }
-        if (data.paymentMethod === "beauty_bank" && data.giftCard) {
+        if (data.paymentMethod === "stored_value" && data.giftCard) {
           return { success: false as const, error: te("giftCards.withFullPrepaid") };
         }
 
@@ -366,7 +366,7 @@ export async function completeAppointment(data: {
           giftAppliedCents,
           remainderCents,
         } = amountsForSet(set, {
-          payingFullFromPrepaid: data.paymentMethod === "beauty_bank",
+          payingFullFromPrepaid: data.paymentMethod === "stored_value",
           totalCents,
           tipCents,
           preview: bbPreview,
@@ -523,7 +523,7 @@ export async function completeAppointment(data: {
             giftCardCents: giftAppliedCents > 0 ? giftAppliedCents : null,
             giftCardTxId: giftDebit?.txId ?? null,
             ledgerNote:
-              data.paymentMethod === "beauty_bank" && bankAppliedCents < totalCents
+              data.paymentMethod === "stored_value" && bankAppliedCents < totalCents
                 ? te("checkout.ledgerNoteMemberDiscount")
                 : "Service checkout",
           });
@@ -704,7 +704,7 @@ export async function createCheckoutPaymentIntent(
     500_000,
   );
 
-  // Fetch appointment, total, Beauty Bank remainder for card charge
+  // Fetch appointment, total, stored-value remainder for card charge
   const data = await withTenantDb(
     slug,
     async (db, tables) => {

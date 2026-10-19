@@ -18,6 +18,7 @@ import {
 test.use({ storageState: { cookies: [], origins: [] } });
 
 const HOME_HOST = "test-home.localhost";
+const PORT = process.env.E2E_PORT ?? "3000";
 const HOME_CLIENT_ID = "f0e2e200-0000-4000-8000-000000000201";
 const SCHEMA = '"tenant_test-home"';
 
@@ -35,7 +36,7 @@ test.describe("home services on-site visits", () => {
     await mockStripe(page);
     await mockCalendarApi(page);
 
-    await page.goto(`http://${HOME_HOST}:3000/book/test-home`);
+    await page.goto(`http://${HOME_HOST}:${PORT}/book/test-home`);
     await expect(page.getByText("Step 1 of 4")).toBeVisible();
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByRole("heading", { name: "Describe what you need" })).toBeVisible();

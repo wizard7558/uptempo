@@ -1,4 +1,9 @@
-import { test, expect } from "@playwright/test";
+import {
+  test,
+  expect,
+  type BrowserContext,
+  type Page,
+} from "@playwright/test";
 import postgres from "postgres";
 import { mockStripe, mockCalendarApi } from "./fixtures/mocks";
 import {
@@ -40,8 +45,10 @@ test.afterAll(async () => {
   await sql.end();
 });
 
-test("request with 2 photos -> quote -> accept with deposit -> booked", async ({ context, page }) => {
-  test.setTimeout(180_000);
+async function createRequestAndVerifyPrivatePhotos(
+  context: BrowserContext,
+  page: Page,
+): Promise<string> {
   const { signedCookieValue } = await seedTestSession(STUDIO_TEST_USER);
   await context.addCookies([
     sessionCookie(signedCookieValue),
@@ -80,6 +87,40 @@ test("request with 2 photos -> quote -> accept with deposit -> booked", async ({
   const file = await page.request.get(src!);
   expect(file.status()).toBe(200);
   expect(file.headers()["content-type"]).toBe("image/png");
+  return src!;
+}
+
+async function expectUnsignedPhotoLinkDenied(
+  context: BrowserContext,
+  src: string,
+) {
+  const unsignedUrl = new URL(src, `http://localhost:${PORT}`);
+  unsignedUrl.search = "";
+  const browser = context.browser();
+  if (!browser) {
+    throw new Error("Expected the E2E browser context to have a browser");
+  }
+  const anonymousContext = await browser.newContext({
+    storageState: { cookies: [], origins: [] },
+  });
+  try {
+    const unsignedFile = await anonymousContext.request.get(
+      unsignedUrl.toString(),
+    );
+    expect(unsignedFile.status()).toBe(403);
+  } finally {
+    await anonymousContext.close();
+  }
+}
+
+test("request photos upload privately", async ({ context, page }) => {
+  const src = await createRequestAndVerifyPrivatePhotos(context, page);
+  await expectUnsignedPhotoLinkDenied(context, src);
+});
+
+test("request with 2 photos -> quote -> accept with deposit -> booked", async ({ context, page }) => {
+  test.setTimeout(180_000);
+  await createRequestAndVerifyPrivatePhotos(context, page);
 
   // 3. The owner writes and sends a quote with a $100 deposit.
   await page.getByRole("link", { name: "Write a quote" }).click();

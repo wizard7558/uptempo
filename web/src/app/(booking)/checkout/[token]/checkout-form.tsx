@@ -199,7 +199,7 @@ export function CheckoutForm({
   const [error, setError] = useState<string | null>(null);
   const [tipCents, setTipCents] = useState(0);
   const [customTipDollars, setCustomTipDollars] = useState("");
-  /** When eligible, "member" uses discounted full-BB path; "standard" uses partial BB + card/cash. */
+  /** When eligible, "member" uses discounted full stored-value path; "standard" uses partial stored value + card/cash. */
   const [memberBbMode, setMemberBbMode] = useState<"member" | "standard">(
     () =>
       eligibleForFullBb && memberDiscountPercent > 0 ? "member" : "standard",
@@ -315,7 +315,7 @@ export function CheckoutForm({
       const result = await completeAppointment({
         appointmentId,
         token,
-        paymentMethod: "beauty_bank",
+        paymentMethod: "stored_value",
         tipCents: 0,
       });
       if (result.success) {

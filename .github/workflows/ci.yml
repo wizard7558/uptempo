@@ -220,7 +220,6 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/uptempo_test
-      E2E_DEV_COMMAND: npm run start
       BETTER_AUTH_SECRET: e2e-test-secret-at-least-32-characters-long
       BETTER_AUTH_URL: http://localhost:3000 # pragma: allowlist secret
       BOOKING_SESSION_SECRET: e2e-test-booking-secret-at-least-32-chars
@@ -257,6 +256,7 @@ jobs:
         run: npx drizzle-kit push
 
       - name: Seed test data
+        id: e2eSeed
         run: npx tsx scripts/seed-e2e-data.ts
 
       - name: Add test-salon.localhost to hosts
@@ -266,15 +266,82 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Build application
+        id: e2eBuild
         run: npm run build
 
-      - name: Run E2E tests
-        run: npx playwright test
+      - name: Create production smoke database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          createdb -h localhost -U postgres uptempo_production_test
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d uptempo_production_test \
+            -c "CREATE EXTENSION IF NOT EXISTS btree_gist;"
 
-      - name: Upload test results
+      - name: Migrate and seed production smoke database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/uptempo_production_test
+        run: |
+          npx drizzle-kit push
+          npx tsx scripts/seed-e2e-data.ts
+
+      - name: Run production E2E smoke tests
+        run: |
+          mkdir -p "$STORAGE_LOCAL_DIR" "$PLAYWRIGHT_HTML_OUTPUT_DIR" \
+            "$PLAYWRIGHT_OUTPUT_DIR" "$TEXT_LINE_SCREENSHOT_DIR"
+          npx playwright test \
+            tests/e2e/admin-requests-studio.spec.ts \
+            tests/e2e/appointment-work-mobile.spec.ts \
+            tests/e2e/text-line.spec.ts \
+            tests/e2e/admin-scheduling.spec.ts \
+            --project=admin \
+            --project=request \
+            --grep='request photos upload privately|checks the studio checklist and adds before and after photos|EIN registration becomes active through the fake cron without saving a full EIN|sole-proprietor registration requests YES and lets the owner resend|schedule page renders without JavaScript errors' \
+            --retries=0 \
+            --output="$PLAYWRIGHT_OUTPUT_DIR"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/uptempo_production_test
+          E2E_DEV_COMMAND: npm run start
+          E2E_PREPAID_CARRIER_FIXTURE: "1"
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/report
+          PLAYWRIGHT_OUTPUT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/results
+          STORAGE_LOCAL_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/uploads
+          TEXT_LINE_SCREENSHOT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/text-line-screenshots
+
+      - name: Upload production smoke report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: web/playwright-report/
+          name: playwright-production-smoke-report
+          path: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/report/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Drop production smoke database
+        if: always()
+        env:
+          PGPASSWORD: postgres
+        run: dropdb --if-exists -h localhost -U postgres uptempo_production_test
+
+      - name: Run full functional E2E suite
+        if: ${{ always() && !cancelled() && steps.e2eSeed.outcome == 'success' && steps.e2eBuild.outcome == 'success' }}
+        run: |
+          mkdir -p "$STORAGE_LOCAL_DIR" "$PLAYWRIGHT_HTML_OUTPUT_DIR" \
+            "$PLAYWRIGHT_OUTPUT_DIR" "$TEXT_LINE_SCREENSHOT_DIR"
+          npx playwright test --output="$PLAYWRIGHT_OUTPUT_DIR"
+        env:
+          E2E_DEV_COMMAND: npm run dev
+          # Prevent hosted-subscription startup from contacting Stripe.
+          STRIPE_SECRET_KEY: ""
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/report
+          PLAYWRIGHT_OUTPUT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/results
+          STORAGE_LOCAL_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/uploads
+          TEXT_LINE_SCREENSHOT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/text-line-screenshots
+
+      - name: Upload functional E2E report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-functional-report
+          path: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/report/
+          if-no-files-found: warn
           retention-days: 7

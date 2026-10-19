@@ -35,13 +35,14 @@ import { passLocationStep } from "./helpers/booking-location-step";
  * `test-salon.localhost:3000/book/test-salon`.
  */
 const TEST_TENANT_SLUG = "test-salon";
+const PORT = process.env.E2E_PORT ?? "3000";
 
 /**
  * Base URL for the test tenant subdomain.
  * The booking page route is /book/{slug} and also requires the subdomain
  * for the middleware to set x-tenant-slug.
  */
-const TENANT_BASE_URL = `http://${TEST_TENANT_SLUG}.localhost:3000`;
+const TENANT_BASE_URL = `http://${TEST_TENANT_SLUG}.localhost:${PORT}`;
 
 // Test client returned by the mocked verify-code endpoint.
 const TEST_CLIENT_ID = "f0e2e200-0000-4000-8000-000000000001";

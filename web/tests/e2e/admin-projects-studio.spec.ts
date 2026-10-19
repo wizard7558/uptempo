@@ -12,6 +12,7 @@ import { STUDIO_TEST_USER, bookingSessionCookie, seedTestSession, sessionCookie 
 test.use({ storageState: { cookies: [], origins: [] } });
 
 const STUDIO_HOST = "test-studio.localhost";
+const PORT = process.env.E2E_PORT ?? "3000";
 const STUDIO_CLIENT_ID = "f0e2e200-0000-4000-8000-000000000101";
 const SLEEVE_TOKEN = "e2eSleeveProjectToken0123456789a";
 
@@ -19,7 +20,7 @@ test("the owner sees what is left to pay and the unused deposit credit on a proj
   const { signedCookieValue } = await seedTestSession(STUDIO_TEST_USER);
   await context.addCookies([sessionCookie(signedCookieValue)]);
 
-  await page.goto("http://localhost:3000/projects");
+  await page.goto(`http://localhost:${PORT}/projects`);
   await expect(page.getByRole("heading", { name: "Projects" })).toBeVisible();
   const row = page.getByRole("row", { name: /Sleeve/ }).first();
   await expect(row).toContainText("Studio Client");
@@ -39,7 +40,7 @@ test("the owner sees what is left to pay and the unused deposit credit on a proj
 });
 
 test("the client's design page says no design has been shared yet", async ({ page }) => {
-  await page.goto(`http://${STUDIO_HOST}:3000/book/test-studio/project/${SLEEVE_TOKEN}`);
+  await page.goto(`http://${STUDIO_HOST}:${PORT}/book/test-studio/project/${SLEEVE_TOKEN}`);
   await expect(page.getByRole("heading", { level: 1, name: "Your design" })).toBeVisible();
   await expect(page.getByText("No design has been shared yet")).toBeVisible();
   await expect(page.getByRole("button", { name: "Approve design" })).toHaveCount(0);
@@ -53,7 +54,7 @@ test("closing a team member's books shows the Books closed panel to clients, and
   ]);
 
   async function setBooks(option: "Open" | "Closed") {
-    await page.goto("http://localhost:3000/settings/staff");
+    await page.goto(`http://localhost:${PORT}/settings/staff`);
     await page.getByRole("button", { name: "Edit Riley Artist" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("combobox", { name: "Books" }).click();
@@ -65,7 +66,7 @@ test("closing a team member's books shows the Books closed panel to clients, and
     await setBooks("Closed");
 
     const clientPage = await context.newPage();
-    await clientPage.goto(`http://${STUDIO_HOST}:3000/book/test-studio`);
+    await clientPage.goto(`http://${STUDIO_HOST}:${PORT}/book/test-studio`);
     await expect(clientPage.getByRole("heading", { name: "Books are closed" })).toBeVisible();
     await expect(clientPage.getByText("We're not taking new requests right now")).toBeVisible();
     await clientPage.close();
@@ -75,7 +76,7 @@ test("closing a team member's books shows the Books closed panel to clients, and
   }
 
   const reopened = await context.newPage();
-  await reopened.goto(`http://${STUDIO_HOST}:3000/book/test-studio`);
+  await reopened.goto(`http://${STUDIO_HOST}:${PORT}/book/test-studio`);
   await expect(reopened.getByRole("heading", { name: "Books are closed" })).toHaveCount(0);
   await expect(reopened.getByText("Step 1 of 4")).toBeVisible();
 });

@@ -12,6 +12,13 @@ const SLUG = "test-salon";
 const SCREENSHOT_DIR =
   process.env.TEXT_LINE_SCREENSHOT_DIR ?? "test-results/text-line-screenshots";
 const TEST_EIN = "12-3456789";
+const CARRIER_REGISTRATION_PAID_FEE_FIXTURE =
+  process.env.E2E_PREPAID_CARRIER_FIXTURE === "1"
+    ? {
+        setupFeeState: "added",
+        setupFeeInvoiceItemId: "ii_e2e_paid_fixture",
+      }
+    : {};
 
 test.setTimeout(180_000);
 
@@ -54,6 +61,15 @@ async function setSmsState(
       sms_registration = ${sql.json(registration as never)}
     where slug = ${SLUG}
   `;
+}
+
+async function prepareCarrierRegistrationFixture(
+  sql: ReturnType<typeof postgres>,
+) {
+  // The production smoke opts into an already-paid fixture because production
+  // must keep real Stripe charging enabled. The full dev suite leaves this
+  // empty so its fake-payment path remains part of the functional flow.
+  await setSmsState(sql, "off", { ...CARRIER_REGISTRATION_PAID_FEE_FIXTURE });
 }
 
 async function restoreSmsSnapshot(
@@ -154,7 +170,7 @@ test("EIN registration becomes active through the fake cron without saving a ful
   const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
   const original = await saveSmsSnapshot(sql);
   try {
-    await setSmsState(sql, "off");
+    await prepareCarrierRegistrationFixture(sql);
     await page.goto("/settings/notifications");
     await expect(page.getByText(/one-time \$19 setup/)).toBeVisible();
     await submitRegistrationForm(page, { ein: TEST_EIN });
@@ -193,7 +209,7 @@ test("sole-proprietor registration requests YES and lets the owner resend", asyn
   const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
   const original = await saveSmsSnapshot(sql);
   try {
-    await setSmsState(sql, "off");
+    await prepareCarrierRegistrationFixture(sql);
     await page.goto("/settings/notifications");
     await submitRegistrationForm(page);
 
