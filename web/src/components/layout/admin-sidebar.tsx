@@ -121,8 +121,8 @@ export function AdminSidebar({
   const currentMembership =
     memberships.find((m) => m.tenantSlug === activeTenantSlug) ??
     memberships[0];
-  const displaySalonName = currentMembership?.salonName ?? null;
-  const compactSalonLabel = displaySalonName ?? "Scheduling";
+  const displayBusinessName = currentMembership?.businessName ?? null;
+  const compactBusinessLabel = displayBusinessName ?? "Scheduling";
   const shareSlug = activeTenantSlug ?? tenantSlug ?? null;
   const showCompactSidebar = !isMobile && !open;
 
@@ -136,7 +136,7 @@ export function AdminSidebar({
     );
   }, [role, enabledModules]);
 
-  const salonMenuItems = (
+  const businessMenuItems = (
     <>
       {memberships.map((m) => (
         <DropdownMenuItem
@@ -146,11 +146,11 @@ export function AdminSidebar({
             m.tenantSlug === activeTenantSlug
           }
           onSelect={() => {
-            void handleSwitchSalon(m.tenantSlug);
+            void handleSwitchBusiness(m.tenantSlug);
           }}
         >
           <span className="flex flex-col gap-0.5">
-            <span>{m.salonName}</span>
+            <span>{m.businessName}</span>
             <span className="text-sm capitalize text-muted-foreground">
               {m.role}
             </span>
@@ -175,7 +175,7 @@ export function AdminSidebar({
     router.push("/login");
   }
 
-  async function handleSwitchSalon(nextSlug: string) {
+  async function handleSwitchBusiness(nextSlug: string) {
     if (nextSlug === activeTenantSlug) return;
     setSwitchingSlug(nextSlug);
     try {
@@ -205,15 +205,15 @@ export function AdminSidebar({
                 <SidebarMenuButton
                   size="lg"
                   className="justify-center rounded-xl"
-                  title={compactSalonLabel}
-                  aria-label={t("adminSidebar.switchPlaceAria", { name: compactSalonLabel })}
+                  title={compactBusinessLabel}
+                  aria-label={t("adminSidebar.switchPlaceAria", { name: compactBusinessLabel })}
                 >
                   <Building2 />
-                  <span>{compactSalonLabel}</span>
+                  <span>{compactBusinessLabel}</span>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-[12rem]">
-                {salonMenuItems}
+                {businessMenuItems}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -243,14 +243,14 @@ export function AdminSidebar({
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         type="button"
-                        aria-label={t("adminSidebar.switchPlaceAria", { name: compactSalonLabel })}
+                        aria-label={t("adminSidebar.switchPlaceAria", { name: compactBusinessLabel })}
                         className="flex min-h-11 min-w-11 max-w-full items-center gap-1 text-left text-sm text-muted-foreground hover:text-foreground"
                       >
-                        <span className="truncate">{compactSalonLabel}</span>
+                        <span className="truncate">{compactBusinessLabel}</span>
                         <ChevronDown className="size-3 shrink-0 opacity-70" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="min-w-[12rem]">
-                        {salonMenuItems}
+                        {businessMenuItems}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

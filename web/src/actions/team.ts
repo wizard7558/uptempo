@@ -692,11 +692,11 @@ export async function joinBusinessFromInvitation(
 export type UserMembershipRow = {
   tenantSlug: string;
   role: string;
-  salonName: string;
+  businessName: string;
 };
 
 /**
- * All salons the current user belongs to (for the tenant switcher).
+ * All businesses the current user belongs to (for the business switcher).
  */
 export async function listUserMemberships(): Promise<{
   memberships: UserMembershipRow[];
@@ -719,7 +719,7 @@ export async function listUserMemberships(): Promise<{
         .select({
           tenantSlug: memberships.tenantSlug,
           role: memberships.role,
-          salonName: tenants.name,
+          businessName: tenants.name,
         })
         .from(memberships)
         .innerJoin(tenants, eq(tenants.slug, memberships.tenantSlug))
@@ -731,7 +731,7 @@ export async function listUserMemberships(): Promise<{
         activeTenantSlug: dbUser?.tenantSlug ?? null,
       };
     },
-    ["user-memberships", session.user.id],
+    ["user-memberships-v2", session.user.id],
     {
       revalidate: USER_MEMBERSHIPS_CACHE_TTL_SECONDS,
       tags: [userMembershipsTag(session.user.id)],
@@ -740,7 +740,7 @@ export async function listUserMemberships(): Promise<{
 }
 
 /**
- * Switch the active salon for the current user (updates denormalized user.role / user.tenant_slug).
+ * Switch the active business for the current user (updates denormalized user.role / user.tenant_slug).
  */
 export async function switchActiveTenant(
   tenantSlug: string,

@@ -938,7 +938,7 @@
       "qr": "QR code",
       "open": "Open your calendar"
     },
-    "salonSwitcher": {
+    "businessSwitcher": {
       "switch": "Switch {place}",
       "others": "Your other {placePlural}"
     },

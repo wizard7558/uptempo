@@ -16,12 +16,12 @@ import { Button } from "@/components/ui/button";
 import { switchActiveTenant, type UserMembershipRow } from "@/actions/team";
 
 /**
- * Escape hatch for owners with more than one salon. When a second salon is
+ * Escape hatch for owners with more than one business. When a second business is
  * created the owner is gated into its onboarding wizard; without this they
- * cannot get back to an already-launched salon. Switching activates the chosen
- * membership and sends them to the schedule (past the gate for launched salons).
+ * cannot get back to an already-launched business. Switching activates the chosen
+ * membership and sends them to the schedule (past the gate for launched businesses).
  */
-export function OnboardingSalonSwitcher({
+export function OnboardingBusinessSwitcher({
   memberships,
   activeTenantSlug,
 }: {
@@ -59,12 +59,12 @@ export function OnboardingSalonSwitcher({
           disabled={switchingSlug !== null}
         >
           <Building2 className="mr-2 h-4 w-4" />
-          {t("salonSwitcher.switch")}
+          {t("businessSwitcher.switch")}
           <ChevronDown className="ml-1 h-3 w-3 opacity-70" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[12rem]">
-        <DropdownMenuLabel>{t("salonSwitcher.others")}</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("businessSwitcher.others")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {others.map((m) => (
           <DropdownMenuItem
@@ -75,7 +75,7 @@ export function OnboardingSalonSwitcher({
             }}
           >
             <span className="flex flex-col gap-0.5">
-              <span>{m.salonName}</span>
+              <span>{m.businessName}</span>
               <span className="text-xs capitalize text-muted-foreground">
                 {m.role}
               </span>

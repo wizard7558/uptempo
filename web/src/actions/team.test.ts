@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => ({
   /** Results returned, in order, by each `publicDb.select()...limit()` chain. */
   selectQueue: [] as unknown[][],
+  selectCalls: 0,
+  cacheCalls: [] as Array<{
+    keyParts: string[];
+    options: { revalidate: number; tags: string[] };
+  }>,
   addMembershipAndActivate: vi.fn(async () => {}),
   hasModule: vi.fn(),
   signUpEmail: vi.fn(async () => ({ user: { id: "new-user" } })),
@@ -11,13 +16,27 @@ const h = vi.hoisted(() => ({
   })),
 }));
 
+type SelectQueryMock = {
+  from: (...args: unknown[]) => SelectQueryMock;
+  innerJoin: (...args: unknown[]) => SelectQueryMock;
+  where: (...args: unknown[]) => SelectQueryMock;
+  limit: (...args: unknown[]) => Promise<unknown[]>;
+  orderBy: (...args: unknown[]) => Promise<unknown[]>;
+};
+
 vi.mock("@/lib/db", () => ({
   publicDb: {
-    select: () => ({
-      from: () => ({
-        where: () => ({ limit: async () => h.selectQueue.shift() ?? [] }),
-      }),
-    }),
+    select: () => {
+      h.selectCalls += 1;
+      const query: SelectQueryMock = {
+        from: () => query,
+        innerJoin: () => query,
+        where: () => query,
+        limit: async () => h.selectQueue.shift() ?? [],
+        orderBy: async () => h.selectQueue.shift() ?? [],
+      };
+      return query;
+    },
     update: () => ({ set: () => ({ where: async () => {} }) }),
   },
 }));
@@ -53,7 +72,14 @@ vi.mock("next/headers", () => ({ headers: vi.fn(async () => new Headers()) }));
 vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
   revalidatePath: vi.fn(),
-  unstable_cache: (fn: () => unknown) => fn,
+  unstable_cache: (
+    fn: () => unknown,
+    keyParts: string[],
+    options: { revalidate: number; tags: string[] },
+  ) => {
+    h.cacheCalls.push({ keyParts, options });
+    return fn;
+  },
 }));
 
 vi.mock("@/lib/tenant/modules", () => ({ hasModule: h.hasModule }));
@@ -66,6 +92,7 @@ import {
   acceptInvitation,
   getInvitationByToken,
   joinBusinessFromInvitation,
+  listUserMemberships,
   sendInvitation,
 } from "./team";
 
@@ -85,6 +112,76 @@ function invitationRows(role: string) {
     [{ name: "Salon X" }],
   ];
 }
+
+describe("listUserMemberships", () => {
+  beforeEach(() => {
+    h.selectQueue = [];
+    h.selectCalls = 0;
+    h.cacheCalls = [];
+  });
+
+  it("returns business names and active tenant while retaining scoped cache settings", async () => {
+    h.getSession.mockResolvedValueOnce({
+      user: {
+        id: "membership-user",
+        email: "member@example.com",
+        name: "Member",
+      },
+    });
+    h.selectQueue = [
+      [{ tenantSlug: "business-a" }],
+      [
+        {
+          tenantSlug: "business-a",
+          role: "owner",
+          businessName: "Northwind Hair",
+        },
+        {
+          tenantSlug: "business-b",
+          role: "provider",
+          businessName: "Northwind Barbers",
+        },
+      ],
+    ];
+
+    await expect(listUserMemberships()).resolves.toEqual({
+      memberships: [
+        {
+          tenantSlug: "business-a",
+          role: "owner",
+          businessName: "Northwind Hair",
+        },
+        {
+          tenantSlug: "business-b",
+          role: "provider",
+          businessName: "Northwind Barbers",
+        },
+      ],
+      activeTenantSlug: "business-a",
+    });
+    expect(h.selectCalls).toBe(2);
+    expect(h.cacheCalls).toEqual([
+      {
+        keyParts: ["user-memberships-v2", "membership-user"],
+        options: {
+          revalidate: 60,
+          tags: ["user:membership-user:memberships"],
+        },
+      },
+    ]);
+  });
+
+  it("returns an empty result without querying the database when unauthenticated", async () => {
+    h.getSession.mockResolvedValueOnce(null as never);
+
+    await expect(listUserMemberships()).resolves.toEqual({
+      memberships: [],
+      activeTenantSlug: null,
+    });
+    expect(h.selectCalls).toBe(0);
+    expect(h.cacheCalls).toEqual([]);
+  });
+});
 
 describe("getInvitationByToken", () => {
   it("returns the business name for invitation display", async () => {

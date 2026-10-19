@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import { SignOutButton } from "./sign-out-button";
 import { listUserMemberships } from "@/actions/team";
-import { OnboardingSalonSwitcher } from "@/components/onboarding/salon-switcher";
+import { OnboardingBusinessSwitcher } from "@/components/onboarding/business-switcher";
 import { TermsProvider } from "@/lib/terms/client";
 import { getTerms } from "@/lib/terms/server";
 import { AppProviders } from "@/components/app-providers";
@@ -30,7 +30,7 @@ export default async function OnboardingLayout({
         <Image src="/brand/wordmark.svg" alt="Uptempo" width={127} height={24} className="dark:invert" />
         <div className="flex items-center gap-2">
           {memberships.length > 1 && (
-            <OnboardingSalonSwitcher
+            <OnboardingBusinessSwitcher
               memberships={memberships}
               activeTenantSlug={activeTenantSlug}
             />
