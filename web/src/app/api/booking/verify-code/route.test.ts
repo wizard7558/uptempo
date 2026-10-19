@@ -48,23 +48,21 @@ const EMAIL_CLIENT_ID = "client-email-0002";
 const PHONE_CLIENT_ID = "client-phone-0003";
 
 function request(
-  overrides: Partial<{
-    identifier: string;
-    code: string;
-    salonId: string;
-    name: string;
-    phone: string;
-  }> = {},
+  overrides: Record<string, unknown> = {},
 ) {
+  return requestBody({
+    identifier: EMAIL,
+    code: "123456",
+    salonId: BUSINESS_ID,
+    ...overrides,
+  });
+}
+
+function requestBody(body: unknown) {
   return new NextRequest("http://localhost/api/booking/verify-code", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      identifier: EMAIL,
-      code: "123456",
-      salonId: BUSINESS_ID,
-      ...overrides,
-    }),
+    body: JSON.stringify(body),
   });
 }
 
@@ -125,6 +123,92 @@ beforeEach(() => {
   mocks.cookieStoreSet.mockReset();
   mocks.updateSet.mockReset();
   mocks.eq.mockReset().mockImplementation((...args: unknown[]) => args);
+});
+
+describe("POST /api/booking/verify-code business ID compatibility", () => {
+  it.each([
+    { label: "canonical businessId", ids: { businessId: BUSINESS_ID, salonId: undefined } },
+    { label: "legacy salonId", ids: { salonId: BUSINESS_ID } },
+    { label: "matching IDs", ids: { businessId: BUSINESS_ID } },
+  ])("accepts $label and uses its business ID for tenant lookup", async ({ ids }) => {
+    mocks.createClientForTenant.mockResolvedValue({ success: true, id: CREATED_ID });
+
+    const response = await POST(request(ids));
+
+    expect(response.status).toBe(200);
+    expect(mocks.getTenantSlugForBusinessId).toHaveBeenCalledWith(BUSINESS_ID);
+    expect(mocks.verifyCodeForTenant).toHaveBeenCalledWith(TENANT, EMAIL, "123456");
+  });
+
+  it.each([
+    { label: "neither ID", ids: { businessId: undefined, salonId: undefined }, error: "Invalid ID" },
+    { label: "invalid businessId beside a valid salonId", ids: { businessId: "invalid", salonId: BUSINESS_ID }, error: "Invalid ID" },
+    { label: "invalid salonId beside a valid businessId", ids: { businessId: BUSINESS_ID, salonId: "invalid" }, error: "Invalid ID" },
+    { label: "array businessId beside a valid salonId", ids: { businessId: [], salonId: BUSINESS_ID }, error: "Invalid ID" },
+    { label: "null businessId beside a valid salonId", ids: { businessId: null, salonId: BUSINESS_ID }, error: "Invalid ID" },
+    { label: "array salonId beside a valid businessId", ids: { businessId: BUSINESS_ID, salonId: [] }, error: "Invalid ID" },
+    { label: "null salonId beside a valid businessId", ids: { businessId: BUSINESS_ID, salonId: null }, error: "Invalid ID" },
+    { label: "conflicting valid IDs", ids: { businessId: BUSINESS_ID, salonId: "00000000-0000-4000-8000-000000000012" }, error: "Conflicting business IDs" },
+  ])("rejects $label before effects", async ({ ids, error }) => {
+    const response = await POST(request(ids));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error });
+    expect(mocks.getTenantSlugForBusinessId).not.toHaveBeenCalled();
+    expect(mocks.verifyCodeForTenant).not.toHaveBeenCalled();
+    expect(mocks.withTenantDb).not.toHaveBeenCalled();
+    expect(mocks.findClientByEmailForTenant).not.toHaveBeenCalled();
+    expect(mocks.findClientByPhoneForTenant).not.toHaveBeenCalled();
+    expect(mocks.createClientForTenant).not.toHaveBeenCalled();
+    expect(mocks.setBookingSession).not.toHaveBeenCalled();
+    expect(mocks.cookieStoreSet).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { identifier: [] },
+    { code: null },
+    { name: [] },
+    { phone: null },
+  ])("rejects invalid body types before effects (%j)", async (invalidField) => {
+    const response = await POST(request(invalidField));
+
+    expect(response.status).toBe(400);
+    expect(mocks.getTenantSlugForBusinessId).not.toHaveBeenCalled();
+    expect(mocks.verifyCodeForTenant).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "array body", body: [] },
+    { label: "null body", body: null },
+  ])("rejects a $label before effects", async ({ body }) => {
+    const response = await POST(requestBody(body));
+
+    expect(response.status).toBe(400);
+    expect(mocks.getTenantSlugForBusinessId).not.toHaveBeenCalled();
+    expect(mocks.verifyCodeForTenant).not.toHaveBeenCalled();
+    expect(mocks.withTenantDb).not.toHaveBeenCalled();
+    expect(mocks.findClientByEmailForTenant).not.toHaveBeenCalled();
+    expect(mocks.findClientByPhoneForTenant).not.toHaveBeenCalled();
+    expect(mocks.createClientForTenant).not.toHaveBeenCalled();
+    expect(mocks.setBookingSession).not.toHaveBeenCalled();
+    expect(mocks.cookieStoreSet).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown business before OTP, database, or account effects", async () => {
+    mocks.getTenantSlugForBusinessId.mockResolvedValue(null);
+
+    const response = await POST(request({ businessId: BUSINESS_ID, salonId: undefined }));
+
+    expect(response.status).toBe(404);
+    expect(mocks.getTenantSlugForBusinessId).toHaveBeenCalledWith(BUSINESS_ID);
+    expect(mocks.verifyCodeForTenant).not.toHaveBeenCalled();
+    expect(mocks.withTenantDb).not.toHaveBeenCalled();
+    expect(mocks.findClientByEmailForTenant).not.toHaveBeenCalled();
+    expect(mocks.findClientByPhoneForTenant).not.toHaveBeenCalled();
+    expect(mocks.createClientForTenant).not.toHaveBeenCalled();
+    expect(mocks.setBookingSession).not.toHaveBeenCalled();
+    expect(mocks.cookieStoreSet).not.toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/booking/verify-code identity selection", () => {

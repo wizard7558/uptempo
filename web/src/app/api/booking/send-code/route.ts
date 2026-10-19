@@ -19,7 +19,22 @@ const MAX_REQUESTS_PER_IP = 5;
 const sendCodeSchema = z.object({
   identifier: z.string().min(1, "Identifier is required"),
   phone: z.string().min(1).optional(),
-  salonId: z.string().uuid("Invalid ID"),
+  salonId: z.string().uuid("Invalid ID").optional(),
+  businessId: z.string().uuid("Invalid ID").optional(),
+}).superRefine(({ businessId, salonId }, context) => {
+  if (!businessId && !salonId) {
+    context.addIssue({
+      code: "custom",
+      message: "Invalid ID",
+      path: ["businessId"],
+    });
+  } else if (businessId && salonId && businessId !== salonId) {
+    context.addIssue({
+      code: "custom",
+      message: "Conflicting business IDs",
+      path: ["salonId"],
+    });
+  }
 });
 
 /** Send the verification code to a phone via iMessage (when LoopMessage is the
@@ -50,14 +65,27 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = sendCodeSchema.safeParse(body);
     if (!parsed.success) {
+      const invalidId = parsed.error.issues.some(
+        (issue) =>
+          (issue.path[0] === "businessId" || issue.path[0] === "salonId") &&
+          issue.message !== "Conflicting business IDs",
+      );
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+        {
+          error: invalidId
+            ? "Invalid ID"
+            : parsed.error.issues[0]?.message ?? "Invalid input",
+        },
         { status: 400 },
       );
     }
 
-    const { identifier, salonId, phone } = parsed.data;
-    const tenantSlug = await getTenantSlugForBusinessId(salonId);
+    const { identifier, phone } = parsed.data;
+    const businessId = parsed.data.businessId ?? parsed.data.salonId;
+    if (!businessId) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+    const tenantSlug = await getTenantSlugForBusinessId(businessId);
     if (!tenantSlug) {
       return NextResponse.json(
         { error: (await getT("errors"))("bookingApi.placeNotFound") },

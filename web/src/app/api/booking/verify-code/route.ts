@@ -15,9 +15,24 @@ export const dynamic = 'force-dynamic';
 const verifyCodeSchema = z.object({
   identifier: z.string().min(1, "Identifier is required"),
   code: z.string().length(6, "Code must be 6 digits"),
-  salonId: z.string().uuid("Invalid ID"),
+  salonId: z.string().uuid("Invalid ID").optional(),
+  businessId: z.string().uuid("Invalid ID").optional(),
   name: z.string().optional(),
   phone: z.string().min(1).optional(),
+}).superRefine(({ businessId, salonId }, context) => {
+  if (!businessId && !salonId) {
+    context.addIssue({
+      code: "custom",
+      message: "Invalid ID",
+      path: ["businessId"],
+    });
+  } else if (businessId && salonId && businessId !== salonId) {
+    context.addIssue({
+      code: "custom",
+      message: "Conflicting business IDs",
+      path: ["salonId"],
+    });
+  }
 });
 
 export async function POST(req: NextRequest) {
@@ -25,14 +40,27 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = verifyCodeSchema.safeParse(body);
     if (!parsed.success) {
+      const invalidId = parsed.error.issues.some(
+        (issue) =>
+          (issue.path[0] === "businessId" || issue.path[0] === "salonId") &&
+          issue.message !== "Conflicting business IDs",
+      );
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+        {
+          error: invalidId
+            ? "Invalid ID"
+            : parsed.error.issues[0]?.message ?? "Invalid input",
+        },
         { status: 400 },
       );
     }
 
-    const { identifier, code, name, salonId, phone } = parsed.data;
-    const tenantSlug = await getTenantSlugForBusinessId(salonId);
+    const { identifier, code, name, phone } = parsed.data;
+    const businessId = parsed.data.businessId ?? parsed.data.salonId;
+    if (!businessId) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+    const tenantSlug = await getTenantSlugForBusinessId(businessId);
     if (!tenantSlug) {
       return NextResponse.json(
         { error: (await getT("errors"))("bookingApi.placeNotFound") },

@@ -57,7 +57,7 @@ export function IdentityStep({ businessId, onComplete, showPhoneField = true }: 
         body: JSON.stringify({
           identifier: identifier.trim(),
           phone: phone.trim() || undefined,
-          salonId: businessId,
+          businessId,
         }),
       });
       const data = await res.json();
@@ -87,7 +87,7 @@ export function IdentityStep({ businessId, onComplete, showPhoneField = true }: 
           identifier: identifier.trim(),
           code,
           phone: phone.trim() || undefined,
-          salonId: businessId,
+          businessId,
         }),
       });
       const data = await res.json();
@@ -303,7 +303,7 @@ export function DetailsStep({
       const res = await fetch("/api/booking/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: phone.trim(), phone: phone.trim(), salonId: businessId }),
+        body: JSON.stringify({ identifier: phone.trim(), phone: phone.trim(), businessId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -333,7 +333,7 @@ export function DetailsStep({
           code,
           phone: phone.trim(),
           name: name.trim(),
-          salonId: businessId,
+          businessId,
         }),
       });
       const data = await res.json();

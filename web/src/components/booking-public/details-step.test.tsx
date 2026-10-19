@@ -68,13 +68,20 @@ describe("DetailsStep verification channel", () => {
     expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toEqual({
       identifier: "+15555550100",
       phone: "+15555550100",
-      salonId: "business-1",
+      businessId: "business-1",
     });
     expect(screen.getByLabelText("detailsStep.code")).toBeTruthy();
 
     await user.type(screen.getByLabelText("detailsStep.code"), "123456");
     await user.click(screen.getByRole("button", { name: "detailsStep.verify" }));
 
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body as string)).toEqual({
+      identifier: "+15555550100",
+      code: "123456",
+      phone: "+15555550100",
+      name: "Ana",
+      businessId: "business-1",
+    });
     expect(await screen.findByText("Invalid code")).toBeTruthy();
     expect(screen.getByLabelText("detailsStep.code")).toBeTruthy();
     expect(onComplete).not.toHaveBeenCalled();
@@ -99,10 +106,15 @@ describe("DetailsStep verification channel", () => {
 
     expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toEqual({
       identifier: "ana@example.com",
-      salonId: "business-1",
+      businessId: "business-1",
     });
     await user.type(screen.getByLabelText("Verification code"), "123456");
     await user.click(screen.getByRole("button", { name: "Verify" }));
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body as string)).toEqual({
+      identifier: "ana@example.com",
+      code: "123456",
+      businessId: "business-1",
+    });
     expect(notifyNativeAuthSuccess).toHaveBeenCalledTimes(1);
     expect(screen.getByText("What is your first name?")).toBeTruthy();
 
@@ -127,6 +139,11 @@ describe("DetailsStep verification channel", () => {
     await user.type(screen.getByLabelText("Verification code"), "123456");
     await user.click(screen.getByRole("button", { name: "Verify" }));
 
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body as string)).toEqual({
+      identifier: "ana@example.com",
+      code: "123456",
+      businessId: "business-1",
+    });
     expect(await screen.findByText("Invalid code")).toBeTruthy();
     expect(screen.getByLabelText("Verification code")).toBeTruthy();
     expect(onComplete).not.toHaveBeenCalled();
@@ -147,6 +164,11 @@ describe("DetailsStep verification channel", () => {
     await user.type(screen.getByLabelText("Verification code"), "654321");
     await user.click(screen.getByRole("button", { name: "Verify" }));
 
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body as string)).toEqual({
+      identifier: "bea@example.com",
+      code: "654321",
+      businessId: "business-1",
+    });
     expect(onComplete).toHaveBeenCalledWith("client-2", "Bea", undefined);
     expect(notifyNativeAuthSuccess).toHaveBeenCalledTimes(1);
 
