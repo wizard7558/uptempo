@@ -61,11 +61,11 @@ export default async function ReschedulePage({
     );
   }
 
-  // Build redirect URL with pre-filled stylist and services
+  // Build redirect URL with pre-filled staff and services
   const serviceIds = appointment.services
     .map((s) => s.serviceId)
     .join(",");
-  const rescheduleUrl = `/book/${slug}?reschedule=${appointment.id}&stylist=${appointment.staffId}&services=${serviceIds}`;
+  const rescheduleUrl = `/book/${slug}?reschedule=${appointment.id}&staff=${appointment.staffId}&services=${serviceIds}`;
 
   redirect(rescheduleUrl);
 }

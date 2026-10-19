@@ -66,6 +66,7 @@ async function BookingPageContent({
 
   // Extract reschedule pre-fill params
   const rescheduleId = typeof query.reschedule === "string" ? query.reschedule : undefined;
+  // Keep stylist as a legacy alias for links already shared with clients.
   const prefillStaffId =
     (typeof query.staff === "string" ? query.staff : undefined) ??
     (typeof query.stylist === "string" ? query.stylist : undefined);
@@ -147,7 +148,7 @@ async function BookingPageContent({
     );
   }
 
-  // Resolve prefill display data server-side (stylist name, service summary, duration)
+  // Resolve prefill display data server-side (staff name, service summary, duration)
   let prefillStaffName: string | undefined;
   let prefillServiceSummary: string | undefined;
   let prefillTotalDuration: number | undefined;
