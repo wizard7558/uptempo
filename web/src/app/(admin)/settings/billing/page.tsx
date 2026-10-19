@@ -44,7 +44,7 @@ export default async function BillingPage() {
       getTerms(slug),
     ]);
 
-  // Re-offer card-on-file only for salons that skipped Stripe during setup (which
+  // Re-offer card-on-file only for businesses that skipped Stripe during setup (which
   // forced the requirement off) and have since connected a charge-ready account.
   const showCardOnFilePrompt =
     status.connected &&

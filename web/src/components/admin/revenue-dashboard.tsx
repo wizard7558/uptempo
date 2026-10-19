@@ -236,7 +236,7 @@ export function RevenueDashboard({ initialData }: RevenueDashboardProps) {
         </div>
       ) : null}
 
-      {/* Per-stylist breakdown table */}
+      {/* Per-staff breakdown table */}
       {sorted.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center">
           <p className="text-muted-foreground">

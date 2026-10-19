@@ -27,7 +27,7 @@ interface WorkingHoursPageClientProps {
   initialOverrides?: AvailabilityOverrideRow[];
   initialStaffId: string;
   locations: Array<{ id: string; name: string; address: string | null }>;
-  /** Per-stylist list of location names where they have no hours yet. */
+  /** Per-staff list of location names where they have no hours yet. */
   missingByStaffId?: Record<string, string[]>;
 }
 

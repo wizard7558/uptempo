@@ -89,7 +89,7 @@ describe("BookingGroupLayout", () => {
   });
 
   it("applies tenant branding css variables when branding exists", async () => {
-    getTenantSlugOrNullMock.mockResolvedValue("test-salon");
+    getTenantSlugOrNullMock.mockResolvedValue("sample-business");
     getBookingSessionMock.mockResolvedValue("client-123");
     getBrandingForBookingMock.mockResolvedValue({
       brandColor: "#FFFF00",

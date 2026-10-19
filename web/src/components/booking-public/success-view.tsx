@@ -104,7 +104,7 @@ export function SuccessView({
       {/* Booking details receipt */}
       <div className="border border-[var(--line)] bg-[var(--ivory-raised)]">
         <div className="divide-y">
-          {/* Stylist */}
+          {/* Staff */}
           <div className="flex items-center gap-3 px-4 py-3">
             <UserIcon className="size-4 shrink-0 text-[var(--ink-soft)]" />
             <div>
@@ -187,7 +187,7 @@ export function SuccessView({
         </div>
       </div>
 
-      {/* Beauty Bank membership upsell (self-gates: hidden for members / no plans) */}
+      {/* Stored-value membership upsell (self-gates: hidden for members / no plans) */}
       {clientId && (
         <MembershipUpsell businessSlug={businessSlug} clientId={clientId} />
       )}

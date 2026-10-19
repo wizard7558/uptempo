@@ -72,8 +72,8 @@ describe("tenant provisioning (integration)", () => {
     if (!DATABASE_URL) return;
     pair = { slugA: makeTestSlug(), slugB: makeTestSlug() };
     await Promise.all([
-      provisionTenantSchema({ name: "Salon A", slug: pair.slugA }),
-      provisionTenantSchema({ name: "Salon B", slug: pair.slugB }),
+      provisionTenantSchema({ name: "Business A", slug: pair.slugA }),
+      provisionTenantSchema({ name: "Business B", slug: pair.slugB }),
     ]);
   }, 180_000);
 
@@ -82,7 +82,7 @@ describe("tenant provisioning (integration)", () => {
     async () => {
       const slug = makeTestSlug();
       const result = await provisionTenantSchema({
-        name: "Test Salon",
+        name: "Test Business",
         slug,
       });
 
@@ -104,7 +104,7 @@ describe("tenant provisioning (integration)", () => {
     "creates all expected tables in the provisioned schema",
     async () => {
       const slug = makeTestSlug();
-      await provisionTenantSchema({ name: "Table Test Salon", slug });
+      await provisionTenantSchema({ name: "Table Test Business", slug });
 
       const expectedTables = [
         "aftercare_templates",

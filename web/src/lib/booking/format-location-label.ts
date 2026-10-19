@@ -1,5 +1,5 @@
 /**
- * Shared helpers for displaying salon / appointment location in UI and emails.
+ * Shared helpers for displaying business / appointment location in UI and emails.
  */
 
 /** Join location name and address; use fallback when both are empty. */

@@ -14,7 +14,7 @@ function fakeStripe(opts: {
 
 const baseArgs = {
   productId: "prod_1",
-  slug: "salon-x",
+  slug: "business-x",
   planId: "plan_1",
 };
 

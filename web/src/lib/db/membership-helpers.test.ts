@@ -36,26 +36,26 @@ describe("getMembershipRoleForActiveTenant", () => {
 
   it("returns role from memberships row", async () => {
     mockLimit.mockResolvedValue([{ role: "admin" }]);
-    expect(await getMembershipRoleForActiveTenant("user-1", "my-salon")).toBe(
+    expect(await getMembershipRoleForActiveTenant("user-1", "my-business")).toBe(
       "admin",
     );
   });
 
   it("returns null when no membership row", async () => {
     mockLimit.mockResolvedValue([]);
-    expect(await getMembershipRoleForActiveTenant("user-1", "my-salon")).toBeNull();
+    expect(await getMembershipRoleForActiveTenant("user-1", "my-business")).toBeNull();
   });
 
   it("trims tenant slug before querying", async () => {
     mockLimit.mockResolvedValue([{ role: "provider" }]);
-    expect(await getMembershipRoleForActiveTenant("user-1", "  my-salon  ")).toBe(
+    expect(await getMembershipRoleForActiveTenant("user-1", "  my-business  ")).toBe(
       "provider",
     );
   });
 
   it("normalizes the legacy stylist role to provider", async () => {
     mockLimit.mockResolvedValue([{ role: "stylist" }]);
-    expect(await getMembershipRoleForActiveTenant("user-1", "my-salon")).toBe(
+    expect(await getMembershipRoleForActiveTenant("user-1", "my-business")).toBe(
       "provider",
     );
   });

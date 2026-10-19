@@ -112,9 +112,9 @@ function StaffGoalRowEditor({ staffMember }: { staffMember: StaffGoalRow }) {
 }
 
 /**
- * Per-stylist Capacity Coach goals. When both hours/week and $/hour are set,
- * the weekly evaluator compares actuals and raises a dashboard alert if the
- * stylist is working hard for under their target rate.
+ * Capacity Coach goals for each staff member. When both hours/week and $/hour are set,
+ * the weekly evaluator compares actuals and raises a dashboard alert when a
+ * staff member's actual rate falls below their target.
  */
 export function CapacityGoalsCard({
   staff,

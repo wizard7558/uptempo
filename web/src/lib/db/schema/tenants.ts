@@ -57,10 +57,10 @@ export const tenants = pgTable(
     comped: integer("comped").notNull().default(0),
     processingRateBps: integer("processing_rate_bps"),
     // Paid platform billing (max($50 floor, fee% x revenue)). Off by default so
-    // beta salons stay free; flipped on per salon when they move to paid.
+    // beta businesses stay free; flipped on per business when they move to paid.
     billingEnabled: integer("billing_enabled").notNull().default(0),
     // Stripe Customer + default card on the PLATFORM account used to charge the
-    // salon its monthly platform fee (distinct from their Connect payout account
+    // business its monthly platform fee (distinct from their Connect payout account
     // and from client cards).
     platformStripeCustomerId: text("platform_stripe_customer_id"),
     platformPaymentMethodId: text("platform_payment_method_id"),
@@ -81,7 +81,7 @@ export const tenants = pgTable(
     billingSwitchedAt: timestamp("billing_switched_at", {
       withTimezone: true,
     }).defaultNow(),
-    // Opt-in: list this salon in the public client app marketplace (default off).
+    // Opt-in: list this business in the public client app marketplace (default off).
     listedInMarketplace: integer("listed_in_marketplace").notNull().default(0),
     // Industry pack id (see src/lib/verticals). Unknown values resolve to "general".
     industry: text("industry").notNull().default("hair_salon"),

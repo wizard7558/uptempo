@@ -115,11 +115,11 @@ interface ServiceListProps {
   initialServices: Service[];
   assistantSettingsEnabled: boolean;
   taskTypes: TaskTypeOption[];
-  /** Map of serviceId → number of active stylists currently offering it. */
+  /** Map of serviceId → number of active staff members currently offering it. */
   offeringCounts: Record<string, number>;
-  /** Curated presets the salon hasn't imported yet. */
+  /** Curated presets the business hasn't imported yet. */
   availablePresets: ServicePreset[];
-  /** Salon-defined categories (defaults + custom), ordered for display. */
+  /** Business-defined categories (defaults + custom), ordered for display. */
   categories: CategoryOption[];
   /** Map of serviceId → add-on serviceIds attached to it. */
   addonsByService: Record<string, string[]>;
@@ -127,8 +127,8 @@ interface ServiceListProps {
   resources: ResourceOption[];
   /** Map of serviceId → what that service needs from rooms and equipment. */
   needsByService: Record<string, ServiceNeedInput[]>;
-  /** Whether add-ons are available on the salon's plan. */
-  /** Whether deposits are available on the salon's plan. */
+  /** Whether add-ons are available on the business's plan. */
+  /** Whether deposits are available on the business's plan. */
   /** The classes module is on, so a service can run as a group class. */
   classesEnabled: boolean;
 }

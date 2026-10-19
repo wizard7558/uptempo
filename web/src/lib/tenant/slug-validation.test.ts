@@ -4,9 +4,9 @@ import { validateSlug, slugSchema } from "./slug-validation";
 describe("slug-validation", () => {
   describe("validateSlug", () => {
     it("accepts valid slugs", () => {
-      expect(validateSlug("acme-salon")).toEqual({ valid: true });
+      expect(validateSlug("acme-business")).toEqual({ valid: true });
       expect(validateSlug("janes-hair")).toEqual({ valid: true });
-      expect(validateSlug("salon123")).toEqual({ valid: true });
+      expect(validateSlug("business123")).toEqual({ valid: true });
       expect(validateSlug("abc")).toEqual({ valid: true });
     });
 
@@ -23,12 +23,12 @@ describe("slug-validation", () => {
     });
 
     it("rejects slugs starting with a number", () => {
-      const result = validateSlug("123salon");
+      const result = validateSlug("123business");
       expect(result.valid).toBe(false);
     });
 
     it("rejects slugs with uppercase letters", () => {
-      const result = validateSlug("AcmeSalon");
+      const result = validateSlug("AcmeBusiness");
       expect(result.valid).toBe(false);
     });
 
@@ -39,7 +39,7 @@ describe("slug-validation", () => {
     });
 
     it("rejects slugs with consecutive hyphens", () => {
-      const result = validateSlug("acme--salon");
+      const result = validateSlug("acme--business");
       expect(result.valid).toBe(false);
       expect(result.error).toContain("consecutive");
     });
@@ -58,9 +58,9 @@ describe("slug-validation", () => {
     });
 
     it("rejects slugs with special characters", () => {
-      expect(validateSlug("acme_salon").valid).toBe(false);
-      expect(validateSlug("acme.salon").valid).toBe(false);
-      expect(validateSlug("acme salon").valid).toBe(false);
+      expect(validateSlug("acme_business").valid).toBe(false);
+      expect(validateSlug("acme.business").valid).toBe(false);
+      expect(validateSlug("acme business").valid).toBe(false);
     });
   });
 

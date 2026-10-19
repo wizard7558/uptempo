@@ -101,7 +101,7 @@ export default async function OnboardingPage({
     redirect(homePath);
   }
 
-  // Fetch stylists and initial hours for the hours step
+  // Fetch staff members and initial hours for the hours step
   let staff: Array<{ id: string; displayName: string }> = [];
   let initialHours: DaySchedule[] = [];
   let locations: Array<{ id: string; name: string; address: string | null }> = [];

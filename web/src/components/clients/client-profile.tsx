@@ -190,7 +190,7 @@ export function ClientProfile({
           <TabsTrigger value="history">Service History</TabsTrigger>
           <TabsTrigger value="forms">Forms</TabsTrigger>
           <TabsTrigger value="overrides">Service Overrides</TabsTrigger>
-          <TabsTrigger value="beauty-bank">{t("clientProfile.prepaidTab")}</TabsTrigger>
+          <TabsTrigger value="stored-value">{t("clientProfile.prepaidTab")}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -220,7 +220,7 @@ export function ClientProfile({
           <OverrideManager clientId={client.id} overrides={overrides} />
         </TabsContent>
 
-        <TabsContent value="beauty-bank">
+        <TabsContent value="stored-value">
           <ClientStoredValuePanel
             clientId={client.id}
             balanceCents={storedValue.balanceCents}

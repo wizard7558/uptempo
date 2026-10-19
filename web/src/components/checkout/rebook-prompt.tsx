@@ -9,10 +9,10 @@ import Link from "next/link";
 
 interface RebookPromptProps {
   clientId: string;
-  salonSlug?: string;
+  businessSlug?: string;
 }
 
-export function RebookPrompt({ clientId, salonSlug }: RebookPromptProps) {
+export function RebookPrompt({ clientId, businessSlug }: RebookPromptProps) {
   const [frequencies, setFrequencies] = useState<ServiceFrequency[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +29,7 @@ export function RebookPrompt({ clientId, salonSlug }: RebookPromptProps) {
     (f) => f.status === "due_soon" || f.status === "overdue",
   );
 
-  const bookUrl = salonSlug ? `/book/${salonSlug}` : "/book";
+  const bookUrl = businessSlug ? `/book/${businessSlug}` : "/book";
 
   if (dueServices.length > 0) {
     return (

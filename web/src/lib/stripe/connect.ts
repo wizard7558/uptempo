@@ -7,7 +7,7 @@ const WEEKLY_PAYOUT_SCHEDULE = {
 };
 
 /**
- * Create a Stripe Connect account for a salon tenant using controller
+ * Create a Stripe Connect account for a business tenant using controller
  * properties. The connected account uses an Express-style dashboard with
  * the platform (application) bearing fees and losses, and Stripe handling
  * requirement collection during the hosted onboarding flow.
@@ -68,7 +68,7 @@ export function billingSettingsUrl(rootDomain?: string): string {
 /**
  * Generate a Stripe-hosted onboarding URL for a Connect account.
  *
- * The salon owner opens this link to complete identity verification,
+ * The business owner opens this link to complete identity verification,
  * bank account setup, and other onboarding requirements.
  */
 export async function createOnboardingLink(params: {

@@ -43,7 +43,7 @@ const describeDb = databaseUrl ? describe : describe.skip;
 const scratches: ScratchTenant[] = [];
 
 const standardInput = {
-  legalBusinessName: "Juniper Salon LLC",
+  legalBusinessName: "Juniper Studio LLC",
   ein: "12-3456789",
   businessType: "LLC" as const,
   businessAddress: {
@@ -296,7 +296,7 @@ describe("SMS business registration state machine", () => {
       const brandSid = row?.smsBrandId;
       expect(brandSid).toBeTruthy();
       brandStatus = "APPROVED";
-      await startRegistration(t.slug, { ...standardInput, legalBusinessName: "Juniper Salon LLC Updated" });
+      await startRegistration(t.slug, { ...standardInput, legalBusinessName: "Juniper Studio LLC Updated" });
       row = await advanceUntil(t.slug, (current) => current?.smsLineStatus === "active");
       expect(row?.smsBrandId).toBe(brandSid);
       expect(recorder.calls.filter((call) => call.method === "createBrand")).toHaveLength(1);

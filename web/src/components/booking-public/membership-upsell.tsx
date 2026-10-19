@@ -15,10 +15,11 @@ interface MembershipUpsellProps {
 }
 
 /**
- * Invites a non-member client to join the salon's Beauty Bank membership (or add
- * funds). Self-gates: fetches eligibility and renders nothing unless the salon has
- * active plans and the client isn't already a member. Safe to mount anywhere in
- * the booking flow — it never throws and shows nothing when not applicable.
+ * Invites a non-member client to join the business's stored-value membership
+ * (or add funds). Self-gates: fetches eligibility and renders nothing unless
+ * the business has active plans and the client isn't already a member. Safe to
+ * mount anywhere in the booking flow — it never throws and shows nothing when
+ * not applicable.
  */
 export function MembershipUpsell({
   businessSlug,

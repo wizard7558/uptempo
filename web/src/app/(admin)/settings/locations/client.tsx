@@ -22,12 +22,12 @@ interface LocationRecord {
 
 interface LocationsPageClientProps {
   initialLocations: LocationRecord[];
-  salonSlug: string;
+  businessSlug: string;
 }
 
 export function LocationsPageClient({
   initialLocations,
-  salonSlug,
+  businessSlug,
 }: LocationsPageClientProps) {
   const [locations, setLocations] = useState(initialLocations);
   const [newName, setNewName] = useState("");
@@ -86,7 +86,7 @@ export function LocationsPageClient({
   }
 
   async function copyBookingLink(location: LocationRecord) {
-    const url = `${window.location.origin}/book/${salonSlug}?location=${location.id}`;
+    const url = `${window.location.origin}/book/${businessSlug}?location=${location.id}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Booking link copied", { description: url });

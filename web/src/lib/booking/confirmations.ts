@@ -56,7 +56,7 @@ export async function sendBookingConfirmations(
         return policy?.timezone ?? "America/New_York";
       });
 
-      // Native push to the salon's registered owner-app devices (own catch so
+      // Native push to the business's registered owner-app devices (own catch so
       // a push failure never blocks the client confirmations below).
       try {
         const { sendApnsNotifications, bundleIdForOwnerType } =
@@ -138,7 +138,7 @@ export async function sendBookingConfirmations(
       const cancelUrl = `${baseUrl}/cancel/${cancelToken}`;
       const rescheduleUrl = `${baseUrl}/reschedule/${rescheduleToken}`;
 
-      // Format date/time in salon timezone
+      // Format date/time in business timezone
       const apptDate = new TZDate(appointment.start, tz);
       const dateStr = format(apptDate, "EEEE, MMMM d, yyyy");
       const timeStr = format(apptDate, "h:mm a");

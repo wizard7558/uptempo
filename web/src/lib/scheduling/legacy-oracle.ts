@@ -22,7 +22,7 @@ export interface WorkingHoursConfig {
  * Excludes slots that overlap with existing appointments.
  *
  * Working-hour boundaries are interpreted in `salonTimezone` (not the process TZ),
- * so availability matches the salon policy on servers running in UTC (CI, Docker, etc.).
+ * so availability matches the business policy on servers running in UTC (CI, Docker, etc.).
  *
  * This is a pure function -- no DB calls. Pass in the data it needs.
  */

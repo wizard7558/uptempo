@@ -38,7 +38,7 @@ describe("tenant provisioning parity (integration)", () => {
       const slug = `parity${Date.now()}${Math.floor(Math.random() * 1000)}`;
       testSlugs.push(slug);
       const schemaName = `tenant_${slug}`;
-      await provisionTenantSchema({ name: "Parity Salon", slug });
+      await provisionTenantSchema({ name: "Parity Business", slug });
 
       const result = await publicDb.execute(
         sql`SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = ${schemaName}`,

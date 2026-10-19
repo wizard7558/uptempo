@@ -69,21 +69,21 @@ describe("requireStaff", () => {
 
   it("throws FORBIDDEN when the user has no membership", async () => {
     getSession.mockResolvedValue({ user: { id: "u1" } });
-    dbLimit.mockResolvedValue([{ tenantSlug: "salon-a" }]);
+    dbLimit.mockResolvedValue([{ tenantSlug: "business-a" }]);
     getRole.mockResolvedValue(null);
     expect(await codeOf(requireStaff())).toBe("FORBIDDEN");
   });
 
   it("throws FORBIDDEN when the role is not in the allowed list", async () => {
     getSession.mockResolvedValue({ user: { id: "u1" } });
-    dbLimit.mockResolvedValue([{ tenantSlug: "salon-a" }]);
+    dbLimit.mockResolvedValue([{ tenantSlug: "business-a" }]);
     getRole.mockResolvedValue("provider");
     expect(await codeOf(requireStaff("owner", "admin"))).toBe("FORBIDDEN");
   });
 
   it("throws FORBIDDEN for a non-staff role value even with no roles given", async () => {
     getSession.mockResolvedValue({ user: { id: "u1" } });
-    dbLimit.mockResolvedValue([{ tenantSlug: "salon-a" }]);
+    dbLimit.mockResolvedValue([{ tenantSlug: "business-a" }]);
     getRole.mockResolvedValue("client");
     expect(await codeOf(requireStaff())).toBe("FORBIDDEN");
   });
@@ -91,33 +91,33 @@ describe("requireStaff", () => {
   it("allows every TeamRole when called with no roles", async () => {
     for (const role of ["owner", "admin", "provider", "assistant"] as const) {
       getSession.mockResolvedValue({ user: { id: "u1" } });
-      dbLimit.mockResolvedValue([{ tenantSlug: "salon-a" }]);
+      dbLimit.mockResolvedValue([{ tenantSlug: "business-a" }]);
       getRole.mockResolvedValue(role);
       await expect(requireStaff()).resolves.toEqual({
         userId: "u1",
         role,
-        tenantSlug: "salon-a",
+        tenantSlug: "business-a",
       });
     }
   });
 
   it("treats a legacy stylist membership as provider", async () => {
     getSession.mockResolvedValue({ user: { id: "u1" } });
-    dbLimit.mockResolvedValue([{ tenantSlug: "salon-a" }]);
+    dbLimit.mockResolvedValue([{ tenantSlug: "business-a" }]);
     getRole.mockResolvedValue("stylist");
     await expect(requireStaff()).resolves.toEqual({
       userId: "u1",
       role: "provider",
-      tenantSlug: "salon-a",
+      tenantSlug: "business-a",
     });
   });
 
   it("derives the tenant from the session user, never the x-tenant-slug header", async () => {
     getSession.mockResolvedValue({ user: { id: "u1" } });
-    dbLimit.mockResolvedValue([{ tenantSlug: "salon-a" }]);
+    dbLimit.mockResolvedValue([{ tenantSlug: "business-a" }]);
     getRole.mockResolvedValue("owner");
     const r = await requireStaff("owner");
-    expect(r.tenantSlug).toBe("salon-a");
-    expect(getRole).toHaveBeenCalledWith("u1", "salon-a");
+    expect(r.tenantSlug).toBe("business-a");
+    expect(getRole).toHaveBeenCalledWith("u1", "business-a");
   });
 });

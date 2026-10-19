@@ -559,7 +559,7 @@ export function NotificationSettingsForm({
         </CardContent>
       </Card>
 
-      {/* Salon Address */}
+      {/* Business Address */}
       <Card>
         <CardHeader>
           <CardTitle>{t("notifications.addressTitle")}</CardTitle>
@@ -569,9 +569,9 @@ export function NotificationSettingsForm({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <Label htmlFor="salon-address">Address</Label>
+            <Label htmlFor="business-address">Address</Label>
             <Input
-              id="salon-address"
+              id="business-address"
               placeholder="123 Main St, City, State 12345"
               value={settings.businessAddress ?? ""}
               onChange={(e) =>

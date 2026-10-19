@@ -79,7 +79,7 @@ async function prepareQuery(q: SlotQuery) {
     q.serviceAddressId ? hasModule(q.slug, "on_site") : Promise.resolve(false),
   ]);
   const hasTravel = onSiteModule && serviceTiming.some((t) => t.locationType === "on_site");
-  // Each person's own durations and prices apply (per-stylist overrides),
+  // Each person's own durations and prices apply (per-staff overrides),
   // unless the caller already named each line's length.
   const quoted = q.lineDurations;
   const durations = await Promise.all(

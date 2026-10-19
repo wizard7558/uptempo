@@ -143,7 +143,7 @@ export function initialsFromName(name: string): string {
 }
 
 /**
- * Estimated annual earnings lift if a stylist reached their target hourly rate
+ * Estimated annual earnings lift if a staff member reached their target hourly rate
  * at their current weekly hours. Null when inputs are missing or non-positive
  * (already at/above target).
  */

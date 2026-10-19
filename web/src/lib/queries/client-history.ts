@@ -27,7 +27,7 @@ export interface ServiceHistoryEntry {
 
 /**
  * Fetch full service history for a client using batch queries (no N+1).
- * Returns appointments with their services, notes, stylist name, and charge data
+ * Returns appointments with their services, notes, staff member name, and charge data
  * in reverse-chronological order.
  */
 export async function getClientServiceHistory(

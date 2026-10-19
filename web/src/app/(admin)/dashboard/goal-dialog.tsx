@@ -23,7 +23,7 @@ interface GoalDialogProps {
 }
 
 /**
- * Quiet entry point for owners/admins to set the salon's monthly revenue goal.
+ * Quiet entry point for owners/admins to set the business's monthly revenue goal.
  * Only rendered for users who can manage settings. Revalidates the dashboard on
  * save so the goal line and business score pick up the new target.
  */

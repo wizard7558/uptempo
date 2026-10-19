@@ -148,7 +148,7 @@ export default async function AdminLayout({
     .map(({ label, href }) => ({ label, href }));
   const canSearchClients = hasPermission(role, "manage_clients");
 
-  // Portal gate: a salon that hasn't launched only exposes the onboarding
+  // Portal gate: a business that hasn't launched only exposes the onboarding
   // wizard (owners/admins) or a holding page (staff). Launched tenants are
   // never gated; this reads the same cached state the sidebar loader uses.
   if (tenantSlug) {

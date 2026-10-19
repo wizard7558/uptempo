@@ -111,9 +111,9 @@ export function StaffForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="stylist-email">Email</Label>
+          <Label htmlFor="staff-email">Email</Label>
           <Input
-            id="stylist-email"
+            id="staff-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -122,9 +122,9 @@ export function StaffForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="stylist-phone">Phone</Label>
+          <Label htmlFor="staff-phone">Phone</Label>
           <Input
-            id="stylist-phone"
+            id="staff-phone"
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}

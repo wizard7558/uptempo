@@ -5,9 +5,9 @@ import {
 import type { ServiceCategory } from "./categories";
 
 /**
- * Curated salon-service templates owners can one-click add to their catalog.
+ * Curated service templates business owners can add to their catalog with one click.
  * Each preset becomes a row in `services` with the listed defaults; owners
- * can edit afterwards or use it verbatim. Stylists then opt in and override
+ * can edit afterwards or use it verbatim. Staff members then opt in and override
  * pricing per their own services page.
  *
  * Pricing is a sensible national-average suggestion, not a recommendation.
@@ -46,7 +46,7 @@ export const SERVICE_PRESETS: ServicePreset[] = hairSalon.serviceTemplates.map(
 );
 
 /**
- * Returns presets that don't already exist in the salon catalog
+ * Returns presets that don't already exist in the business catalog
  * (matched case-insensitively on name).
  */
 export function filterUnusedPresets(

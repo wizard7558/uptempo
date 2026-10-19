@@ -72,8 +72,8 @@ export type CreateCheckoutResult =
   | { success: false; error: string };
 
 /**
- * Validate a cart against the salon's live catalog and create a Stripe
- * Checkout Session on the salon's behalf. Prices always come from the DB —
+ * Validate a cart against the business's live catalog and create a Stripe
+ * Checkout Session on the business's behalf. Prices always come from the DB —
  * client-supplied prices are never trusted.
  */
 export async function createStorefrontCheckoutSession(opts: {

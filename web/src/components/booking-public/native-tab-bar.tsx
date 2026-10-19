@@ -10,7 +10,7 @@ const SLUG_COOKIE = "uptempo_last_salon";
 const SLUG_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 
 /**
- * Salon-facing surfaces that get the tab bar. Transactional deep-link pages
+ * Business-facing surfaces that get the tab bar. Transactional deep-link pages
  * (forms, intake, cancel, reschedule, checkout, aftercare, quiz) stay
  * chromeless.
  */
@@ -28,10 +28,10 @@ function readSlugCookie(): string | null {
 
 /**
  * Native-app-only bottom tab bar (Book / Shop / Account) so the client shell
- * feels like a phone app instead of a website. Remembers the last salon the
+ * feels like a phone app instead of a website. Remembers the last business the
  * client visited (cookie, also set server-side on OTP verification) so every
- * tab is salon-scoped, and bounces the app's cold start at /discover straight
- * to that salon. Renders nothing on the plain web.
+ * tab is business-scoped, and bounces the app's cold start at /discover straight
+ * to that business. Renders nothing on the plain web.
  */
 export function NativeTabBar() {
   const pathname = usePathname();
@@ -76,7 +76,7 @@ export function NativeTabBar() {
     };
   }, [showTabBar]);
 
-  // Remember the salon from any salon-scoped path; fall back to the cookie.
+  // Remember the business from any business-scoped path; fall back to the cookie.
   useEffect(() => {
     const fromPath = slugFromPath(pathname);
     if (fromPath) {
@@ -88,7 +88,7 @@ export function NativeTabBar() {
   }, [pathname]);
 
   // Cold start lands on /discover (the shell's fixed URL). If we already know
-  // the client's salon, go straight there — once per app session, so tapping
+  // the client's business, go straight there — once per app session, so tapping
   // through to Discover on purpose still works.
   useEffect(() => {
     if (!native || pathname !== "/discover") return;

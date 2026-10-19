@@ -198,7 +198,7 @@ describe("TextLineCard", () => {
           reason: "business_rejected",
           reasonMessage: "The legal name did not match the business record.",
           formDefaults: {
-            legalBusinessName: "Northwind Salon LLC",
+            legalBusinessName: "Northwind Services LLC",
             businessType: "LLC",
             businessAddress: {
               street: "123 Main Street",
@@ -228,7 +228,7 @@ describe("TextLineCard", () => {
     expect(ein.required).toBe(true);
     expect(
       (screen.getByLabelText("Legal business name") as HTMLInputElement).value,
-    ).toBe("Northwind Salon LLC");
+    ).toBe("Northwind Services LLC");
   });
 
   it("shows the sole-proprietor confirmation instructions and supports resend", async () => {

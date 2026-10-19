@@ -26,7 +26,7 @@ function requestHostname(headersList: Headers): string {
  *
  * Order matters: `x-tenant-slug` (e.g. /book/:slug) wins first. If the user is
  * logged in with `user.tenant_slug` set, that comes **before** preview defaults
- * so admin/dashboard requests use the salon they belong to instead of the
+ * so admin/dashboard requests use the business they belong to instead of the
  * preview pilot tenant (which would break feature gates like assistant seats).
  */
 async function resolveSlug(): Promise<string | null> {

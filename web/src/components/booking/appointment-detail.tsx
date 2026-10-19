@@ -485,7 +485,7 @@ export function AppointmentDetail({
         </>
       )}
 
-      {/* Stylist */}
+      {/* Staff */}
       {staffName && (
         <div className="flex items-center gap-2">
           <Scissors className="h-4 w-4 text-muted-foreground" />

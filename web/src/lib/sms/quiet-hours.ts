@@ -1,10 +1,10 @@
 import { TZDate } from "@date-fns/tz";
 import { getHours } from "date-fns";
 
-/** SMS quiet hours start (9 PM salon time) — no sends at or after this hour */
+/** SMS quiet hours start (9 PM business local time) — no sends at or after this hour */
 export const QUIET_HOURS_START = 21;
 
-/** SMS quiet hours end (8 AM salon time) — no sends before this hour */
+/** SMS quiet hours end (8 AM business local time) — no sends before this hour */
 export const QUIET_HOURS_END = 8;
 
 /**

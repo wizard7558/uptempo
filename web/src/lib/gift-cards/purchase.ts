@@ -40,7 +40,7 @@ export function maskEmail(email: string): string {
 }
 
 /**
- * Hosted Checkout on the salon's connected account. The gift card code is
+ * Hosted Checkout on the business's connected account. The gift card code is
  * not created here. The webhook creates it after Stripe says the session is paid.
  */
 export async function createGiftCardCheckoutSession(

@@ -22,8 +22,8 @@ describe("buildFromAddress", () => {
   it("stays unchanged in multi mode", () => {
     vi.stubEnv("UPTEMPO_MODE", "multi");
     vi.stubEnv("EMAIL_FROM", "");
-    expect(buildFromAddress("Ada Salon")).toBe(
-      "Ada Salon via Uptempo <noreply@bookuptempo.com>",
+    expect(buildFromAddress("Ada Business")).toBe(
+      "Ada Business via Uptempo <noreply@bookuptempo.com>",
     );
     expect(buildFromAddress()).toBe("Uptempo <noreply@bookuptempo.com>");
   });
@@ -31,8 +31,8 @@ describe("buildFromAddress", () => {
   it("omits the platform name in single mode", () => {
     vi.stubEnv("UPTEMPO_MODE", "single");
     vi.stubEnv("EMAIL_FROM", "");
-    expect(buildFromAddress("Ada Salon")).toBe(
-      "Ada Salon <noreply@bookuptempo.com>",
+    expect(buildFromAddress("Ada Business")).toBe(
+      "Ada Business <noreply@bookuptempo.com>",
     );
     expect(buildFromAddress()).toBe("Bookings <noreply@bookuptempo.com>");
   });
@@ -50,7 +50,7 @@ describe("sendEmail", () => {
       to: "a@b.co",
       bcc: ["owner@b.co", "admin@b.co"],
       subject: "Hello",
-      businessName: "Ada Salon",
+      businessName: "Ada Business",
       idempotencyKey: "billing-notice:test-salon:2026-12-15",
       react: React.createElement("p", null, "Hi there"),
     });
@@ -67,7 +67,7 @@ describe("sendEmail", () => {
     };
     expect(arg.html).toContain("Hi there");
     expect(arg.text).toContain("Hi there");
-    expect(arg.from).toBe("Ada Salon via Uptempo <noreply@bookuptempo.com>");
+    expect(arg.from).toBe("Ada Business via Uptempo <noreply@bookuptempo.com>");
     expect(arg.to).toBe("a@b.co");
     expect(arg.subject).toBe("Hello");
     expect(arg.bcc).toEqual(["owner@b.co", "admin@b.co"]);

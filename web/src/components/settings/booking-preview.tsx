@@ -44,7 +44,7 @@ export function BookingPreview({ settings }: { settings: BookingThemeSettings })
             selectedServiceIds={["signature"]}
             initialStaff={[
               {
-                id: "preview-stylist",
+                id: "preview-staff",
                 displayName: t("branding.previewStaff"),
                 photoUrl: null,
                 bio: null,

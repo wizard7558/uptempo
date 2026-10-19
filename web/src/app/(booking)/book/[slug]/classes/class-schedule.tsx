@@ -66,7 +66,7 @@ interface Props {
   classes: PublicClass[];
   mine: MyClassSpot[];
   client: ClassClient | null;
-  /** Salon-local YYYY-MM-DD, so the first week matches on the server and the client. */
+  /** Business-local YYYY-MM-DD, so the first week matches on the server and the client. */
   today: string;
 }
 

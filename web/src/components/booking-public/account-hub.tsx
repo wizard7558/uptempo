@@ -46,7 +46,7 @@ export type StoredValueInitial = {
 interface AccountHubProps {
   clientId: string;
   businessName: string;
-  /** Salon slug for `/subscribe/[slug]` when membership plans exist */
+  /** Tenant slug for `/subscribe/[slug]` when membership plans exist */
   subscribeTenantSlug?: string | null;
   hasSubscribeablePlans?: boolean;
   initialProfile: ClientProfileData | null;

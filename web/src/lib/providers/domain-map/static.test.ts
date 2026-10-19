@@ -16,10 +16,10 @@ describe("parseDomainMap", () => {
 
 describe("static domain map reader", () => {
   it("looks up a host case-insensitively", async () => {
-    vi.stubEnv("UPTEMPO_DOMAIN_MAP", "book.example.com=ada-salon");
+    vi.stubEnv("UPTEMPO_DOMAIN_MAP", "book.example.com=ada-business");
     const reader = createStaticReader();
     expect(reader.id).toBe("static");
-    expect(await reader.lookup("Book.Example.com")).toBe("ada-salon");
+    expect(await reader.lookup("Book.Example.com")).toBe("ada-business");
     expect(await reader.lookup("missing.test")).toBeNull();
   });
 

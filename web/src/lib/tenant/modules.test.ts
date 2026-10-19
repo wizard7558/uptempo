@@ -31,7 +31,7 @@ import {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.getTenantSlug.mockResolvedValue("salon-x");
+  mocks.getTenantSlug.mockResolvedValue("business-x");
 });
 
 describe("hasModule", () => {

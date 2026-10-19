@@ -262,7 +262,7 @@ export async function bookAppointment(p: BookAppointmentParams): Promise<BookApp
     }
 
     return await withResourceRetry<BookAppointmentResult>(RESOURCE_RETRY_ATTEMPTS, async () => {
-      // Duration, price and processing snapshots (per-stylist overrides apply).
+      // Duration, price and processing snapshots (per-staff overrides apply).
       const durationInfo = p.lineOverrides
         ? {
             services: [],

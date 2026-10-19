@@ -21,9 +21,9 @@ export async function generateMetadata({
 }
 
 /**
- * Public salon storefront. Shows the salon's retail catalog, with products
+ * Public business storefront. Shows the business's retail catalog, with products
  * matching the signed-in client's hair profile surfaced first, and hands off
- * to Stripe-hosted checkout. The booking group layout supplies salon branding
+ * to Stripe-hosted checkout. The booking group layout supplies business branding
  * and header chrome, so this page renders only its own heading + catalog.
  */
 export default async function StorePage({

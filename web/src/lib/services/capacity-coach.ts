@@ -4,9 +4,9 @@ import { withTenantDb } from "@/lib/db/tenant";
 /**
  * Capacity Coach
  * --------------
- * Compares each stylist's *actual* booked hours and effective hourly earnings,
+ * Compares each staff member's *actual* booked hours and effective hourly earnings,
  * over a trailing window, against the goals they set (hours/week + $/hour). When
- * a stylist is working at or above their target hours yet earning under their
+ * a staff member is working at or above their target hours yet earning under their
  * target rate, it raises a dashboard alert recommending a price increase or
  * retiring their lowest-yield service.
  *
@@ -39,7 +39,7 @@ export interface StaffServiceTotals {
 export interface StaffGoalActuals {
   staffId: string;
   staffName: string;
-  /** Goal: hours/week the stylist wants to work. Must be > 0 to evaluate. */
+  /** Goal: hours/week the staff member wants to work. Must be > 0 to evaluate. */
   targetHoursPerWeek: number;
   /** Goal: take-home per hour, in cents. Must be > 0 to evaluate. */
   targetHourlyEarningsCents: number;
@@ -87,8 +87,8 @@ function usd(cents: number): string {
 }
 
 /**
- * Score one stylist's window. Returns null when there isn't enough signal, or
- * when the stylist is at/above their target rate (no nag warranted).
+ * Score one staff member's window. Returns null when there isn't enough signal, or
+ * when the staff member is at/above their target rate (no nag warranted).
  */
 export function computeCapacityInsight(
   input: StaffGoalActuals,
@@ -204,7 +204,7 @@ export interface CapacityEvaluationResult {
 }
 
 /**
- * Evaluate every goal-setting stylist in a tenant and reconcile their coach
+ * Evaluate every goal-setting staff member in a tenant and reconcile their coach
  * alerts (upsert when underpaid, clear when back on track). Accepts an optional `now` for deterministic tests.
  */
 export async function evaluateCapacityForTenant(
@@ -265,7 +265,7 @@ export async function evaluateCapacityForTenant(
         ),
       );
 
-    // Aggregate per stylist → per service.
+    // Aggregate per staff member → per service.
     const byStaffMember = new Map<
       string,
       {

@@ -133,7 +133,7 @@ describe("Twilio registration adapter", () => {
     sdk.availableList.mockResolvedValue([{ phoneNumber: "+12065550100" }]);
     sdk.incomingList.mockResolvedValue([]);
     sdk.incomingCreate.mockResolvedValue({ sid: "PN-sid", phoneNumber: "+12065550100" });
-    sdk.incomingFetch.mockResolvedValue({ sid: "PN-sid", phoneNumber: "+12065550100", friendlyName: "Uptempo salon" });
+    sdk.incomingFetch.mockResolvedValue({ sid: "PN-sid", phoneNumber: "+12065550100", friendlyName: "Uptempo business" });
   });
 
   it("uses the documented standard and sole-proprietor bundle policies and attributes", async () => {
@@ -152,11 +152,11 @@ describe("Twilio registration adapter", () => {
     });
     await client.createSoleProprietorInformation({
       friendlyName: "sole info",
-      attributes: { brand_name: "Salon LLC", mobile_phone_number: "+12065550100", vertical: "CONSUMER" },
+      attributes: { brand_name: "Business LLC", mobile_phone_number: "+12065550100", vertical: "CONSUMER" },
     });
     expect(sdk.endUserCreate).toHaveBeenLastCalledWith({
       friendlyName: "sole info",
-      attributes: { brand_name: "Salon LLC", mobile_phone_number: "+12065550100", vertical: "CONSUMER" },
+      attributes: { brand_name: "Business LLC", mobile_phone_number: "+12065550100", vertical: "CONSUMER" },
       type: "sole_proprietor_information",
     });
     await client.createTrustProduct({ friendlyName: "sole trust", email: "support@example.test", policySid: SOLE_TRUST_POLICY });
@@ -190,7 +190,7 @@ describe("Twilio registration adapter", () => {
       messagingServiceSid: "MG1",
       brandSid: "BN1",
       usecase: "LOW_VOLUME",
-      description: "Transactional appointment confirmations and reminders for opted-in salon clients.",
+      description: "Transactional appointment confirmations and reminders for opted-in business clients.",
       messageFlow: "Clients consent in the optional unchecked box while booking online. Consent is not required to book; reply STOP to opt out.",
       messageSamples: ["Your appointment is confirmed for Monday at 2:30 PM.", "Reminder: your appointment is Monday at 2:30 PM."],
     });
@@ -321,21 +321,21 @@ describe("Twilio registration adapter", () => {
   it("configures tenant webhooks and refuses a selected number owned by another tenant", async () => {
     const client = createTwilioRegistrationClient();
     await client.createMessagingService({
-      friendlyName: "Uptempo salon reminders",
+      friendlyName: "Uptempo business reminders",
       inboundRequestUrl: "https://example.test/api/twilio/inbound",
       statusCallback: "https://example.test/api/twilio/status?tenant=salon",
     });
     expect(sdk.serviceCreate).toHaveBeenCalledWith({
-      friendlyName: "Uptempo salon reminders",
+      friendlyName: "Uptempo business reminders",
       inboundRequestUrl: "https://example.test/api/twilio/inbound",
       inboundMethod: "POST",
       statusCallback: "https://example.test/api/twilio/status?tenant=salon",
       useInboundWebhookOnNumber: true,
     });
-    sdk.incomingList.mockResolvedValueOnce([{ sid: "PN-other", phoneNumber: "+12065550100", friendlyName: "Uptempo another-salon" }]);
+    sdk.incomingList.mockResolvedValueOnce([{ sid: "PN-other", phoneNumber: "+12065550100", friendlyName: "Uptempo another-business" }]);
     await expect(client.purchaseNumber({
       phoneNumber: "+12065550100",
-      friendlyName: "Uptempo salon",
+      friendlyName: "Uptempo business",
       inboundRequestUrl: "https://example.test/api/twilio/inbound",
       statusCallback: "https://example.test/api/twilio/status?tenant=salon",
     })).rejects.toMatchObject({ code: "number_unavailable" });
@@ -347,13 +347,13 @@ describe("Twilio registration adapter", () => {
     sdk.incomingFetch.mockResolvedValueOnce({
       sid: "PN-sid",
       phoneNumber: "+12065550100",
-      friendlyName: "Uptempo other-salon",
+      friendlyName: "Uptempo other-business",
     });
     await expect(client.attachNumber(
-      "MG-salon",
+      "MG-business",
       "PN-sid",
       "+12065550100",
-      "Uptempo salon",
+      "Uptempo business",
     )).rejects.toMatchObject({ code: "number_unavailable" });
     expect(sdk.servicePhoneCreate).not.toHaveBeenCalled();
   });

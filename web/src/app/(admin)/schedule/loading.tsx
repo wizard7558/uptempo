@@ -23,7 +23,7 @@ export default function ScheduleLoading() {
           </div>
         </div>
 
-        {/* Stylist columns */}
+        {/* Staff columns */}
         <div className="flex flex-1">
           {Array.from({ length: 3 }).map((_, col) => (
             <div key={col} className="flex-1 border-r p-3 last:border-r-0">

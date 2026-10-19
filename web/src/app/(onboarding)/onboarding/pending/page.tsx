@@ -17,7 +17,7 @@ import { Clock } from "lucide-react";
 import { SignOutButton } from "../../sign-out-button";
 
 /**
- * Holding page for staff (stylists/assistants) who reach an unlaunched salon.
+ * Holding page for staff members/assistants who reach an unlaunched business.
  * The admin layout's onboarding gate redirects non-owners here; owners go to
  * the wizard instead. No wizard access from this page.
  */
@@ -34,7 +34,7 @@ export default async function OnboardingPendingPage() {
   const tenantSlug = dbUser?.tenantSlug ?? null;
   const tenant = tenantSlug ? await getTenantBySlug(tenantSlug) : null;
 
-  // Salon already launched — send staff into the app.
+  // Business already launched — send staff into the app.
   if (tenant && (tenant.onboardingSteps as { launched?: boolean } | null)?.launched) {
     redirect("/schedule");
   }

@@ -3,13 +3,13 @@
  *
  *   per-service override (services.deposit_type/amount)
  *        beats
- *   salon global rule (salon_policies.deposit_*)
+ *   business global rule (salon_policies.deposit_*)
  *
  * A service's `depositType`:
  *   - 'none'            → never a deposit (even if the global rule would apply)
  *   - 'percent'         → override: `depositAmount` percent of the service price
  *   - 'fixed'           → override: `depositAmount` cents
- *   - null (inherit)    → fall back to the salon's global rule
+ *   - null (inherit)    → fall back to the business's global rule
  *
  * The global rule, when enabled, applies to inheriting services whose duration is
  * at/above `depositDurationThresholdMinutes` (or always, if the threshold is null).

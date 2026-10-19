@@ -21,7 +21,7 @@ export default async function WorkingHoursPage() {
     getLocationCoverageGaps(),
   ]);
 
-  // Pre-load hours for the first stylist (if any)
+  // Pre-load hours for the first staff member (if any)
   let initialHours: Awaited<ReturnType<typeof getWorkingHoursForStaffMember>> = [];
   let initialOverrides: AvailabilityOverrideRow[] = [];
   if (staff.length > 0) {
@@ -31,7 +31,7 @@ export default async function WorkingHoursPage() {
     ]);
   }
 
-  // Build a lookup of which locations each stylist is missing.
+  // Build a lookup of which locations each staff member is missing.
   const gapsByStaffMember = new Map<string, string[]>();
   for (const gap of gaps) {
     const list = gapsByStaffMember.get(gap.staffId) ?? [];

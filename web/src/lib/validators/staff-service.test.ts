@@ -107,7 +107,7 @@ describe("setStaffServiceSchema", () => {
     expect(r.success).toBe(false);
   });
 
-  it("rejects invalid stylist UUID", () => {
+  it("rejects invalid staff UUID", () => {
     const r = setStaffServiceSchema.safeParse({
       staffId: "not-a-uuid",
       serviceId: SERVICE,

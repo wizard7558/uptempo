@@ -87,7 +87,7 @@ export default async function CancelPage({
     );
   }
 
-  // Get salon policy from tenant schema
+  // Get business policy from tenant schema
   const policy = await withTenantDb(slug, async (db, { businessSettings }) => {
     const [p] = await db
       .select({
@@ -100,7 +100,7 @@ export default async function CancelPage({
     return p;
   });
 
-  // Get salon name from tenant registry (public schema)
+  // Get business name from tenant registry (public schema)
   const tenant = await getTenantBySlug(slug);
   const businessName = tenant?.name ?? t("cancelPage.defaultName");
 

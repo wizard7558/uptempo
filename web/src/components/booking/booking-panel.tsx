@@ -202,7 +202,7 @@ export function BookingPanel({
   const projectId =
     queryProjectId && queryClientId && form.selectedClient?.id === queryClientId ? queryProjectId : null;
 
-  // Filter services to those assigned to selected stylist. Prefer the freshly
+  // Filter services to those assigned to the selected staff member. Prefer the freshly
   // fetched assignments (updated when the panel opens) over the schedule page's
   // initial prop, so newly-added services appear without a full reload.
   const selectedStaffServices = form.staffId
@@ -216,9 +216,9 @@ export function BookingPanel({
     : allServices;
 
   // Pre-resolve durations + prices for every service in the list as soon as
-  // a client (and optionally stylist) is known. This way the rows in the
+  // a client (and optionally a staff member) is known. This way the rows in the
   // service picker show the client's custom duration/price up front — the
-  // stylist doesn't have to tick a service to discover the override.
+  // staff member doesn't have to tick a service to discover the override.
   const availableServiceIds = useMemo(
     () => availableServices.map((s) => s.id),
     [availableServices],
@@ -372,7 +372,7 @@ export function BookingPanel({
       serviceIds: form.selectedServiceIds,
       startTime: form.startTime.toISOString(),
       locationId: form.locationId,
-      // Stylist UI always allows overlapping appointments. Public booking UI
+      // Staff UI always allows overlapping appointments. Public booking UI
       // goes through confirmBooking, which does not set this flag.
       allowOverlap: true,
       ...(projectId ? { projectId } : {}),
@@ -455,7 +455,7 @@ export function BookingPanel({
         </div>
       </div>
 
-      {/* Stylist */}
+      {/* Staff */}
       <div className="space-y-2">
         <Label>{t("bookingPanel.staffLabel")}</Label>
         <Select

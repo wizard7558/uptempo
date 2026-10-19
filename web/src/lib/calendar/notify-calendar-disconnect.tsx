@@ -15,7 +15,7 @@ function platformLabel(platform: string): string {
 }
 
 /**
- * Notify salon owner by email when a calendar connection breaks (active → error).
+ * Notify the business owner by email when a calendar connection breaks (active → error).
  * No-op if no owner email is found.
  */
 export async function notifyCalendarConnectionError(params: {

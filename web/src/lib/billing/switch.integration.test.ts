@@ -469,8 +469,8 @@ describe.skipIf(!databaseUrl)("billing notice delivery (db)", () => {
 
     await withTenantDb(paying.slug, async (db, tables) => {
       await db.insert(tables.staff).values([
-        { displayName: "A Stylist", role: "provider", isActive: 1 },
-        { displayName: "B Stylist", role: "provider", isActive: 1 },
+        { displayName: "A Staff Member", role: "provider", isActive: 1 },
+        { displayName: "B Staff Member", role: "provider", isActive: 1 },
       ]);
       await db.insert(tables.businessSettings).values({ smsConfirmationEnabled: 1 });
       await db.insert(tables.smsMessages).values({

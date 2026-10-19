@@ -11,7 +11,7 @@ describe("cleanSource", () => {
     ["expo-2026", "expo-2026"],
     ["Expo 2026", "expo-2026"],
     ["  CHAIR  ", "chair"],
-    ["salon expo / booth 12", "salon-expo-booth-12"],
+    ["business expo / booth 12", "business-expo-booth-12"],
     ["--leading-and-trailing--", "leading-and-trailing"],
     ["café", "caf"],
   ])("normalizes %p -> %p", (input, expected) => {
@@ -34,7 +34,7 @@ describe("cleanSource", () => {
   });
 
   it("is idempotent — cleaning an already-clean label is a no-op", () => {
-    const once = cleanSource("Salon Expo 2026")!;
+    const once = cleanSource("Business Expo 2026")!;
     expect(cleanSource(once)).toBe(once);
   });
 
@@ -64,7 +64,7 @@ describe("viaQuizSource", () => {
   });
 
   it("produces a label that is stable under cleanSource", () => {
-    const label = viaQuizSource("Salon Expo 2026");
+    const label = viaQuizSource("Business Expo 2026");
     expect(cleanSource(label)).toBe(label);
   });
 

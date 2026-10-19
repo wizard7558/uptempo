@@ -23,7 +23,7 @@ afterEach(() => {
 describe("getTenantSlug", () => {
   it("returns the single slug and ignores the header", async () => {
     vi.stubEnv("UPTEMPO_MODE", "single");
-    headersGet.mockReturnValue("other-salon");
+    headersGet.mockReturnValue("other-business");
     getSingleTenantSlug.mockResolvedValue("only-shop");
     await expect(getTenantSlug()).resolves.toBe("only-shop");
   });

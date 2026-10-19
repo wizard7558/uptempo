@@ -26,7 +26,7 @@ export async function ensureTenantProvisioned(
       timezone: tenant.timezone,
     });
 
-    // Create the default stylist for the owner (idempotent for concurrent requests)
+    // Create the default staff member for the owner (idempotent for concurrent requests)
     await withTenantDb(slug, async (db, { staff }) => {
       const existing = await db
         .select({ id: staff.id })
