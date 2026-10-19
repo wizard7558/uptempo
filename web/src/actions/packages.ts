@@ -63,7 +63,7 @@ export type ClientCredits = {
 /** Staff session + module gate for the owner/admin actions. */
 async function adminGuard() {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "packages");
   const t = await getT("packages", slug);
@@ -152,7 +152,7 @@ const clientIdSchema = z.uuid();
 
 export async function getClientCredits(clientId: string): Promise<ClientCredits> {
   const auth = await requireRole("owner", "admin", "provider");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "packages");
   const id = clientIdSchema.parse(clientId);

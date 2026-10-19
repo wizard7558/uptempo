@@ -49,7 +49,7 @@ export async function createResources(
   data: CreateResourcesInput,
 ): Promise<{ success: true; ids: string[] } | Failure> {
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = createResourcesSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: { message: "Invalid room or equipment" } };
@@ -83,7 +83,7 @@ export async function updateResource(
   data: UpdateResourceInput,
 ): Promise<{ success: true } | Failure> {
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = updateResourceSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: { message: "Invalid room or equipment" } };

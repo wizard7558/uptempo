@@ -321,7 +321,7 @@ const windowSchema = z.object({
 
 async function booksGuard() {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   return { slug, ts: await getT("settings", slug) };
 }

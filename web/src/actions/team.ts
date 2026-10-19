@@ -40,7 +40,7 @@ function userMembershipsTag(userId: string): string {
  */
 export async function listTeamMembers() {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   const members = await publicDb
@@ -115,7 +115,7 @@ export async function sendInvitation(data: {
   role: TeamRole;
 }): Promise<{ success: true } | { success: false; error: string }> {
   const { userId, role: callerRole, tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -270,7 +270,7 @@ export async function listInvitations(): Promise<{
   unavailable: boolean;
 }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   try {
@@ -322,7 +322,7 @@ export async function resendInvitation(
   invitationId: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -374,7 +374,7 @@ export async function revokeInvitation(
   invitationId: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 

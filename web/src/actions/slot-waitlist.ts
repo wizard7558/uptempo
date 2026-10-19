@@ -21,7 +21,7 @@ type Failure = { success: false; error: string };
 
 async function staffGuard() {
   const auth = await requireRole("owner", "admin", "provider", "assistant");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "slot_waitlist");
   return { slug, userId: auth.userId };
@@ -29,7 +29,7 @@ async function staffGuard() {
 
 async function adminGuard() {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "slot_waitlist");
   return { slug };

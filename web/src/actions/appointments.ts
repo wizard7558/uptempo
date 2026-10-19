@@ -83,7 +83,7 @@ export async function createBookingGroup(data: {
   notes?: string | null;
 }) {
   const session = await requireAdminRole();
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = createBookingGroupSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.flatten().formErrors.join(", ") || "Invalid group booking" };
@@ -151,7 +151,7 @@ export async function createRecurringBooking(data: {
   count: number | null;
 }) {
   const session = await requireAdminRole();
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = createRecurringBookingSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.flatten().formErrors.join(", ") || "Invalid repeating booking" };
@@ -266,7 +266,7 @@ export async function createRecurringBooking(data: {
  */
 export async function stopRecurrence(data: { appointmentId: string }) {
   const session = await requireAdminRole();
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = z.object({ appointmentId: z.string().uuid() }).safeParse(data);
   if (!parsed.success) return { success: false as const, error: "Invalid request" };
   const slug = session.tenantSlug;

@@ -25,7 +25,7 @@ export async function uploadProductPhoto(formData: FormData): Promise<
   { ok: true; url: string } | { ok: false; error: string }
 > {
   const session = await requireRole("owner");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = session.tenantSlug;
   try {
 

@@ -14,7 +14,7 @@ export async function setModuleEnabled(
   enabled: boolean,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   if (!isToggleModule(moduleId)) {

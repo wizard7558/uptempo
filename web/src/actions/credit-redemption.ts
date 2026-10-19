@@ -40,7 +40,7 @@ async function failureFor(slug: string, result: Extract<AppointmentCreditResult,
  */
 export async function takeLateCancelCredit(appointmentId: string): Promise<{ success: true } | Failure> {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   try {
     await assertModule(slug, "packages");
@@ -66,7 +66,7 @@ export async function takeLateCancelCredit(appointmentId: string): Promise<{ suc
  */
 export async function getLateCancelCreditOption(appointmentId: string): Promise<boolean> {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   if (!(await hasModule(slug, "packages"))) return false;
   const id = idSchema.safeParse(appointmentId);
@@ -96,7 +96,7 @@ export async function getLateCancelCreditOption(appointmentId: string): Promise<
 export async function applyCreditAtCheckout(appointmentId: string): Promise<{ success: true } | Failure> {
   // Staff only: the public checkout link cannot spend a client's credits.
   const auth = await requireRole("owner", "admin", "provider");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   try {
     await assertModule(slug, "packages");

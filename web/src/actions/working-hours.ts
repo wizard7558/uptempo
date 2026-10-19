@@ -73,7 +73,7 @@ export async function getWorkingHoursForStaffMember(staffId: string): Promise<Da
  */
 export async function saveWeeklySchedule(data: WeeklyScheduleInput) {
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = weeklyScheduleSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.flatten() };
@@ -153,7 +153,7 @@ export async function listAvailabilityOverrides(staffId: string): Promise<Availa
 /** Creates or replaces the override for one staff member and date. Closed = no intervals. */
 export async function saveAvailabilityOverride(data: OverrideInput) {
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = overrideSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.flatten() };
@@ -192,7 +192,7 @@ export async function saveAvailabilityOverride(data: OverrideInput) {
 
 export async function deleteAvailabilityOverride(id: string) {
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   if (!z.string().uuid().safeParse(id).success) return failure("Invalid id");
   try {
   const slug = session.tenantSlug;

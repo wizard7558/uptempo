@@ -21,7 +21,7 @@ const nameSchema = z.string().trim().min(1).max(40);
 
 async function authorize(): Promise<string> {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   await ensureExpenseCategories(slug);
   return slug;

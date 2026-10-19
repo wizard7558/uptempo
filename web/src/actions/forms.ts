@@ -523,7 +523,7 @@ export async function updateIdRetention(days: number) {
     return { success: false as const, error: "Choose one of the listed times." };
   }
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = session.tenantSlug;
   const keepDays = parsed.data;
 
@@ -636,7 +636,7 @@ export async function uploadIdPhoto(
 /** Staff mark an uploaded ID as checked (owner, admin or provider). */
 export async function verifyConsentId(formResponseId: string) {
   const session = await requireRole("owner", "admin", "provider");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = session.tenantSlug;
   if (!z.uuid().safeParse(formResponseId).success) {
     return { success: false as const, error: "Form not found" };

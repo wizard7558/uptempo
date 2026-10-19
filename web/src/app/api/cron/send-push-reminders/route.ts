@@ -84,14 +84,14 @@ async function sendPushForTenant(
   }
 
   const tz = settings.timezone ?? "America/New_York";
-  // Respect salon quiet hours (same window as SMS) — push is opt-in but still
+  // Respect business quiet hours (same window as SMS) — push is opt-in but still
   // shouldn't fire overnight.
   if (!isWithinSendWindow(tz)) {
     return { sent: 0, failed: 0, skipped: 0 };
   }
 
   const tenant = await getTenantBySlug(tenantSlug);
-  const salonName = tenant?.name ?? (await getEmailT(tenantSlug, "emails"))("fallbacks.yourPlace");
+  const businessName = tenant?.name ?? (await getEmailT(tenantSlug, "emails"))("fallbacks.yourPlace");
   const topic = bundleIdForOwnerType("client") ?? "";
 
   let sent = 0;
@@ -181,7 +181,7 @@ async function sendPushForTenant(
             environment: t.environment as ApnsEnvironment,
           })),
           {
-            title: salonName,
+            title: businessName,
             body: `Reminder: ${serviceLabel} with ${appt.staffName} ${timeStr}.`,
             data: { path: "/account" },
           },

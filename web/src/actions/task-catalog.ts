@@ -18,7 +18,7 @@ export async function createTaskType(data: {
   defaultDurationMinutes: number;
 }): Promise<{ success: true; id: string } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
     const parsed = taskCatalogSchema.safeParse(data);
@@ -66,7 +66,7 @@ export async function seedDefaultTaskTypes(): Promise<
   { success: true; created: number } | { success: false; error: string }
 > {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
     await assertModule(slug, "assistant_tasks");
@@ -128,7 +128,7 @@ export async function updateTaskType(
   data: { name?: string; defaultDurationMinutes?: number },
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -172,7 +172,7 @@ export async function listTaskTypes(): Promise<
     "provider",
     "assistant",
   );
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   return withTenantDb(slug, async (db, { taskCatalog }) => {
@@ -196,7 +196,7 @@ export async function deleteTaskType(
   id: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 

@@ -409,7 +409,7 @@ export async function setServiceNeeds(
   needs: ServiceNeedInput[],
 ): Promise<{ success: true } | { success: false; error: { message: string } }> {
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = setServiceNeedsSchema.safeParse({ serviceId, needs });
   if (!parsed.success) {
     return { success: false, error: { message: "Invalid needs" } };

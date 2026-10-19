@@ -33,7 +33,7 @@ const uuid = z.string().uuid();
 /** Team session + module gate for the daily board actions. */
 async function staffGuard() {
   const auth = await requireRole("owner", "admin", "provider", "assistant");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "walk_in_queue");
   return { slug, userId: auth.userId, te: await getT("errors", slug) };
@@ -42,7 +42,7 @@ async function staffGuard() {
 /** Session + module gate for the settings actions. */
 async function adminGuard() {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "walk_in_queue");
   return { slug, userId: auth.userId, te: await getT("errors", slug) };

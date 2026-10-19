@@ -195,7 +195,7 @@ export async function requireStaff(...roles: TeamRole[]): Promise<{
   const session = await getCurrentUserTenant();
   if (!session) throw new AuthError("UNAUTHENTICATED", "Not signed in");
   const tenantSlug = session.tenantSlug?.trim();
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const raw = await getMembershipRoleForActiveTenant(
     session.userId,
     tenantSlug,

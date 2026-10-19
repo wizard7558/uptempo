@@ -35,7 +35,7 @@ const ZIP_SHAPE = /^[A-Za-z0-9 -]{3,10}$/;
 /** Owner/admin session plus the module gate. */
 async function settingsGuard() {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "on_site");
   const ts = await getT("settings", slug);
@@ -317,7 +317,7 @@ export async function sendOnMyWay(input: {
   etaMinutes: number;
 }): Promise<{ success: true; alreadySent?: true } | Fail> {
   const auth = await requireRole("owner", "admin", "provider", "assistant");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   const ts = await getT("schedule", slug);
   try {

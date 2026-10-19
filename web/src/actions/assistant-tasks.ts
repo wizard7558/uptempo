@@ -51,7 +51,7 @@ export async function assignTask(data: {
   notes?: string;
 }): Promise<{ success: true; id: string } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin", "provider");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
     const parsed = assignTaskSchema.safeParse(data);
@@ -140,7 +140,7 @@ export async function updateTask(data: {
   notes?: string;
 }): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin", "provider");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
     const parsed = updateTaskSchema.safeParse(data);
@@ -219,7 +219,7 @@ export async function deleteTask(
   id: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin", "provider");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -261,7 +261,7 @@ export async function listTasksForAppointment(
   }>
 > {
   const { tenantSlug } = await requireRole("owner", "admin", "provider");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   return withTenantDb(slug, async (db, { assistantTasks, staff }) => {
@@ -307,7 +307,7 @@ export async function listTasksForAssistant(
   }>
 > {
   const { tenantSlug } = await requireRole("owner", "admin", "provider", "assistant");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   // Build day range in UTC -- the caller should pass a date in the salon's timezone
@@ -366,7 +366,7 @@ export async function listTasksForAssistants(
     "provider",
     "assistant",
   );
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   const dayStart = new Date(date);
   dayStart.setHours(0, 0, 0, 0);
@@ -444,7 +444,7 @@ export async function getTaskById(taskId: string): Promise<
     "provider",
     "assistant",
   );
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   return withTenantDb(slug, async (db, { assistantTasks, staff }) => {
