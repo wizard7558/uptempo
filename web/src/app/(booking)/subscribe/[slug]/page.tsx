@@ -9,7 +9,7 @@ import {
 import { withTenantDb } from "@/lib/db/tenant";
 import { eq, and, ne, desc } from "drizzle-orm";
 import { isTenantProvisioned } from "@/lib/tenant/registry";
-import { salonPageMetadata } from "@/lib/seo/tenant-metadata";
+import { businessPageMetadata } from "@/lib/seo/tenant-metadata";
 import { SubscribeWizard } from "./subscribe-wizard";
 
 export async function generateMetadata({
@@ -19,9 +19,9 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const t = await getT("booking", slug);
-  return salonPageMetadata(slug, (businessName) => ({
+  return businessPageMetadata(slug, (businessName) => ({
     title: `${businessName} membership`,
-    description: t("subscribePage.metaDescription", { salonName: businessName }),
+    description: t("subscribePage.metaDescription", { businessName }),
   }));
 }
 

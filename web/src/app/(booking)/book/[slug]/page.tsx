@@ -14,7 +14,7 @@ import {
 import { getTenantBySlug, isTenantProvisioned } from "@/lib/tenant/registry";
 import { isBookingPageOpen } from "@/lib/onboarding/state";
 import { getT } from "@/lib/terms/server";
-import { salonPageMetadata } from "@/lib/seo/tenant-metadata";
+import { businessPageMetadata } from "@/lib/seo/tenant-metadata";
 import { BookingPageSkeleton } from "@/components/booking-public/page-skeletons";
 import { BookingWizard } from "./booking-wizard";
 import { getPublicBookingFlow } from "@/lib/requests/flow";
@@ -31,7 +31,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return salonPageMetadata(slug, (businessName) => ({
+  return businessPageMetadata(slug, (businessName) => ({
     title: `Book at ${businessName}`,
     description: `Book your next appointment at ${businessName} — pick your service and time online, 24/7.`,
   }));

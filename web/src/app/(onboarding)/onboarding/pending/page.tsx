@@ -40,7 +40,7 @@ export default async function OnboardingPendingPage() {
   }
 
   const t = await getT("onboarding", tenantSlug);
-  const salonName = tenant?.name ?? t("pending.defaultName");
+  const businessName = tenant?.name ?? t("pending.defaultName");
 
   return (
     <div className="mx-auto flex max-w-lg flex-col items-center px-6 py-16">
@@ -51,7 +51,7 @@ export default async function OnboardingPendingPage() {
           </div>
           <CardTitle>Almost there</CardTitle>
           <CardDescription>
-            {salonName} is still being set up by the owner. You&apos;ll get
+            {businessName} is still being set up by the owner. You&apos;ll get
             access as soon as it launches.
           </CardDescription>
         </CardHeader>

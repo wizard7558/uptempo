@@ -53,7 +53,7 @@ vi.mock("drizzle-orm", async (importOriginal) => {
   };
 });
 
-describe("getStylistUtilization SQL compatibility", () => {
+describe("getStaffUtilization SQL compatibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getTenantSlugMock.mockResolvedValue("test-salon");

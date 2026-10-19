@@ -145,8 +145,8 @@ export async function checkSlugAvailability(slug: string): Promise<{ available: 
 /**
  * Generate a URL-safe slug from a salon name, appending a suffix if taken.
  */
-async function generateUniqueSlug(salonName: string): Promise<string> {
-  const base = salonName
+async function generateUniqueSlug(businessName: string): Promise<string> {
+  const base = businessName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^[^a-z]+/, "")
@@ -382,10 +382,10 @@ export async function saveBusinessDetails(input: {
   address: string;
 }): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug, userId } = await requireStaff("owner", "admin");
-  const salonName = input.salonName.trim();
+  const businessName = input.salonName.trim();
   const phone = input.phone.trim();
   const address = input.address.trim();
-  if (!salonName || !phone || !address) {
+  if (!businessName || !phone || !address) {
     return {
       success: false,
       error: (await getT("errors", tenantSlug))("onboarding.missingBusiness"),
@@ -397,7 +397,7 @@ export async function saveBusinessDetails(input: {
 
   await publicDb
     .update(tenants)
-    .set({ name: salonName, updatedAt: new Date() })
+    .set({ name: businessName, updatedAt: new Date() })
     .where(eq(tenants.slug, tenantSlug));
 
   await withTenantDb(tenantSlug, async (db, { staff, locations, businessSettings }) => {
@@ -413,10 +413,10 @@ export async function saveBusinessDetails(input: {
     if (location) {
       await db
         .update(locations)
-        .set({ name: salonName, address, updatedAt: new Date() })
+        .set({ name: businessName, address, updatedAt: new Date() })
         .where(eq(locations.id, location.id));
     } else {
-      await db.insert(locations).values({ name: salonName, address });
+      await db.insert(locations).values({ name: businessName, address });
     }
 
     const [policy] = await db

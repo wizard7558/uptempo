@@ -15,7 +15,7 @@ import { hashPublicToken, isPublicTokenShape } from "@/lib/security/public-token
 import { getBookingSession } from "@/lib/booking/session-cookie";
 import { daysBetween, localDay } from "@/lib/scheduling/intervals";
 import { timeOfDayRange, type TimeOfDay } from "@/lib/waitlist/match";
-import { formatSalonDay, formatSalonTime } from "@/lib/waitlist/clock";
+import { formatBusinessDay, formatBusinessTime } from "@/lib/waitlist/clock";
 import { declineOffer, markOfferBooked, processOpening } from "@/lib/waitlist/opening";
 import { bookAppointment } from "@/lib/booking/book";
 import { sendBookingConfirmations } from "@/lib/booking/confirmations";
@@ -216,9 +216,9 @@ export async function loadWaitlistClaim(token: string): Promise<ClaimOffer> {
     state: "valid",
     service: names.service,
     staff: names.staff,
-    date: formatSalonDay(start, names.timezone),
-    time: formatSalonTime(start, names.timezone),
-    heldUntil: row.offerExpiresAt ? formatSalonTime(row.offerExpiresAt, names.timezone) : "",
+    date: formatBusinessDay(start, names.timezone),
+    time: formatBusinessTime(start, names.timezone),
+    heldUntil: row.offerExpiresAt ? formatBusinessTime(row.offerExpiresAt, names.timezone) : "",
   };
 }
 

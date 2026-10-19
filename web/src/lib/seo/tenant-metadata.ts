@@ -9,7 +9,7 @@ import {
  * shared links preview the actual page — "Book at Example Studio" with the business's
  * logo — instead of the generic platform blurb from the root layout.
  */
-export async function salonPageMetadata(
+export async function businessPageMetadata(
   slug: string,
   build: (businessName: string) => { title: string; description: string },
 ): Promise<Metadata> {

@@ -2,7 +2,7 @@ import { getT } from "@/lib/terms/server";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getStorefront } from "@/actions/storefront";
-import { salonPageMetadata } from "@/lib/seo/tenant-metadata";
+import { businessPageMetadata } from "@/lib/seo/tenant-metadata";
 import { StorePageSkeleton } from "@/components/booking-public/page-skeletons";
 import { StoreClient } from "./store-client";
 
@@ -14,9 +14,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return salonPageMetadata(slug, (salonName) => ({
-    title: `Shop ${salonName}`,
-    description: `Shop the products ${salonName} uses and recommends — order online for pickup or delivery.`,
+  return businessPageMetadata(slug, (businessName) => ({
+    title: `Shop ${businessName}`,
+    description: `Shop the products ${businessName} uses and recommends — order online for pickup or delivery.`,
   }));
 }
 

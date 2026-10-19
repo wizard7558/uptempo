@@ -712,7 +712,7 @@
       "description": "Schedule your next {place} appointment online"
     },
     "subscribePage": {
-      "metaDescription": "Join {salonName}'s membership — monthly {prepaidBalance} credit toward services, plus member perks."
+      "metaDescription": "Join {businessName}'s membership — monthly {prepaidBalance} credit toward services, plus member perks."
     },
     "planStep": {
       "discount": "{percent}% off services when paying fully from {prepaidBalance}"

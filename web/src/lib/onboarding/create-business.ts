@@ -13,9 +13,9 @@ import { getVertical, type VerticalId } from "@/lib/verticals";
 
 const signupT = () => createTermsT(hairSalon.terms, "errors");
 
-async function generateUniqueSlug(salonName: string): Promise<string> {
+async function generateUniqueSlug(businessName: string): Promise<string> {
   const base =
-    salonName
+    businessName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^[^a-z]+/, "")
@@ -39,7 +39,7 @@ async function generateUniqueSlug(salonName: string): Promise<string> {
 }
 
 export async function createBusinessAccount(data: {
-  salonName: string;
+  businessName: string;
   timezone: string;
   ownerName: string;
   email: string;
@@ -47,7 +47,7 @@ export async function createBusinessAccount(data: {
   industry: VerticalId;
 }): Promise<{ success: true; slug: string } | { success: false; error: string }> {
   try {
-    const slug = await generateUniqueSlug(data.salonName);
+    const slug = await generateUniqueSlug(data.businessName);
     const vertical = getVertical(data.industry);
 
     const newUser = await auth.api.signUpEmail({
@@ -64,7 +64,7 @@ export async function createBusinessAccount(data: {
 
     try {
       await publicDb.insert(tenants).values({
-        name: data.salonName,
+        name: data.businessName,
         slug,
         timezone: data.timezone,
         schemaVersion: 0,
