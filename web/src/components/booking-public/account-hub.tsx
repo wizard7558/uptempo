@@ -45,7 +45,7 @@ export type StoredValueInitial = {
 
 interface AccountHubProps {
   clientId: string;
-  salonName: string;
+  businessName: string;
   /** Salon slug for `/subscribe/[slug]` when membership plans exist */
   subscribeTenantSlug?: string | null;
   hasSubscribeablePlans?: boolean;
@@ -60,12 +60,12 @@ interface AccountHubProps {
     consentedAt: string | null;
     method: string | null;
   };
-  salonTimezone: string;
+  businessTimezone: string;
 }
 
 export function AccountHub({
   clientId,
-  salonName,
+  businessName,
   subscribeTenantSlug,
   hasSubscribeablePlans,
   initialProfile,
@@ -75,7 +75,7 @@ export function AccountHub({
   appointmentsError,
   storedValue,
   smsConsent,
-  salonTimezone,
+  businessTimezone,
 }: AccountHubProps) {
   const t = useT("booking");
   const { prepaidBalance } = useTerms();
@@ -85,7 +85,7 @@ export function AccountHub({
         <h1 className="display text-3xl sm:text-4xl text-[var(--ink)]">
           My account
         </h1>
-        <p className="text-sm text-[var(--ink-soft)] mt-1">{salonName}</p>
+        <p className="text-sm text-[var(--ink-soft)] mt-1">{businessName}</p>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
@@ -145,14 +145,14 @@ export function AccountHub({
             upcoming={upcoming}
             past={past}
             errorMessage={appointmentsError}
-            salonTimezone={salonTimezone}
+            businessTimezone={businessTimezone}
           />
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-4">
           <ClientNotifications
             clientId={clientId}
-            salonName={salonName}
+            businessName={businessName}
             initialPhone={initialProfile?.phone ?? ""}
             initialConsent={smsConsent}
           />

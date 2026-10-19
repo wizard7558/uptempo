@@ -37,9 +37,9 @@ interface BookingDetails {
 
 interface SuccessViewProps {
   booking: BookingDetails;
-  salonName: string;
-  salonTimezone: string;
-  salonSlug: string;
+  businessName: string;
+  businessTimezone: string;
+  businessSlug: string;
   clientId: string | null;
   onBookAnother: () => void;
 }
@@ -50,9 +50,9 @@ interface SuccessViewProps {
 
 export function SuccessView({
   booking,
-  salonName,
-  salonTimezone,
-  salonSlug,
+  businessName,
+  businessTimezone,
+  businessSlug,
   clientId,
   onBookAnother,
 }: SuccessViewProps) {
@@ -66,8 +66,8 @@ export function SuccessView({
     router.refresh();
   }, [router]);
 
-  const startDate = new TZDate(new Date(booking.start), salonTimezone);
-  const endDate = new TZDate(new Date(booking.end), salonTimezone);
+  const startDate = new TZDate(new Date(booking.start), businessTimezone);
+  const endDate = new TZDate(new Date(booking.end), businessTimezone);
 
   const formattedDate = format(startDate, "EEEE, MMMM d, yyyy");
   const formattedStartTime = format(startDate, "h:mm a");
@@ -84,7 +84,7 @@ export function SuccessView({
     serviceSummary,
     start: new Date(booking.start),
     end: new Date(booking.end),
-    salonName,
+    businessName,
     location: calendarLocation,
   });
 
@@ -189,11 +189,11 @@ export function SuccessView({
 
       {/* Beauty Bank membership upsell (self-gates: hidden for members / no plans) */}
       {clientId && (
-        <MembershipUpsell salonSlug={salonSlug} clientId={clientId} />
+        <MembershipUpsell businessSlug={businessSlug} clientId={clientId} />
       )}
 
       {/* Opt into iMessage reminders (no-op if not configured) */}
-      <ImessageOptIn salonName={salonName} />
+      <ImessageOptIn businessName={businessName} />
 
       {/* Add to Calendar */}
       <div className="space-y-3">

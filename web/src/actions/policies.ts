@@ -228,22 +228,22 @@ export async function sendIntakeRequest(input: { appointmentId: string }) {
       getEmailBranding(slug),
       getEmailT(slug, "emails"),
     ]);
-    const salonName = branding.salonName;
+    const businessName = branding.salonName;
 
     if (client.email) {
       const { IntakeRequestEmail } = await import("@/emails/intake-request");
       await sendEmail({
         to: client.email,
-        subject: emailT("intakeMail.subject", { business: salonName }),
+        subject: emailT("intakeMail.subject", { business: businessName }),
         react: IntakeRequestEmail({
           t: emailT,
-          salonName,
+          salonName: businessName,
           clientName: client.name,
           intakeUrl,
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
         }),
-        salonName,
+        salonName: businessName,
       });
     }
 
@@ -264,7 +264,7 @@ export async function sendIntakeRequest(input: { appointmentId: string }) {
       const { sendSms } = await import("@/lib/sms/send");
       await sendSms({
         to: client.phone,
-        body: emailT("intake.sms", { placeName: salonName, url: intakeUrl }),
+        body: emailT("intake.sms", { placeName: businessName, url: intakeUrl }),
         tenantSlug: slug,
         clientId: client.id,
         appointmentId,
@@ -296,7 +296,7 @@ interface IntakeContext {
   signedAt: Date | null;
   clientId: string;
   clientName: string;
-  salonName: string;
+  businessName: string;
   logoUrl: string | null;
 }
 
@@ -353,7 +353,7 @@ export async function getIntakeByToken(
     signedAt: ctx.sig.signedAt,
     clientId: ctx.sig.clientId,
     clientName: ctx.client.name,
-    salonName: branding.salonName,
+    businessName: branding.salonName,
     logoUrl: branding.logoUrl,
   };
 }

@@ -60,7 +60,7 @@ export type ClassClient = { clientId: string; clientName: string };
 
 interface Props {
   businessId: string;
-  salonName: string;
+  businessName: string;
   verificationChannel?: BookingVerificationChannel;
   timezone: string;
   classes: PublicClass[];
@@ -97,7 +97,7 @@ function weekDays(weekStart: string): string[] {
 
 export function ClassSchedule({
   businessId,
-  salonName,
+  businessName,
   verificationChannel = "phone",
   timezone,
   classes: initialClasses,
@@ -271,7 +271,7 @@ export function ClassSchedule({
 
   const header = (
     <div className="text-center">
-      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{salonName}</h1>
+      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{businessName}</h1>
       <p className="mt-1 text-base text-[var(--ink)]">{t("public.title")}</p>
     </div>
   );

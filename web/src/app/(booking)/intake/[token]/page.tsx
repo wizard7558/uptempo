@@ -26,7 +26,7 @@ export default async function IntakePage({
       <div className="mx-auto max-w-lg p-8 text-center text-[var(--ink)]">
         <h1 className="display text-3xl mb-2">All set</h1>
         <p className="text-[var(--ink-soft)]">
-          You&apos;ve already signed and saved a card with {intake.salonName}.
+          You&apos;ve already signed and saved a card with {intake.businessName}.
           See you soon!
         </p>
       </div>
@@ -37,7 +37,7 @@ export default async function IntakePage({
     <IntakeForm
       token={token}
       clientName={intake.clientName}
-      salonName={intake.salonName}
+      businessName={intake.businessName}
       logoUrl={intake.logoUrl}
       policyText={intake.policyText}
     />

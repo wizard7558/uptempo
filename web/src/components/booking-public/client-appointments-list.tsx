@@ -9,14 +9,14 @@ interface Props {
   upcoming: AccountAppointmentRow[];
   past: AccountAppointmentRow[];
   errorMessage?: string;
-  salonTimezone: string;
+  businessTimezone: string;
 }
 
 export function ClientAppointmentsList({
   upcoming,
   past,
   errorMessage,
-  salonTimezone,
+  businessTimezone,
 }: Props) {
   if (errorMessage) {
     return (
@@ -35,8 +35,8 @@ export function ClientAppointmentsList({
     row: AccountAppointmentRow;
     showActions: boolean;
   }) {
-    const start = new TZDate(new Date(row.start), salonTimezone);
-    const end = new TZDate(new Date(row.end), salonTimezone);
+    const start = new TZDate(new Date(row.start), businessTimezone);
+    const end = new TZDate(new Date(row.end), businessTimezone);
     const when = format(start, "EEE, MMM d · h:mm a");
     const until = format(end, "h:mm a");
 

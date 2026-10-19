@@ -170,9 +170,9 @@ export function PaymentStep({ onComplete, appointmentId, depositCents = 0, submi
 
 interface ConfirmPayStepProps {
   businessId: string;
-  salonSlug: string;
-  salonName: string;
-  salonTimezone: string;
+  businessSlug: string;
+  businessName: string;
+  businessTimezone: string;
   staffId: string;
   staffName: string;
   anyStaff?: boolean;
@@ -199,9 +199,9 @@ interface ConfirmPayStepProps {
 
 export function ConfirmPayStep({
   businessId,
-  salonSlug,
-  salonName,
-  salonTimezone,
+  businessSlug,
+  businessName,
+  businessTimezone,
   staffId,
   staffName,
   anyStaff,
@@ -297,8 +297,8 @@ export function ConfirmPayStep({
     };
   }, [serviceIds, clientId, staffId]);
 
-  const startDate = new TZDate(new Date(selectedTime), salonTimezone);
-  const endDate = new TZDate(addMinutes(new Date(selectedTime), totalDuration), salonTimezone);
+  const startDate = new TZDate(new Date(selectedTime), businessTimezone);
+  const endDate = new TZDate(addMinutes(new Date(selectedTime), totalDuration), businessTimezone);
   const formattedDate = format(startDate, "EEEE, MMMM d, yyyy");
   const formattedStartTime = format(startDate, "h:mm a");
   const formattedEndTime = format(endDate, "h:mm a");
@@ -506,7 +506,7 @@ export function ConfirmPayStep({
           <Checkbox id="sms-opt-in" checked={smsOptIn} onCheckedChange={(checked) => setSmsOptIn(checked === true)} />
           <label htmlFor="sms-opt-in" className="cursor-pointer text-sm leading-tight">
             I agree to receive appointment reminders, confirmations, and cancellation notifications via SMS from{" "}
-            {salonName} at the number provided ({clientPhone}).
+            {businessName} at the number provided ({clientPhone}).
             <span className="mt-1 block text-[13px] text-[var(--ink-soft)]">
               Message frequency varies (typically 2–4 messages per appointment). Message and data rates may apply.
               Reply STOP to opt out or HELP for help at any time. See our{" "}
@@ -523,7 +523,7 @@ export function ConfirmPayStep({
         </div>
       )}
 
-      <MembershipUpsell salonSlug={salonSlug} clientId={clientId} variant="inline" />
+      <MembershipUpsell businessSlug={businessSlug} clientId={clientId} variant="inline" />
 
       <div className="sticky bottom-[var(--app-tab-bar-offset,0px)] z-20 -mx-4 border-t border-[var(--line)] bg-[var(--ivory)] px-4 pb-[var(--app-footer-safe-pad,env(safe-area-inset-bottom))] pt-3 sm:static sm:-mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
         <Button onClick={handleConfirm} disabled={confirming} className="w-full" variant="default">

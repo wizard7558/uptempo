@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 
 interface Props {
   clientId: string;
-  salonName: string;
+  businessName: string;
   initialPhone: string;
   initialConsent: {
     consented: boolean;
@@ -22,7 +22,7 @@ interface Props {
 
 export function ClientNotifications({
   clientId,
-  salonName,
+  businessName,
   initialPhone,
   initialConsent,
 }: Props) {
@@ -94,7 +94,7 @@ export function ClientNotifications({
       <p className="text-xs leading-relaxed text-[var(--ink-soft)]">
         By turning on SMS reminders, you agree to receive automated
         appointment text messages (reminders, confirmations, and schedule
-        changes) from {salonName} at the number above. Message frequency varies
+        changes) from {businessName} at the number above. Message frequency varies
         (typically 2–4 messages per appointment). Message and data rates may
         apply. Reply STOP to opt out or HELP for help at any time. Consent is
         not a condition of any purchase. See our{" "}
@@ -119,7 +119,7 @@ export function ClientNotifications({
       </p>
 
       {/* iMessage opt-in (renders only when the platform opt-in URL is set). */}
-      <ImessageOptIn salonName={salonName} />
+      <ImessageOptIn businessName={businessName} />
 
       {pending && (
         <div className="flex items-center gap-2 text-sm text-[var(--ink-soft)]">

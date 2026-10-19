@@ -103,7 +103,7 @@ export default async function SubscribePage({
   return (
     <SubscribeWizard
       businessId={business.id}
-      salonName={business.name}
+      businessName={business.name}
       tenantSlug={slug}
       plans={plans}
       clientSession={clientSession}

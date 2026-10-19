@@ -8,7 +8,7 @@ import { getMembershipUpsellInfo } from "@/actions/membership";
 import { PiggyBankIcon } from "lucide-react";
 
 interface MembershipUpsellProps {
-  salonSlug: string;
+  businessSlug: string;
   clientId: string;
   /** Visual variant: "card" (standalone, e.g. success screen) or "inline" (compact hint). */
   variant?: "card" | "inline";
@@ -21,7 +21,7 @@ interface MembershipUpsellProps {
  * the booking flow — it never throws and shows nothing when not applicable.
  */
 export function MembershipUpsell({
-  salonSlug,
+  businessSlug,
   clientId,
   variant = "card",
 }: MembershipUpsellProps) {
@@ -54,7 +54,7 @@ export function MembershipUpsell({
         {discount > 0
           ? t("membershipUpsell.inlineDiscount", { discount })
           : t("membershipUpsell.inlineNoDiscount")}
-        <Link href={`/subscribe/${salonSlug}`} className="editorial-link">
+        <Link href={`/subscribe/${businessSlug}`} className="editorial-link">
           become a member
         </Link>
         .
@@ -77,7 +77,7 @@ export function MembershipUpsell({
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button asChild variant="default"  className="w-full sm:w-auto">
-          <Link href={`/subscribe/${salonSlug}`}>Become a member</Link>
+          <Link href={`/subscribe/${businessSlug}`}>Become a member</Link>
         </Button>
         <Button
           asChild

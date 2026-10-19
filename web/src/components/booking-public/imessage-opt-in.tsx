@@ -21,7 +21,7 @@ function isMobile(): boolean {
  *
  * The copy states clearly what they'll receive and why the extra step exists.
  */
-export function ImessageOptIn({ salonName }: { salonName: string }) {
+export function ImessageOptIn({ businessName }: { businessName: string }) {
   if (!OPT_IN_URL) return null;
 
   async function handleOptIn() {
@@ -43,7 +43,7 @@ export function ImessageOptIn({ salonName }: { salonName: string }) {
         Get reminders by iMessage
       </p>
       <p className="text-xs leading-relaxed text-[var(--ink-soft)]">
-        Receive appointment confirmations and reminders from {salonName} by
+        Receive appointment confirmations and reminders from {businessName} by
         iMessage. Tapping below opens Messages with a quick pre-filled note to
         send us — that one-time step is how Apple lets us text you. We only send
         appointment-related messages, never marketing, and you can stop anytime.

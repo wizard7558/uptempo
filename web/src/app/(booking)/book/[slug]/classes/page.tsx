@@ -44,7 +44,7 @@ export default async function ClassesPage({ params }: { params: Promise<{ slug: 
     <ClassSchedule
       verificationChannel={getBookingVerificationChannel()}
       businessId={business.id}
-      salonName={business.name}
+      businessName={business.name}
       timezone={list.timezone}
       classes={list.classes}
       mine={mine}

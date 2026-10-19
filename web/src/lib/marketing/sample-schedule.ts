@@ -28,7 +28,7 @@ function isoDate(date: Date): string {
 /**
  * Fixed sample times for the marketing booking demo. Dates count forward from
  * `now` (UTC) so the month never looks stale; times are UTC wall-clock values,
- * which the demo renders with `salonTimezone="UTC"`.
+ * which the demo renders with `businessTimezone="UTC"`.
  */
 export function buildSampleSchedule(industry: DemoIndustry, now: Date): SampleSchedule {
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));

@@ -64,7 +64,7 @@ function formatMoney(cents: number) {
 
 interface SubscribeWizardProps {
   businessId: string;
-  salonName: string;
+  businessName: string;
   tenantSlug: string;
   plans: SubscribePlanRow[];
   clientSession: { clientId: string; clientName: string } | null;
@@ -74,7 +74,7 @@ interface SubscribeWizardProps {
 
 export function SubscribeWizard({
   businessId,
-  salonName,
+  businessName,
   tenantSlug,
   plans,
   clientSession: initialSession,
@@ -163,7 +163,7 @@ export function SubscribeWizard({
       <div className="mx-auto max-w-md px-4 py-10 space-y-4">
         <h1 className="display text-4xl text-[var(--ink)]">{t("subscribeWizard.title")}</h1>
         <p className="text-sm text-[var(--ink-soft)]">
-          {salonName} doesn&apos;t have any membership plans available online yet.
+          {businessName} doesn&apos;t have any membership plans available online yet.
         </p>
         <Button asChild variant="outline"  className="w-full">
           <Link href={`/book/${tenantSlug}`}>Book an appointment</Link>
@@ -195,7 +195,7 @@ export function SubscribeWizard({
       <div className="mx-auto max-w-md px-4 py-8 space-y-8">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.3em] text-[var(--ink-soft)]">
-            {salonName}
+            {businessName}
           </p>
           <h1 className="display mt-1 text-4xl text-[var(--ink)]">
             {t("subscribeWizard.membershipTitle")}
@@ -210,7 +210,7 @@ export function SubscribeWizard({
         {step === "plan" && clientSession && needsPlanStep && (
           <PlanStep
             plans={plans}
-            salonName={salonName}
+            businessName={businessName}
             initialPlanId={planId}
             onContinue={onPlanContinue}
           />
@@ -249,7 +249,7 @@ export function SubscribeWizard({
       {/* Hero */}
       <section className="text-center space-y-5">
         <p className="text-xs font-medium uppercase tracking-[0.3em] text-[var(--ink-soft)]">
-          {salonName} · Membership
+          {businessName} · Membership
         </p>
         <h1 className="display text-4xl leading-tight text-[var(--ink)] sm:text-5xl">
           {t("subscribeWizard.membershipTitle")}

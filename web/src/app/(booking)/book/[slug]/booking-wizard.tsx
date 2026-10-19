@@ -384,10 +384,10 @@ export function bookingReducer(state: BookingState, action: BookingAction): Book
 
 interface BookingWizardProps {
   businessId: string;
-  salonSlug: string;
-  salonName: string;
-  hasSalonLogo: boolean;
-  salonTimezone: string;
+  businessSlug: string;
+  businessName: string;
+  hasBusinessLogo: boolean;
+  businessTimezone: string;
   requireCardOnFile: boolean;
   clientSession: ClientSession | null;
   waitlistEnabled?: boolean;
@@ -408,10 +408,10 @@ function rethrowAuth(err: unknown): void {
 
 export function BookingWizard({
   businessId,
-  salonSlug,
-  salonName,
-  hasSalonLogo,
-  salonTimezone,
+  businessSlug,
+  businessName,
+  hasBusinessLogo,
+  businessTimezone,
   requireCardOnFile,
   clientSession,
   waitlistEnabled = false,
@@ -543,18 +543,18 @@ export function BookingWizard({
   if (state.bookingResult) {
     return (
       <div className="space-y-6">
-        {hasSalonLogo ? (
-          <h1 className="sr-only">{salonName}</h1>
+        {hasBusinessLogo ? (
+          <h1 className="sr-only">{businessName}</h1>
         ) : (
           <div className="text-center">
-            <h1 className="display text-4xl text-[var(--ink)]">{salonName}</h1>
+            <h1 className="display text-4xl text-[var(--ink)]">{businessName}</h1>
           </div>
         )}
         <SuccessView
           booking={state.bookingResult}
-          salonName={salonName}
-          salonTimezone={salonTimezone}
-          salonSlug={salonSlug}
+          businessName={businessName}
+          businessTimezone={businessTimezone}
+          businessSlug={businessSlug}
           clientId={state.clientId}
           onBookAnother={() => dispatch({ type: "RESET_KEEP_CLIENT" })}
         />
@@ -564,11 +564,11 @@ export function BookingWizard({
 
   return (
     <div className="space-y-6">
-      {hasSalonLogo ? (
-        <h1 className="sr-only">{salonName}</h1>
+      {hasBusinessLogo ? (
+        <h1 className="sr-only">{businessName}</h1>
       ) : (
         <div className="text-center">
-          <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{salonName}</h1>
+          <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{businessName}</h1>
         </div>
       )}
 
@@ -626,7 +626,7 @@ export function BookingWizard({
             serviceAddressId={state.serviceAddressId}
             needsAddress={state.needsAddress}
             serviceIds={state.serviceIds}
-            salonTimezone={salonTimezone}
+            businessTimezone={businessTimezone}
             selectedDate={state.selectedDate}
             selectedTime={state.selectedTime}
             waitlistEnabled={waitlistEnabled}
@@ -689,9 +689,9 @@ export function BookingWizard({
           state.selectedTime && (
             <ConfirmPayStep
               businessId={businessId}
-              salonSlug={salonSlug}
-              salonName={salonName}
-              salonTimezone={salonTimezone}
+              businessSlug={businessSlug}
+              businessName={businessName}
+              businessTimezone={businessTimezone}
               staffId={state.assignedStaffId ?? state.staffId}
               staffName={
                 state.assignedStaffName ?? state.staffName ?? t("bookingWizard.staffFallback")
@@ -714,7 +714,7 @@ export function BookingWizard({
               requireCardOnFile={state.requireCardOnFile}
               onConfirm={(booking) => {
                 trackClientEvent("booking.completed_client", {
-                  salonName,
+                  salonName: businessName,
                   serviceCount: state.serviceIds.length,
                 });
                 dispatch({ type: "SET_BOOKING_RESULT", result: booking });

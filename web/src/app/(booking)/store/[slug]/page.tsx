@@ -55,7 +55,7 @@ async function StorePageContent({ slug }: { slug: string }) {
     <div className="mx-auto w-full max-w-lg px-4 py-8 sm:px-6 md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
       <div className="mb-6">
         <h1 className="display text-4xl text-[var(--ink)]">
-          {data.salonName} Shop
+          {data.businessName} Shop
         </h1>
         <p className="mt-1 text-sm text-[var(--ink-soft)]">
           {firstName

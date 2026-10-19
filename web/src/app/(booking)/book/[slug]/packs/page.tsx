@@ -23,7 +23,7 @@ export default async function PacksPage({ params }: { params: Promise<{ slug: st
   return (
     <PacksView
       businessId={business.id}
-      salonName={business.name}
+      businessName={business.name}
       packs={packs}
       signedIn={Boolean(sessionClientId)}
     />

@@ -12,7 +12,7 @@ describe("generateCalendarLinks", () => {
       serviceSummary: "Haircut",
       start,
       end,
-      salonName: "Test Salon",
+      businessName: "Test Salon",
       location,
     });
 
@@ -30,7 +30,7 @@ describe("generateCalendarLinks", () => {
       serviceSummary: "Haircut",
       start,
       end,
-      salonName: "Test Salon",
+      businessName: "Test Salon",
       location: null,
     });
     expect(links.google).toContain("http");

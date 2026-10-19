@@ -41,8 +41,8 @@ type Client = { clientId: string; clientName: string };
 
 export interface RequestWizardProps {
   businessId: string;
-  salonName: string;
-  hasSalonLogo: boolean;
+  businessName: string;
+  hasBusinessLogo: boolean;
   verificationChannel?: BookingVerificationChannel;
   clientSession: { clientId: string; clientName: string } | null;
   fields: RequestFieldDef[];
@@ -75,8 +75,8 @@ function describeFields(fields: RequestFieldDef[]): RequestFieldDef[] {
 
 export function RequestWizard({
   businessId,
-  salonName,
-  hasSalonLogo,
+  businessName,
+  hasBusinessLogo,
   verificationChannel = "phone",
   clientSession,
   fields,
@@ -219,11 +219,11 @@ export function RequestWizard({
     return typeof v === "string" ? v : "";
   }
 
-  const header = hasSalonLogo ? (
-    <h1 className="sr-only">{salonName}</h1>
+  const header = hasBusinessLogo ? (
+    <h1 className="sr-only">{businessName}</h1>
   ) : (
     <div className="text-center">
-      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{salonName}</h1>
+      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{businessName}</h1>
     </div>
   );
 

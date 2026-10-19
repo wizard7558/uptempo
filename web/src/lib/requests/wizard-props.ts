@@ -70,8 +70,8 @@ export async function loadRequestWizardProps(
   return {
     verificationChannel: getBookingVerificationChannel(),
     businessId: salon.id,
-    salonName: salon.name,
-    hasSalonLogo: Boolean(branding?.logoUrl?.trim()),
+    businessName: salon.name,
+    hasBusinessLogo: Boolean(branding?.logoUrl?.trim()),
     clientSession: data.client ? { clientId: data.client.id, clientName: data.client.name } : null,
     fields: resolveRequestFields(vertical.requestFields),
     services: data.serviceRows,

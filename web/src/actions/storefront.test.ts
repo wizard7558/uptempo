@@ -102,6 +102,7 @@ describe("getStorefront", () => {
 
   it("sorts a product tagged all ahead of the catalog for a red hair profile", async () => {
     const data = await getStorefront("test-salon");
+    expect(data?.businessName).toBe("Test Salon");
     expect(data?.products.map((product) => product.name)).toEqual(["For everyone", "Blonde only"]);
     expect(data?.products.map((product) => product.recommended)).toEqual([true, false]);
     expect(data?.client).toEqual({ id: "client-1", name: "Ada" });

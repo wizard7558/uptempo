@@ -112,8 +112,8 @@ async function BookingPageContent({
       : Promise.resolve(null),
   ]);
 
-  const salonTimezone = policy.timezone;
-  const hasSalonLogo = Boolean(branding?.logoUrl?.trim());
+  const businessTimezone = policy.timezone;
+  const hasBusinessLogo = Boolean(branding?.logoUrl?.trim());
 
   // Check for returning client session
   let clientSession: { clientId: string; clientName: string; clientPhone: string | null } | null = null;
@@ -193,10 +193,10 @@ async function BookingPageContent({
     <BookingWizard
       verificationChannel={getBookingVerificationChannel()}
       businessId={business.id}
-      salonSlug={slug}
-      salonName={business.name}
-      hasSalonLogo={hasSalonLogo}
-      salonTimezone={salonTimezone}
+      businessSlug={slug}
+      businessName={business.name}
+      hasBusinessLogo={hasBusinessLogo}
+      businessTimezone={businessTimezone}
       requireCardOnFile={policy.requireCardOnFile === 1}
       clientSession={clientSession}
       waitlistEnabled={waitlistEnabled}

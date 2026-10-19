@@ -10,12 +10,12 @@ import { buyPackage, type PublicPackage } from "@/actions/packages";
 
 interface Props {
   businessId: string;
-  salonName: string;
+  businessName: string;
   packs: PublicPackage[];
   signedIn: boolean;
 }
 
-export function PacksView({ businessId, salonName, packs, signedIn: initiallySignedIn }: Props) {
+export function PacksView({ businessId, businessName, packs, signedIn: initiallySignedIn }: Props) {
   const t = useT("packages");
   const [signedIn, setSignedIn] = useState(initiallySignedIn);
   /** The pack the client picked; kept while they sign in or add a card. */
@@ -54,7 +54,7 @@ export function PacksView({ businessId, salonName, packs, signedIn: initiallySig
 
   const header = (
     <div className="text-center">
-      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{salonName}</h1>
+      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{businessName}</h1>
       <p className="mt-1 text-sm font-light text-[var(--ink)]">{t("publicSubtitle")}</p>
     </div>
   );

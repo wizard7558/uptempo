@@ -34,7 +34,7 @@ export default function BookingDemoStep({
         locationId="demo"
         needsAddress={false}
         serviceIds={["demo"]}
-        salonTimezone="UTC"
+        businessTimezone="UTC"
         selectedDate={null}
         selectedTime={null}
         sampleSchedule={schedule}

@@ -41,14 +41,14 @@ export function WaitlistJoin({
   staffId,
   locationId,
   activeDate,
-  salonTimezone,
+  businessTimezone,
   clientPhone,
 }: {
   serviceIds: string[];
   staffId: string;
   locationId: string;
   activeDate: string | null;
-  salonTimezone: string;
+  businessTimezone: string;
   clientPhone: string | null;
 }) {
   const t = useT("waitlist");
@@ -65,7 +65,7 @@ export function WaitlistJoin({
 
   function openDialog(next: boolean) {
     if (next) {
-      const start = activeDate ?? localDay(new Date(), salonTimezone);
+      const start = activeDate ?? localDay(new Date(), businessTimezone);
       setFrom(start);
       setTo(addDays(start, 7));
       setError(null);
@@ -125,7 +125,7 @@ export function WaitlistJoin({
                 onSelect={(d) => {
                   if (d) chooseFrom(dateToYmd(d));
                 }}
-                disabled={{ before: ymdToDate(localDay(new Date(), salonTimezone)) }}
+                disabled={{ before: ymdToDate(localDay(new Date(), businessTimezone)) }}
               />
             </div>
             <div className="space-y-1">

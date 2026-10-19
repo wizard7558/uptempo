@@ -47,7 +47,7 @@ function render(classes: PublicClass[], mine: MyClassSpot[] = []) {
   return wrap(
     <ClassSchedule
       businessId="s1"
-      salonName="Test Gym"
+      businessName="Test Gym"
       timezone={TZ}
       classes={classes}
       mine={mine}

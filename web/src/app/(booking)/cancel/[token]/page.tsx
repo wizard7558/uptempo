@@ -102,7 +102,7 @@ export default async function CancelPage({
 
   // Get salon name from tenant registry (public schema)
   const tenant = await getTenantBySlug(slug);
-  const salonName = tenant?.name ?? t("cancelPage.defaultName");
+  const businessName = tenant?.name ?? t("cancelPage.defaultName");
 
   const tz = policy?.timezone ?? "America/New_York";
 
@@ -171,7 +171,7 @@ export default async function CancelPage({
           appointmentId={appointment.id}
           isLateCancellation={isLateCancellation}
           potentialFeeCents={potentialFeeCents}
-          salonName={salonName}
+          businessName={businessName}
         />
       </div>
     </div>

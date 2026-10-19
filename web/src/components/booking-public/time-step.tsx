@@ -41,7 +41,7 @@ interface TimeStepProps {
   needsAddress?: boolean | null;
   clientId?: string | null;
   serviceIds: string[];
-  salonTimezone: string;
+  businessTimezone: string;
   onComplete: (
     date: string,
     time: string,
@@ -83,7 +83,7 @@ export function TimeStep({
   needsAddress = false,
   clientId,
   serviceIds,
-  salonTimezone,
+  businessTimezone,
   onComplete,
   onLocation = () => {},
   onAddress = () => {},
@@ -245,16 +245,16 @@ export function TimeStep({
 
   const grouped = useMemo(() => {
     const list = slots ?? NO_SLOTS;
-    const morning = list.filter((slot) => slotPart(slot.time, salonTimezone) === "morning");
-    const afternoon = list.filter((slot) => slotPart(slot.time, salonTimezone) === "afternoon");
+    const morning = list.filter((slot) => slotPart(slot.time, businessTimezone) === "morning");
+    const afternoon = list.filter((slot) => slotPart(slot.time, businessTimezone) === "afternoon");
     return [
       { part: "morning" as const, items: morning },
       { part: "afternoon" as const, items: afternoon },
     ];
-  }, [salonTimezone, slots]);
+  }, [businessTimezone, slots]);
 
   function formatSlotTime(isoString: string): string {
-    return format(new TZDate(new Date(isoString), salonTimezone), "h:mm a");
+    return format(new TZDate(new Date(isoString), businessTimezone), "h:mm a");
   }
 
   async function saveAddress() {
@@ -282,7 +282,7 @@ export function TimeStep({
         staffId={staffId}
         locationId={locationId}
         activeDate={activeDate}
-        salonTimezone={salonTimezone}
+        businessTimezone={businessTimezone}
         clientPhone={clientPhone}
       />
     ) : null;

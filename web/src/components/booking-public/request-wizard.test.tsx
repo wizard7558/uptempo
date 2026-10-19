@@ -36,8 +36,8 @@ function renderWizard(props: Partial<RequestWizardProps> = {}) {
       <TermsProvider terms={VERTICALS.tattoo.terms}>
         <RequestWizard
           businessId="s1"
-          salonName="Ink"
-          hasSalonLogo={false}
+          businessName="Ink"
+          hasBusinessLogo={false}
           clientSession={{ clientId: "c1", clientName: "Casey" }}
           fields={resolveRequestFields(VERTICALS.tattoo.requestFields)}
           services={[{ id: "svc-1", name: "Half-day session" }]}

@@ -27,7 +27,7 @@ import {
 interface IntakeFormProps {
   token: string;
   clientName: string;
-  salonName: string;
+  businessName: string;
   logoUrl: string | null;
   policyText: string;
 }
@@ -190,7 +190,7 @@ function InnerForm({ token, clientName, onCompleted }: InnerFormProps) {
 export function IntakeForm({
   token,
   clientName,
-  salonName,
+  businessName,
   logoUrl,
   policyText,
 }: IntakeFormProps) {
@@ -204,7 +204,7 @@ export function IntakeForm({
         <h1 className="display text-3xl text-[var(--ink)]">All set</h1>
         <p className="text-[var(--ink-soft)]">
           Thanks {clientName.split(" ")[0]} — your signature and card are saved.
-          See you soon at {salonName}!
+          See you soon at {businessName}!
         </p>
       </div>
     );
@@ -217,12 +217,12 @@ export function IntakeForm({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={logoUrl}
-            alt={salonName}
+            alt={businessName}
             className="mx-auto h-12 w-auto"
           />
         ) : null}
         <h1 className="display text-3xl text-[var(--ink)]">
-          Welcome from {salonName}
+          Welcome from {businessName}
         </h1>
         <p className="text-sm text-[var(--ink-soft)]">
           Please review our policies, sign, and add a card on file before your

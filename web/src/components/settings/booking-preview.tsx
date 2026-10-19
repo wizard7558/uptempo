@@ -76,7 +76,7 @@ export function BookingPreview({ settings }: { settings: BookingThemeSettings })
             onLocation={() => {}}
             onAddress={() => {}}
             serviceIds={["signature"]}
-            salonTimezone="UTC"
+            businessTimezone="UTC"
             selectedDate={null}
             selectedTime={null}
             sampleSchedule={{
