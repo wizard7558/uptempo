@@ -156,7 +156,9 @@ test.describe("admin settings", () => {
 // ---------------------------------------------------------------------------
 
 test.describe("admin schedule operations", () => {
-  test("schedule page renders without JavaScript errors", async ({ page }) => {
+  test("schedule page renders without JavaScript errors", async ({
+    page,
+  }, testInfo) => {
     await mockStripe(page);
     await mockCalendarApi(page);
 
@@ -183,6 +185,13 @@ test.describe("admin schedule operations", () => {
         !err.includes("Failed to load resource") &&
         !err.includes("net::ERR"),
     );
+
+    if (consoleErrors.length > 0) {
+      await testInfo.attach("console-errors", {
+        body: JSON.stringify(consoleErrors, null, 2),
+        contentType: "application/json",
+      });
+    }
 
     // No unexpected errors should be present
     expect(unexpectedErrors).toHaveLength(0);

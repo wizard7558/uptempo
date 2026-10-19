@@ -169,7 +169,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     const { client, pkg } = await clientWithPack("Booker", 3, { card: true });
     state.clientId = client;
     const res = await confirmBooking({
-      salonId: t.slug,
+      businessId: t.slug,
       staffId: ids.staff,
       clientId: client,
       serviceIds: [ids.svc],
@@ -193,7 +193,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     const { client, pkg } = await clientWithPack("NoUse", 3);
     state.clientId = client;
     const res = await confirmBooking({
-      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(1).toISOString(),
+      businessId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(1).toISOString(),
     });
     expect(res).toMatchObject({ success: true, creditApplied: false });
     const id = (res as { booking: { id: string } }).booking.id;
@@ -206,7 +206,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     const { client } = await clientWithPack("NoPack", 0);
     state.clientId = client;
     const res = await confirmBooking({
-      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(2).toISOString(), useCredit: true,
+      businessId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(2).toISOString(), useCredit: true,
     });
     expect(res).toMatchObject({ success: true, creditApplied: false });
     const id = (res as { booking: { id: string; depositCents: number } }).booking.id;
@@ -222,7 +222,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     const { client: other } = await clientWithPack("Stranger", 0);
     state.clientId = other;
     const res = await confirmBooking({
-      salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(3).toISOString(), useCredit: true,
+      businessId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(3).toISOString(), useCredit: true,
     });
     expect(res).toEqual({ success: false, error: "Sign in to book" });
     expect(await balance(pkg)).toBe(2);
@@ -233,7 +233,7 @@ describe("using credits at booking, cancel and checkout against a real tenant sc
     try {
       expect(await getCreditOption([ids.svc])).toBeNull();
       const off = await confirmBooking({
-        salonId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(4).toISOString(), useCredit: true,
+        businessId: t.slug, staffId: ids.staff, clientId: client, serviceIds: [ids.svc], startTime: bookableSlot(4).toISOString(), useCredit: true,
       });
       expect(off).toMatchObject({ success: true, creditApplied: false });
       expect(await balance(pkg)).toBe(2);

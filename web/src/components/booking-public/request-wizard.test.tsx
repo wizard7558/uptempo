@@ -35,7 +35,7 @@ function renderWizard(props: Partial<RequestWizardProps> = {}) {
     <NextIntlClientProvider locale="en" messages={messages}>
       <TermsProvider terms={VERTICALS.tattoo.terms}>
         <RequestWizard
-          salonId="s1"
+          businessId="s1"
           salonName="Ink"
           hasSalonLogo={false}
           clientSession={{ clientId: "c1", clientName: "Casey" }}

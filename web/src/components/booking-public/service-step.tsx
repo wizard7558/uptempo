@@ -45,7 +45,7 @@ interface CategoryMeta {
 }
 
 interface ServiceStepProps {
-  salonId: string;
+  businessId: string;
   clientId: string | null;
   selectedStaffId: string | null;
   selectedServiceIds: string[];
@@ -88,7 +88,7 @@ function priceLabel(priceCents: number | undefined, priceDisplay: string | undef
 }
 
 export function ServiceStep({
-  salonId,
+  businessId,
   clientId,
   selectedStaffId,
   selectedServiceIds,
@@ -130,7 +130,7 @@ export function ServiceStep({
     return () => {
       cancelled = true;
     };
-  }, [sample, salonId]);
+  }, [sample, businessId]);
 
   useEffect(() => {
     if (sample) return;

@@ -22,7 +22,7 @@ export default async function PacksPage({ params }: { params: Promise<{ slug: st
   const [packs, sessionClientId] = await Promise.all([listPackagesPublic(), getBookingSession()]);
   return (
     <PacksView
-      salonId={business.id}
+      businessId={business.id}
       salonName={business.name}
       packs={packs}
       signedIn={Boolean(sessionClientId)}

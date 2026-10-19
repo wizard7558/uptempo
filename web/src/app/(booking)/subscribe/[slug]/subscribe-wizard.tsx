@@ -63,7 +63,7 @@ function formatMoney(cents: number) {
 }
 
 interface SubscribeWizardProps {
-  salonId: string;
+  businessId: string;
   salonName: string;
   tenantSlug: string;
   plans: SubscribePlanRow[];
@@ -73,7 +73,7 @@ interface SubscribeWizardProps {
 }
 
 export function SubscribeWizard({
-  salonId,
+  businessId,
   salonName,
   tenantSlug,
   plans,
@@ -340,7 +340,7 @@ export function SubscribeWizard({
             Sign in with your phone to begin — it only takes a minute.
           </p>
         </div>
-        <IdentityStep salonId={salonId} onComplete={onIdentityComplete} />
+        <IdentityStep businessId={businessId} onComplete={onIdentityComplete} />
       </section>
     </div>
   );

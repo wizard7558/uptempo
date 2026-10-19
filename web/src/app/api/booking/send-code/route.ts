@@ -6,7 +6,7 @@ import { createVerificationForTenant } from "@/lib/booking/otp";
 import { sendEmail } from "@/lib/email/send";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { clientIpFrom } from "@/lib/http/client-ip";
-import { getTenantSlugForSalonId } from "@/lib/tenant/registry";
+import { getTenantSlugForBusinessId } from "@/lib/tenant/registry";
 import { getSmsProvider } from "@/lib/providers/sms";
 import { isLoopMessageConfigured } from "@/lib/sms/loopmessage";
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { identifier, salonId, phone } = parsed.data;
-    const tenantSlug = await getTenantSlugForSalonId(salonId);
+    const tenantSlug = await getTenantSlugForBusinessId(salonId);
     if (!tenantSlug) {
       return NextResponse.json(
         { error: (await getT("errors"))("bookingApi.placeNotFound") },

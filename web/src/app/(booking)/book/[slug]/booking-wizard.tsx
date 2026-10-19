@@ -383,7 +383,7 @@ export function bookingReducer(state: BookingState, action: BookingAction): Book
 }
 
 interface BookingWizardProps {
-  salonId: string;
+  businessId: string;
   salonSlug: string;
   salonName: string;
   hasSalonLogo: boolean;
@@ -407,7 +407,7 @@ function rethrowAuth(err: unknown): void {
 }
 
 export function BookingWizard({
-  salonId,
+  businessId,
   salonSlug,
   salonName,
   hasSalonLogo,
@@ -594,7 +594,7 @@ export function BookingWizard({
       <div>
         {state.currentStep === "service" && (
           <ServiceStep
-            salonId={salonId}
+            businessId={businessId}
             clientId={state.clientId}
             selectedStaffId={state.staffId}
             selectedServiceIds={state.serviceIds}
@@ -666,7 +666,7 @@ export function BookingWizard({
         {state.currentStep === "details" && (
           <DetailsStep
             verificationChannel={verificationChannel}
-            salonId={salonId}
+            businessId={businessId}
             clientId={state.clientId}
             clientName={state.clientName}
             onComplete={(clientId, clientName, phone) =>
@@ -688,7 +688,7 @@ export function BookingWizard({
           state.selectedDate &&
           state.selectedTime && (
             <ConfirmPayStep
-              salonId={salonId}
+              businessId={businessId}
               salonSlug={salonSlug}
               salonName={salonName}
               salonTimezone={salonTimezone}

@@ -508,7 +508,7 @@ async function loadPublicBookingReceipt(slug: string, appointmentId: string) {
  * On success, loads the receipt for the confirmation page.
  */
 export async function confirmBooking(data: {
-  salonId: string;
+  businessId: string;
   staffId: string;
   clientId: string;
   serviceIds: string[];

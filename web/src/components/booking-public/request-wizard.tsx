@@ -40,7 +40,7 @@ type Photo = { id: string; name: string; previewUrl: string };
 type Client = { clientId: string; clientName: string };
 
 export interface RequestWizardProps {
-  salonId: string;
+  businessId: string;
   salonName: string;
   hasSalonLogo: boolean;
   verificationChannel?: BookingVerificationChannel;
@@ -74,7 +74,7 @@ function describeFields(fields: RequestFieldDef[]): RequestFieldDef[] {
 }
 
 export function RequestWizard({
-  salonId,
+  businessId,
   salonName,
   hasSalonLogo,
   verificationChannel = "phone",
@@ -357,7 +357,7 @@ export function RequestWizard({
       {step === "details" && (
         <DetailsStep
           verificationChannel={verificationChannel}
-          salonId={salonId}
+          businessId={businessId}
           clientId={client?.clientId ?? null}
           clientName={client?.clientName ?? null}
           onComplete={(clientId, clientName) => {

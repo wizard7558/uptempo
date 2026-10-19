@@ -46,7 +46,7 @@ function wrap(node: React.ReactNode) {
 function render(classes: PublicClass[], mine: MyClassSpot[] = []) {
   return wrap(
     <ClassSchedule
-      salonId="s1"
+      businessId="s1"
       salonName="Test Gym"
       timezone={TZ}
       classes={classes}

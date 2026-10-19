@@ -69,7 +69,7 @@ export async function loadRequestWizardProps(
 
   return {
     verificationChannel: getBookingVerificationChannel(),
-    salonId: salon.id,
+    businessId: salon.id,
     salonName: salon.name,
     hasSalonLogo: Boolean(branding?.logoUrl?.trim()),
     clientSession: data.client ? { clientId: data.client.id, clientName: data.client.name } : null,

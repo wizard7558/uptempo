@@ -192,7 +192,7 @@ async function BookingPageContent({
   const wizard = (
     <BookingWizard
       verificationChannel={getBookingVerificationChannel()}
-      salonId={business.id}
+      businessId={business.id}
       salonSlug={slug}
       salonName={business.name}
       hasSalonLogo={hasSalonLogo}

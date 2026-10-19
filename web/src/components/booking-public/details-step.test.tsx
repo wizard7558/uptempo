@@ -31,7 +31,7 @@ function renderDetailsStep(
 ) {
   return render(
     <DetailsStep
-      salonId="salon-1"
+      businessId="business-1"
       clientId={null}
       clientName={null}
       onComplete={vi.fn()}
@@ -68,7 +68,7 @@ describe("DetailsStep verification channel", () => {
     expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toEqual({
       identifier: "+15555550100",
       phone: "+15555550100",
-      salonId: "salon-1",
+      salonId: "business-1",
     });
     expect(screen.getByLabelText("detailsStep.code")).toBeTruthy();
 
@@ -99,7 +99,7 @@ describe("DetailsStep verification channel", () => {
 
     expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toEqual({
       identifier: "ana@example.com",
-      salonId: "salon-1",
+      salonId: "business-1",
     });
     await user.type(screen.getByLabelText("Verification code"), "123456");
     await user.click(screen.getByRole("button", { name: "Verify" }));
@@ -152,7 +152,7 @@ describe("DetailsStep verification channel", () => {
 
     rerender(
       <DetailsStep
-        salonId="salon-1"
+        businessId="business-1"
         clientId="client-3"
         clientName="Casey"
         verificationChannel="email"
@@ -168,7 +168,7 @@ describe("DetailsStep verification channel", () => {
 
   it("keeps IdentityStep optional-phone behavior for its other callsites", () => {
     render(
-      <IdentityStep salonId="salon-1" onComplete={vi.fn()} />,
+      <IdentityStep businessId="business-1" onComplete={vi.fn()} />,
     );
 
     expect(screen.getByLabelText("Mobile number (optional)")).toBeTruthy();

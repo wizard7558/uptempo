@@ -34,7 +34,7 @@ const staffStep = (terms: VerticalTerms) =>
   wrap(
     terms,
     <ServiceStep
-      salonId="s1"
+      businessId="s1"
       clientId={null}
       selectedStaffId={null}
       selectedServiceIds={[]}
@@ -54,7 +54,7 @@ const staffStepWith = (staff: ReturnType<typeof member>[]) =>
   wrap(
     VERTICALS.hair_salon.terms,
     <ServiceStep
-      salonId="s1"
+      businessId="s1"
       clientId={null}
       selectedStaffId={null}
       selectedServiceIds={[]}

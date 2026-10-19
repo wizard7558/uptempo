@@ -5,7 +5,7 @@ import { z } from "zod";
 import { verifyCodeForTenant } from "@/lib/booking/otp";
 import { setBookingSession } from "@/lib/booking/session-cookie";
 import { findClientByEmailForTenant, findClientByPhoneForTenant, createClientForTenant } from "@/lib/clients/for-tenant";
-import { getTenantSlugForSalonId } from "@/lib/tenant/registry";
+import { getTenantSlugForBusinessId } from "@/lib/tenant/registry";
 import { withTenantDb } from "@/lib/db/tenant";
 import { normalizePhone } from "@/lib/phone";
 import { eq } from "drizzle-orm";
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { identifier, code, name, salonId, phone } = parsed.data;
-    const tenantSlug = await getTenantSlugForSalonId(salonId);
+    const tenantSlug = await getTenantSlugForBusinessId(salonId);
     if (!tenantSlug) {
       return NextResponse.json(
         { error: (await getT("errors"))("bookingApi.placeNotFound") },

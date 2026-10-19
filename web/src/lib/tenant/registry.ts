@@ -101,10 +101,10 @@ export async function getTenantById(id: string) {
   return tenant ?? null;
 }
 
-export async function getTenantSlugForSalonId(
-  salonId: string,
+export async function getTenantSlugForBusinessId(
+  businessId: string,
 ): Promise<string | null> {
-  const tenant = await getTenantById(salonId);
+  const tenant = await getTenantById(businessId);
   return tenant?.slug ?? null;
 }
 

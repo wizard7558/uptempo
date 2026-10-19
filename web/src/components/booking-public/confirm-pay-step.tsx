@@ -169,7 +169,7 @@ export function PaymentStep({ onComplete, appointmentId, depositCents = 0, submi
 }
 
 interface ConfirmPayStepProps {
-  salonId: string;
+  businessId: string;
   salonSlug: string;
   salonName: string;
   salonTimezone: string;
@@ -198,7 +198,7 @@ interface ConfirmPayStepProps {
 }
 
 export function ConfirmPayStep({
-  salonId,
+  businessId,
   salonSlug,
   salonName,
   salonTimezone,
@@ -324,7 +324,7 @@ export function ConfirmPayStep({
         return;
       }
       const result = await confirmBooking({
-        salonId,
+        businessId,
         staffId,
         clientId,
         serviceIds,

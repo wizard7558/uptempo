@@ -38,7 +38,7 @@ export function BookingPreview({ settings }: { settings: BookingThemeSettings })
       >
         <div className="space-y-8">
           <ServiceStep
-            salonId="preview"
+            businessId="preview"
             clientId={null}
             selectedStaffId="any"
             selectedServiceIds={["signature"]}

@@ -220,6 +220,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/uptempo_test
+      E2E_DEV_COMMAND: npm run start
       BETTER_AUTH_SECRET: e2e-test-secret-at-least-32-characters-long
       BETTER_AUTH_URL: http://localhost:3000 # pragma: allowlist secret
       BOOKING_SESSION_SECRET: e2e-test-booking-secret-at-least-32-chars

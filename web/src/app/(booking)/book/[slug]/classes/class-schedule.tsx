@@ -59,7 +59,7 @@ export function spotPhrase(session: SpotSession): "open" | "waitlist" | "closed"
 export type ClassClient = { clientId: string; clientName: string };
 
 interface Props {
-  salonId: string;
+  businessId: string;
   salonName: string;
   verificationChannel?: BookingVerificationChannel;
   timezone: string;
@@ -96,7 +96,7 @@ function weekDays(weekStart: string): string[] {
 }
 
 export function ClassSchedule({
-  salonId,
+  businessId,
   salonName,
   verificationChannel = "phone",
   timezone,
@@ -336,7 +336,7 @@ export function ClassSchedule({
         <p className="text-sm text-[var(--ink)]">{t("public.flow.detailsLead")}</p>
         <DetailsStep
           verificationChannel={verificationChannel}
-          salonId={salonId}
+          businessId={businessId}
           clientId={client?.clientId ?? null}
           clientName={client?.clientName ?? null}
           onComplete={(clientId, clientName) => {
