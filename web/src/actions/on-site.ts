@@ -11,7 +11,7 @@ import { getTenantBySlug } from "@/lib/tenant/registry";
 import { assertModule, hasModule, ModuleDisabledError } from "@/lib/tenant/modules";
 import { getT } from "@/lib/terms/server";
 import { getEmailT } from "@/lib/terms/email";
-import { getBusinessSettingsForTenant } from "@/lib/policies/salon-policy";
+import { getBusinessSettingsForTenant } from "@/lib/policies/business-policy";
 import { lookupPostalCentroid, nearestPostal, normalizePostal } from "@/lib/geo/postal";
 import { localDay } from "@/lib/scheduling/intervals";
 import { sendSms } from "@/lib/sms/send";

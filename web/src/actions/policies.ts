@@ -18,7 +18,7 @@ import { getBaseUrl } from "@/lib/utils";
 import { getStripe } from "@/lib/stripe/server";
 import { sendEmail } from "@/lib/email/send";
 import { getEmailBranding } from "@/lib/email/branding";
-import { getBusinessSettingsForTenant, mapPolicyToPaymentMethodSettings } from "@/lib/policies/salon-policy";
+import { getBusinessSettingsForTenant, mapPolicyToPaymentMethodSettings } from "@/lib/policies/business-policy";
 
 export async function getBusinessSettings() {
   const { tenantSlug: slug } = await requireStaff();

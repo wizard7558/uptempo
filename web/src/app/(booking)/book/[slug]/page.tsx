@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { getStaffServices } from "@/actions/booking-public";
 import { getBookingSession } from "@/lib/booking/session-cookie";
-import { getBusinessSettingsForTenant } from "@/lib/policies/salon-policy";
+import { getBusinessSettingsForTenant } from "@/lib/policies/business-policy";
 import { withTenantDb } from "@/lib/db/tenant";
 import { getTenantSlug } from "@/lib/tenant/context";
 import { eq } from "drizzle-orm";

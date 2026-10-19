@@ -14,7 +14,7 @@ import {
   listActiveMembershipPlansPublic,
 } from "@/actions/membership";
 import { getSmsConsentForBookingClient } from "@/actions/sms";
-import { getBusinessSettingsForTenant } from "@/lib/policies/salon-policy";
+import { getBusinessSettingsForTenant } from "@/lib/policies/business-policy";
 import { AccountHub } from "@/components/booking-public/account-hub";
 
 export default function AccountPage() {

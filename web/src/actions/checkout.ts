@@ -8,7 +8,7 @@ import { getEmailBranding } from "@/lib/email/branding";
 import { getT } from "@/lib/terms/server";
 import type Stripe from "stripe";
 import { withTenantDb } from "@/lib/db/tenant";
-import { getPaymentMethodSettingsForTenant } from "@/lib/policies/salon-policy";
+import { getPaymentMethodSettingsForTenant } from "@/lib/policies/business-policy";
 import { getStripe } from "@/lib/stripe/server";
 import { calculateAppointmentPrice } from "@/lib/services/policy-engine";
 import { processOffSessionCharge } from "@/lib/services/charge-processing";

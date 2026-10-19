@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { withTenantDb } from "@/lib/db/tenant";
 import { getUserRole, requireStaff } from "@/lib/auth/rbac";
 import { hasPermission } from "@/lib/auth/permissions";
-import { getBusinessSettingsForTenant } from "@/lib/policies/salon-policy";
+import { getBusinessSettingsForTenant } from "@/lib/policies/business-policy";
 
 /**
  * Business-wide monthly service-revenue goal (cents). Stored in business_settings;
