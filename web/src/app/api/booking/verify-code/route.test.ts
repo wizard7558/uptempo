@@ -311,10 +311,25 @@ describe("POST /api/booking/verify-code identity selection", () => {
     });
     expect(mocks.findClientByPhoneForTenant).not.toHaveBeenCalled();
     expect(mocks.setBookingSession).toHaveBeenCalledWith(CREATED_ID);
-    expect(mocks.cookieStoreSet).toHaveBeenCalledWith(
+    const rememberedBusinessCookieOptions = {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 365 * 24 * 60 * 60,
+    };
+    expect(mocks.cookieStoreSet).toHaveBeenCalledTimes(2);
+    expect(mocks.cookieStoreSet).toHaveBeenNthCalledWith(
+      1,
+      "uptempo_last_business",
+      TENANT,
+      rememberedBusinessCookieOptions,
+    );
+    expect(mocks.cookieStoreSet).toHaveBeenNthCalledWith(
+      2,
       "uptempo_last_salon",
       TENANT,
-      expect.objectContaining({ path: "/", httpOnly: false }),
+      rememberedBusinessCookieOptions,
     );
   });
 

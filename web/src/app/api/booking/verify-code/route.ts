@@ -179,16 +179,27 @@ export async function POST(req: NextRequest) {
     // Set the booking session cookie
     await setBookingSession(clientId);
 
-    // Remember the salon (readable client-side) so the native app's tab bar
-    // and cold-start redirect are salon-scoped from the very first sign-in.
+    // Remember the business (readable client-side) so the native app's tab bar
+    // and cold-start redirect are business-scoped from the very first sign-in.
+    // Keep the legacy cookie in sync for cached native clients.
     const cookieStore = await cookies();
-    cookieStore.set("uptempo_last_salon", tenantSlug, {
+    const rememberedBusinessCookieOptions = {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "lax" as const,
       path: "/",
       maxAge: 365 * 24 * 60 * 60,
-    });
+    };
+    cookieStore.set(
+      "uptempo_last_business",
+      tenantSlug,
+      rememberedBusinessCookieOptions,
+    );
+    cookieStore.set(
+      "uptempo_last_salon",
+      tenantSlug,
+      rememberedBusinessCookieOptions,
+    );
 
     return NextResponse.json({
       clientId,
