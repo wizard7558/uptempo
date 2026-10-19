@@ -3,7 +3,7 @@ import { withTenantDb } from "@/lib/db/tenant";
 import { hasModule } from "@/lib/tenant/modules";
 import { hashPublicToken, isPublicTokenShape } from "@/lib/security/public-token";
 import { loadQueueBoard } from "@/lib/queue/board";
-import { getSalonBySlug } from "@/actions/booking-public";
+import { getBusinessBySlug } from "@/actions/booking-public";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +38,8 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
   });
   if (!entry) return notFound();
 
-  const [salon, cachedBoard] = await Promise.all([
-    getSalonBySlug(slug),
+  const [business, cachedBoard] = await Promise.all([
+    getBusinessBySlug(slug),
     loadQueueBoard(slug, entry.locationId, new Date(), { cached: true }),
   ]);
   const isHere = (b: typeof cachedBoard) =>
@@ -58,7 +58,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ slug: strin
       position: waiting?.position ?? null,
       waitMinutes: waiting?.waitMinutes ?? null,
       staffName: active?.assignedStaffName ?? null,
-      businessName: salon?.name ?? "",
+      businessName: business?.name ?? "",
     },
     { headers: HEADERS },
   );

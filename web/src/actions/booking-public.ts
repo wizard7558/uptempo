@@ -37,10 +37,10 @@ import { findRedeemablePackage, redeemForAppointment } from "@/lib/credits/ledge
 import { enforceAgeGate, getAgeGate, parseDob, type AgeGate } from "@/lib/consent/gate";
 
 /**
- * Look up a salon by its URL slug.
- * Queries the tenants table (the canonical registry of all salons).
+ * Look up a business by its URL slug.
+ * Queries the tenants table (the canonical registry of all businesses).
  */
-export async function getSalonBySlug(
+export async function getBusinessBySlug(
   slug: string,
 ): Promise<{ id: string; name: string; slug: string } | null> {
   const [tenant] = await publicDb

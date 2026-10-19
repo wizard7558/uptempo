@@ -26,8 +26,8 @@ const GUARD_CALLS = new Set([
 
 /** Intentionally public actions: "file#fn" -> why it is safe to expose. */
 const PUBLIC_ACTIONS: Record<string, string> = {
-  "booking-public.ts#getSalonBySlug":
-    "public catalog: salon id/name by slug (booking page entry)",
+  "booking-public.ts#getBusinessBySlug":
+    "public catalog: business id/name by slug (booking page entry)",
   "booking-public.ts#getBookingStaff":
     "public catalog: active staff for the booking host; tenant from the middleware header on /book paths",
   "booking-public.ts#servicesNeedAddress":

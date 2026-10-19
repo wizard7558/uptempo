@@ -8,7 +8,7 @@ import { getTenantSlug } from "@/lib/tenant/context";
 import { eq } from "drizzle-orm";
 import { clearBookingSession } from "@/lib/booking/session-cookie";
 import {
-  getSalonBySlugCached,
+  getBusinessBySlugCached,
   getBookingBrandingCached,
 } from "@/lib/booking/cached-lookups";
 import { getTenantBySlug, isTenantProvisioned } from "@/lib/tenant/registry";
@@ -31,9 +31,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return salonPageMetadata(slug, (salonName) => ({
-    title: `Book at ${salonName}`,
-    description: `Book your next appointment at ${salonName} — pick your service and time online, 24/7.`,
+  return salonPageMetadata(slug, (businessName) => ({
+    title: `Book at ${businessName}`,
+    description: `Book your next appointment at ${businessName} — pick your service and time online, 24/7.`,
   }));
 }
 
@@ -75,8 +75,8 @@ async function BookingPageContent({
   const locationParam =
     typeof query.location === "string" ? query.location.trim() : undefined;
 
-  const salon = await getSalonBySlugCached(slug);
-  if (!salon || !(await isTenantProvisioned(slug))) {
+  const business = await getBusinessBySlugCached(slug);
+  if (!business || !(await isTenantProvisioned(slug))) {
     notFound();
   }
 
@@ -85,7 +85,7 @@ async function BookingPageContent({
     const t = await getT("booking", slug);
     return (
       <main className="mx-auto max-w-lg px-6 py-16">
-        <h1 className="text-2xl font-medium">{salon.name}</h1>
+        <h1 className="text-2xl font-medium">{business.name}</h1>
         <p className="mt-3 text-sm">{t("unpublished")}</p>
       </main>
     );
@@ -178,7 +178,7 @@ async function BookingPageContent({
   // when the module is on. ?flow=book always forces the classic wizard.
   const flow = query.flow === "book" ? "book" : await getPublicBookingFlow(tenantSlug);
   if (flow === "request") {
-    return <RequestWizard {...(await loadRequestWizardProps(tenantSlug, salon))} />;
+    return <RequestWizard {...(await loadRequestWizardProps(tenantSlug, business))} />;
   }
   // Class-first businesses open on the schedule. ?flow=book still reaches the wizard.
   if (flow === "class") redirect(`/book/${slug}/classes`);
@@ -192,9 +192,9 @@ async function BookingPageContent({
   const wizard = (
     <BookingWizard
       verificationChannel={getBookingVerificationChannel()}
-      salonId={salon.id}
+      salonId={business.id}
       salonSlug={slug}
-      salonName={salon.name}
+      salonName={business.name}
       hasSalonLogo={hasSalonLogo}
       salonTimezone={salonTimezone}
       requireCardOnFile={policy.requireCardOnFile === 1}

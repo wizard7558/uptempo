@@ -18,7 +18,7 @@ import { getBaseUrl } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics/events";
 import { findClientByPhoneForTenant, createClientForTenant } from "@/lib/clients/for-tenant";
 import { recordSmsConsent } from "@/lib/sms/consent";
-import { getSalonBySlug } from "@/actions/booking-public";
+import { getBusinessBySlug } from "@/actions/booking-public";
 import { loadQueueBoard } from "@/lib/queue/board";
 
 /**
@@ -101,8 +101,8 @@ export async function getQueueJoinInfo(
     return { success: false, error: (await getT("errors", slug))("queue.turnedOff") };
   }
 
-  const [salon, board, lists] = await Promise.all([
-    getSalonBySlug(slug),
+  const [business, board, lists] = await Promise.all([
+    getBusinessBySlug(slug),
     loadQueueBoard(slug, locationId, new Date(), { cached: true }),
     withTenantDb(slug, async (db, t) => {
       const [settings] = await db
@@ -141,7 +141,7 @@ export async function getQueueJoinInfo(
   const isKiosk = kioskTokenOk(kioskToken, lists.kioskHash);
   return {
     success: true,
-    businessName: salon?.name ?? "",
+    businessName: business?.name ?? "",
     open: board.open,
     full: board.waiting.length >= board.maxWaiting,
     waitingCount: board.waiting.length,
@@ -295,7 +295,7 @@ export async function joinQueue(input: JoinQueueInput): Promise<JoinQueueResult>
 
   // 10. Text the link, after the response.
   if (input.smsConsent && settings.textOnJoin) {
-    const salon = await getSalonBySlug(slug);
+    const business = await getBusinessBySlug(slug);
     const clientIdForSms = clientId ?? undefined;
     runAfterResponse(() =>
       sendSms({
@@ -306,7 +306,7 @@ export async function joinQueue(input: JoinQueueInput): Promise<JoinQueueResult>
           date: "",
           time: "",
           services: "",
-          business: salon?.name ?? "",
+          business: business?.name ?? "",
           link: `${getBaseUrl()}/q/${slug}/e/${token}`,
         }),
         tenantSlug: slug,

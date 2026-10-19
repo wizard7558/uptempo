@@ -62,7 +62,7 @@ vi.mock("@/lib/sms/send", () => ({ sendSms: h.sendSms }));
 vi.mock("@/lib/utils/after", () => ({ runAfterResponse: (fn: () => Promise<unknown>) => void fn() }));
 vi.mock("@/lib/clients/for-tenant", () => ({ findClientByPhoneForTenant: vi.fn(), createClientForTenant: vi.fn() }));
 vi.mock("@/lib/sms/consent", () => ({ recordSmsConsent: vi.fn() }));
-vi.mock("@/actions/booking-public", () => ({ getSalonBySlug: async () => ({ name: "Acme Salon" }) }));
+vi.mock("@/actions/booking-public", () => ({ getBusinessBySlug: async () => ({ name: "Acme Salon" }) }));
 
 import {
   addWalkIn,

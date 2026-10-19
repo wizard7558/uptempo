@@ -27,7 +27,7 @@ vi.mock("@/lib/clients/for-tenant", () => ({
   createClientForTenant: h.createClient,
 }));
 vi.mock("@/lib/sms/consent", () => ({ recordSmsConsent: h.recordSmsConsent }));
-vi.mock("@/actions/booking-public", () => ({ getSalonBySlug: async () => ({ id: "s", name: "Salon", slug: "salon" }) }));
+vi.mock("@/actions/booking-public", () => ({ getBusinessBySlug: async () => ({ id: "s", name: "Salon", slug: "salon" }) }));
 vi.mock("@/lib/sms/send", () => ({ sendSms: h.sendSms }));
 vi.mock("@/lib/utils/after", () => ({ runAfterResponse: (fn: () => Promise<unknown>) => void fn() }));
 vi.mock("@/lib/analytics/events", () => ({ trackEvent: vi.fn() }));

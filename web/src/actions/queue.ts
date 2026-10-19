@@ -18,7 +18,7 @@ import { loadQueueBoard, type QueueBoardEntry } from "@/lib/queue/board";
 import { beginService, claimEntry, endService, type ClaimedEntry } from "@/lib/queue/line";
 import { findClientByPhoneForTenant, createClientForTenant } from "@/lib/clients/for-tenant";
 import { recordSmsConsent } from "@/lib/sms/consent";
-import { getSalonBySlug } from "@/actions/booking-public";
+import { getBusinessBySlug } from "@/actions/booking-public";
 
 /**
  * Front-desk actions for the walk-in line. Every action needs a team session and
@@ -199,7 +199,7 @@ export async function addWalkIn(input: AddWalkInInput): Promise<{ success: true;
   if (parsed.data.smsConsent && phone) {
     const board = await loadQueueBoard(slug, locationId);
     if (board.textOnJoin) {
-      const salon = await getSalonBySlug(slug);
+      const business = await getBusinessBySlug(slug);
       runAfterResponse(() =>
         sendSms({
           to: phone,
@@ -209,7 +209,7 @@ export async function addWalkIn(input: AddWalkInInput): Promise<{ success: true;
             date: "",
             time: "",
             services: "",
-            business: salon?.name ?? "",
+            business: business?.name ?? "",
             link: `${getBaseUrl()}/q/${slug}/e/${token}`,
           }),
           tenantSlug: slug,
@@ -236,7 +236,7 @@ export type CallResult =
 /** Texts the person that it's their turn. Runs after the response; a failure never fails the call. */
 async function textCalled(slug: string, entry: ClaimedEntry) {
   if (!entry.phone) return;
-  const salon = await getSalonBySlug(slug);
+  const business = await getBusinessBySlug(slug);
   const to = entry.phone;
   runAfterResponse(() =>
     sendSms({
@@ -247,7 +247,7 @@ async function textCalled(slug: string, entry: ClaimedEntry) {
         date: "",
         time: "",
         services: "",
-        business: salon?.name ?? "",
+        business: business?.name ?? "",
       }),
       tenantSlug: slug,
       clientId: entry.clientId ?? undefined,

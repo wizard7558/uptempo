@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { withTenantDb } from "@/lib/db/tenant";
-import { getSalonBySlug } from "@/actions/booking-public";
+import { getBusinessBySlug } from "@/actions/booking-public";
 import { isTenantProvisioned } from "@/lib/tenant/registry";
 
 /**
@@ -14,11 +14,11 @@ import { isTenantProvisioned } from "@/lib/tenant/registry";
  */
 const REVALIDATE_SECONDS = 300;
 
-/** Cached salon identity ({ id, name, slug }) for a public slug. */
-export function getSalonBySlugCached(slug: string) {
+/** Cached business identity ({ id, name, slug }) for a public slug. */
+export function getBusinessBySlugCached(slug: string) {
   return unstable_cache(
-    () => getSalonBySlug(slug),
-    ["salon-by-slug", slug],
+    () => getBusinessBySlug(slug),
+    ["business-by-slug", slug],
     { tags: [`tenant:${slug}`], revalidate: REVALIDATE_SECONDS },
   )();
 }

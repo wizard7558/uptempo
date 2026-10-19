@@ -1,6 +1,6 @@
 import { getT } from "@/lib/terms/server";
 import { notFound } from "next/navigation";
-import { getSalonBySlug } from "@/actions/booking-public";
+import { getBusinessBySlug } from "@/actions/booking-public";
 import { listActiveMembershipPlansPublic } from "@/actions/membership";
 import {
   getBookingSession,
@@ -19,9 +19,9 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const t = await getT("booking", slug);
-  return salonPageMetadata(slug, (salonName) => ({
-    title: `${salonName} membership`,
-    description: t("subscribePage.metaDescription", { salonName }),
+  return salonPageMetadata(slug, (businessName) => ({
+    title: `${businessName} membership`,
+    description: t("subscribePage.metaDescription", { salonName: businessName }),
   }));
 }
 
@@ -34,8 +34,8 @@ export default async function SubscribePage({
 }) {
   const { slug } = await params;
   const query = await searchParams;
-  const salon = await getSalonBySlug(slug);
-  if (!salon || !(await isTenantProvisioned(slug))) {
+  const business = await getBusinessBySlug(slug);
+  if (!business || !(await isTenantProvisioned(slug))) {
     notFound();
   }
 
@@ -102,8 +102,8 @@ export default async function SubscribePage({
 
   return (
     <SubscribeWizard
-      salonId={salon.id}
-      salonName={salon.name}
+      salonId={business.id}
+      salonName={business.name}
       tenantSlug={slug}
       plans={plans}
       clientSession={clientSession}

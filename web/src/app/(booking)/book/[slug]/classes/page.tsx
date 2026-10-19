@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { getTenantSlug } from "@/lib/tenant/context";
 import { isTenantProvisioned } from "@/lib/tenant/registry";
 import { hasModule } from "@/lib/tenant/modules";
-import { getSalonBySlugCached } from "@/lib/booking/cached-lookups";
+import { getBusinessBySlugCached } from "@/lib/booking/cached-lookups";
 import { clearBookingSession, getBookingSession } from "@/lib/booking/session-cookie";
 import { withTenantDb } from "@/lib/db/tenant";
 import { getT } from "@/lib/terms/server";
@@ -14,8 +14,8 @@ import { ClassSchedule } from "./class-schedule";
 
 export default async function ClassesPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const salon = await getSalonBySlugCached(slug);
-  if (!salon || !(await isTenantProvisioned(slug))) notFound();
+  const business = await getBusinessBySlugCached(slug);
+  if (!business || !(await isTenantProvisioned(slug))) notFound();
   const tenantSlug = await getTenantSlug();
 
   if (!(await hasModule(tenantSlug, "classes"))) {
@@ -43,8 +43,8 @@ export default async function ClassesPage({ params }: { params: Promise<{ slug: 
   return (
     <ClassSchedule
       verificationChannel={getBookingVerificationChannel()}
-      salonId={salon.id}
-      salonName={salon.name}
+      salonId={business.id}
+      salonName={business.name}
       timezone={list.timezone}
       classes={list.classes}
       mine={mine}

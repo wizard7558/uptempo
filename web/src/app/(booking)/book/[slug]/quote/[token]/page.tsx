@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { isTenantProvisioned } from "@/lib/tenant/registry";
-import { getSalonBySlugCached } from "@/lib/booking/cached-lookups";
+import { getBusinessBySlugCached } from "@/lib/booking/cached-lookups";
 import { getQuoteForPage } from "@/actions/quotes-public";
 import { QuoteClient } from "./quote-client";
 
@@ -12,8 +12,8 @@ export default async function QuotePage({
   params: Promise<{ slug: string; token: string }>;
 }) {
   const { slug, token } = await params;
-  const salon = await getSalonBySlugCached(slug);
-  if (!salon || !(await isTenantProvisioned(slug))) notFound();
+  const business = await getBusinessBySlugCached(slug);
+  if (!business || !(await isTenantProvisioned(slug))) notFound();
   const data = await getQuoteForPage(token);
   return <QuoteClient token={token} data={data} />;
 }
