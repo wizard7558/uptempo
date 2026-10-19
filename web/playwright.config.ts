@@ -42,7 +42,9 @@ export default defineConfig({
   // booking specs create appointments that consume the slots the others look
   // for (parallel runs made booking-flex / booking-flow fail intermittently).
   workers: 1,
-  reporter: process.env.CI ? "github" : "html",
+  reporter: process.env.CI
+    ? [["github"], ["html", { open: "never" }]]
+    : "html",
 
   use: {
     baseURL: e2eBaseUrl,

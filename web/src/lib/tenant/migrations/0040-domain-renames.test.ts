@@ -82,7 +82,7 @@ async function oldNameCounts(schema: string) {
 }
 
 describe("migration 0040 domain renames (integration)", () => {
-  itDb("fresh provision lands at LATEST with no legacy names", async () => {
+  itDb("fresh provision keeps canonical base objects and the explicit 0060 compatibility surface", async () => {
     const { provisionTenantSchema } = await import("../provision");
     const { LATEST_SCHEMA_VERSION } = await import("./index");
     const { publicDb } = await import("@/lib/db");
@@ -97,9 +97,25 @@ describe("migration 0040 domain renames (integration)", () => {
     expect(t.schemaVersion).toBe(LATEST_SCHEMA_VERSION);
 
     const P = "(stylist|salon|beauty_bank)";
-    const legacy = await rows(sql`
-      SELECT 'col ' || table_name || '.' || column_name AS name FROM information_schema.columns
-        WHERE table_schema = ${schema} AND (table_name ~ ${P} OR column_name ~ ${P} OR column_default ~ ${P})
+    const legacyBaseObjects = await rows(sql`
+      SELECT 'rel ' || c.relname AS name
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = ${schema} AND c.relkind = 'r' AND c.relname ~ ${P}
+      UNION ALL
+      SELECT 'col ' || c.relname || '.' || a.attname
+      FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = ${schema} AND c.relkind = 'r' AND a.attnum > 0 AND NOT a.attisdropped
+        AND (c.relname ~ ${P} OR a.attname ~ ${P})
+        AND (c.relname || '.' || a.attname) NOT IN (
+          'staff.legacy_stylist_role',
+          'appointments.stylist_id',
+          'working_hours.stylist_id',
+          'calendar_connections.stylist_id',
+          'external_events.stylist_id',
+          'time_blocks.stylist_id',
+          'charges.beauty_bank_cents'
+        )
       UNION ALL
       SELECT 'con ' || t.relname || '.' || c.conname FROM pg_constraint c
         JOIN pg_class t ON t.oid = c.conrelid JOIN pg_namespace n ON n.oid = t.relnamespace
@@ -108,7 +124,21 @@ describe("migration 0040 domain renames (integration)", () => {
       SELECT 'idx ' || indexname FROM pg_indexes
         WHERE schemaname = ${schema} AND (tablename ~ ${P} OR indexname ~ ${P} OR indexdef ~ ${P})
     `);
-    expect(legacy).toEqual([]);
+    expect(legacyBaseObjects).toEqual([]);
+
+    const compatibilityViews = await rows(sql`
+      SELECT c.relname AS name, c.relkind
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = ${schema} AND c.relkind = 'v'
+      ORDER BY c.relname
+    `);
+    expect(compatibilityViews).toEqual([
+      { name: "beauty_bank_balances", relkind: "v" },
+      { name: "beauty_bank_transactions", relkind: "v" },
+      { name: "salon_policies", relkind: "v" },
+      { name: "stylist_services", relkind: "v" },
+      { name: "stylists", relkind: "v" },
+    ]);
   }, 60000);
 
   itDb("fresh@LATEST and fresh@39 + migrateTenant have identical fingerprints", async () => {

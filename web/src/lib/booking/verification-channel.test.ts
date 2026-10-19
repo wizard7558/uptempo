@@ -10,8 +10,11 @@ describe("getBookingVerificationChannel", () => {
     { mode: "single", sms: "none", expected: "email" },
     { mode: "single", sms: "twilio", expected: "phone" },
     { mode: "single", sms: "loopmessage", expected: "phone" },
+    { mode: "single", sms: "log", expected: "phone" },
+    { mode: "single", sms: " LOG ", expected: "phone" },
     { mode: "multi", sms: "none", expected: "phone" },
     { mode: "multi", sms: "twilio", expected: "phone" },
+    { mode: "multi", sms: "log", expected: "phone" },
   ])("returns $expected for $mode mode with SMS_PROVIDER=$sms", ({ mode, sms, expected }) => {
     vi.stubEnv("UPTEMPO_MODE", mode);
     vi.stubEnv("SMS_PROVIDER", sms);

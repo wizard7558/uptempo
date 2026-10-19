@@ -2,6 +2,11 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { execFileSync } from "node:child_process";
 import { eq, inArray } from "drizzle-orm";
 import { resolve } from "node:path";
+import postgres from "postgres";
+import {
+  assertBillingSwitchTestDatabase,
+  resolveBillingSwitchTestDatabaseConfig,
+} from "./billing-switch-test-database";
 
 const fakeSendEmail = vi.hoisted(() => vi.fn());
 const stripeState = vi.hoisted(() => ({
@@ -184,7 +189,8 @@ import {
 import { publicDb } from "@/lib/db";
 import { memberships, tenants, user, type SmsLineStatus } from "@/lib/db/schema";
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseConfig = resolveBillingSwitchTestDatabaseConfig(process.env);
+const databaseUrl = databaseConfig.enabled ? databaseConfig.databaseUrl : undefined;
 const itDb = databaseUrl ? it : it.skip;
 
 type FakeEmail = {
@@ -206,6 +212,18 @@ describe.skipIf(!databaseUrl)("billing notice delivery (db)", () => {
   let clockTime: Date | null = null;
   let advanceByMs = 0;
   let emails: FakeEmail[] = [];
+
+  async function verifyTestDatabaseOwnership() {
+    if (!databaseConfig.enabled) {
+      throw new Error("Billing switch database opt-in was not enabled");
+    }
+    const sql = postgres(databaseConfig.databaseUrl, { max: 1 });
+    try {
+      await assertBillingSwitchTestDatabase(sql, databaseConfig);
+    } finally {
+      await sql.end({ timeout: 5 });
+    }
+  }
 
   async function makeSwitchBusiness(
     tag: string,
@@ -354,6 +372,7 @@ describe.skipIf(!databaseUrl)("billing notice delivery (db)", () => {
   }
 
   beforeAll(async () => {
+    await verifyTestDatabaseOwnership();
     vi.stubEnv("UPTEMPO_MODE", "multi");
     vi.stubEnv("EMAIL_PROVIDER", "console");
     vi.stubEnv("RESEND_API_KEY", "");
@@ -481,16 +500,20 @@ describe.skipIf(!databaseUrl)("billing notice delivery (db)", () => {
   afterAll(async () => {
     if (!databaseUrl) return;
     try {
-      if (userIds.length > 0) {
-        await publicDb.delete(memberships).where(inArray(memberships.userId, userIds));
-        await publicDb.delete(user).where(inArray(user.id, userIds));
+      await verifyTestDatabaseOwnership();
+      try {
+        if (userIds.length > 0) {
+          await publicDb.delete(memberships).where(inArray(memberships.userId, userIds));
+          await publicDb.delete(user).where(inArray(user.id, userIds));
+        }
+      } catch {
+        // Continue schema cleanup even after a failed row cleanup.
       }
-    } catch {
-      // Continue schema cleanup even after a failed row cleanup.
+      for (const fixture of [...fixtures].reverse()) await fixture.drop();
+    } finally {
+      vi.unstubAllEnvs();
+      await closeBillingDatabase();
     }
-    for (const fixture of [...fixtures].reverse()) await fixture.drop();
-    vi.unstubAllEnvs();
-    await closeBillingDatabase();
   }, 120_000);
 
   itDb("dry-runs five businesses, retains provider-failure intent, serializes retries, and sends only once", async () => {

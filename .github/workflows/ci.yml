@@ -113,6 +113,68 @@ jobs:
       - name: Migrate
         run: node scripts/db-prepare.mjs && node scripts/migrate-platform.mjs && pnpm exec tsx scripts/migrate-tenants.ts
 
+      - name: Prepare billing switch disposable test database
+        id: billing-switch-db
+        env:
+          PGPASSWORD: postgres
+        run: |
+          RUN_ID="$(node -e "process.stdout.write(require('node:crypto').randomBytes(12).toString('hex'))")"
+          DATABASE_NAME="uptempo_billing_switch_test_${RUN_ID}"
+          createdb -h localhost -p 5432 -U postgres "${DATABASE_NAME}"
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
+            -c "COMMENT ON DATABASE \"${DATABASE_NAME}\" IS 'uptempo-billing-switch-disposable:${RUN_ID}'"
+          echo "run_id=${RUN_ID}" >> "${GITHUB_OUTPUT}"
+          echo "database_name=${DATABASE_NAME}" >> "${GITHUB_OUTPUT}"
+
+      - name: Migrate billing switch disposable test database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_RUN_ID: ${{ steps.billing-switch-db.outputs.run_id }}
+          PGPASSWORD: postgres
+        run: |
+          EXPECTED_MARKER="uptempo-billing-switch-disposable:${BILLING_SWITCH_TEST_RUN_ID}"
+          ACTUAL_MARKER="$(psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d "${BILLING_SWITCH_TEST_DATABASE_URL##*/}" -Atc \
+            "SELECT pg_catalog.shobj_description(oid, 'pg_database') FROM pg_catalog.pg_database WHERE datname = current_database()")"
+          if [ "${ACTUAL_MARKER}" != "${EXPECTED_MARKER}" ]; then
+            echo "::error::Billing switch test database ownership marker did not match; refusing migration."
+            exit 1
+          fi
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d "${BILLING_SWITCH_TEST_DATABASE_URL##*/}" \
+            -c "CREATE EXTENSION IF NOT EXISTS btree_gist"
+          node scripts/db-prepare.mjs
+          pnpm run migrate:platform
+          pnpm exec tsx scripts/migrate-tenants.ts
+
+      - name: Test billing switch integration suite against disposable database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_RUN_ID: ${{ steps.billing-switch-db.outputs.run_id }}
+          EMAIL_PROVIDER: console
+          RESEND_API_KEY: ""
+          SMTP_HOST: ""
+          VERCEL_ENV: development
+        run: pnpm exec vitest run src/lib/billing/switch.integration.test.ts
+
+      - name: Drop billing switch disposable test database
+        if: always() && steps.billing-switch-db.outputs.database_name != ''
+        env:
+          BILLING_SWITCH_TEST_DATABASE_NAME: ${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_RUN_ID: ${{ steps.billing-switch-db.outputs.run_id }}
+          PGPASSWORD: postgres
+        run: |
+          EXPECTED_MARKER="uptempo-billing-switch-disposable:${BILLING_SWITCH_TEST_RUN_ID}"
+          ACTUAL_MARKER="$(psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d postgres -Atc "SELECT pg_catalog.shobj_description(oid, 'pg_database') FROM pg_catalog.pg_database WHERE datname = '${BILLING_SWITCH_TEST_DATABASE_NAME}'")"
+          if [ "${ACTUAL_MARKER}" != "${EXPECTED_MARKER}" ]; then
+            echo "::error::Billing switch test database ownership marker did not match; refusing cleanup."
+            exit 1
+          fi
+          dropdb -h localhost -p 5432 -U postgres "${BILLING_SWITCH_TEST_DATABASE_NAME}"
+
       - name: Prepare archive safety test database
         id: archive-legacy-db
         env:

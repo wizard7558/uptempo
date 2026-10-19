@@ -74,6 +74,7 @@ import { migration as m0056 } from "./0056-custom-fields";
 import { migration as m0057 } from "./0057-drop-hair-types";
 import { migration as m0058 } from "./0058-branding-theme";
 import { migration as m0059 } from "./0059-appointment-check-in";
+import { migration as m0060 } from "./0060-domain-compatibility";
 
 /**
  * Ordered registry of all tenant schema migrations.
@@ -137,6 +138,7 @@ const registry: TenantMigration[] = [
   m0057,
   m0058,
   m0059,
+  m0060,
 ];
 
 export const migrations: TenantMigration[] = registry.sort(
