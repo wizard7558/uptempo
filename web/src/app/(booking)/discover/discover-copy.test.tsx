@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-const listMarketplaceSalons = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/tenant/registry", () => ({ listMarketplaceSalons }));
+const listMarketplaceBusinesses = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/tenant/registry", () => ({ listMarketplaceBusinesses }));
 
 import DiscoverPage, { metadata } from "./page";
 
@@ -13,7 +13,7 @@ async function render(q?: string) {
 
 describe("/discover marketplace copy is industry neutral", () => {
   it("empty state and heading never say salon", async () => {
-    listMarketplaceSalons.mockResolvedValue([]);
+    listMarketplaceBusinesses.mockResolvedValue([]);
     const html = await render();
     expect(html).toContain("Find a local business to book");
     expect(html).toContain("tattoo studios");
@@ -24,12 +24,12 @@ describe("/discover marketplace copy is industry neutral", () => {
   });
 
   it("no-results message says business", async () => {
-    listMarketplaceSalons.mockResolvedValue([]);
+    listMarketplaceBusinesses.mockResolvedValue([]);
     expect(await render("fade")).toContain("No businesses found for “fade”.");
   });
 
   it("lists businesses and keeps the booking link", async () => {
-    listMarketplaceSalons.mockResolvedValue([{ slug: "fade-co", name: "Fade Co" }]);
+    listMarketplaceBusinesses.mockResolvedValue([{ slug: "fade-co", name: "Fade Co" }]);
     const html = await render();
     expect(html).toContain("Fade Co");
     expect(html).toContain('href="/book/fade-co"');

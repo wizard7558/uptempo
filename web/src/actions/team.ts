@@ -592,9 +592,9 @@ export async function acceptInvitation(
 
 /**
  * Accept an invitation for a user who already has an account (same email as the invite).
- * Requires an active session matching the invitation email. Switches active tenant to the new salon.
+ * Requires an active session matching the invitation email. Switches active tenant to the new business.
  */
-export async function joinSalonFromInvitation(
+export async function joinBusinessFromInvitation(
   token: string,
 ): Promise<
   { success: true; tenantSlug: string } | { success: false; error: string }

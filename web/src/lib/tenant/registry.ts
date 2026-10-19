@@ -185,16 +185,16 @@ export async function resolveTenantSlugForAppointment(
   return null;
 }
 
-export type MarketplaceSalon = { name: string; slug: string };
+export type MarketplaceBusiness = { name: string; slug: string };
 
 /**
- * Active salons that have opted into the public client app marketplace.
+ * Active businesses that have opted into the public client app marketplace.
  * Optional case-insensitive name search. Used by the `/discover` screen that
  * the client iOS app opens to (since the app has no URL bar to carry a slug).
  */
-export async function listMarketplaceSalons(
+export async function listMarketplaceBusinesses(
   search?: string,
-): Promise<MarketplaceSalon[]> {
+): Promise<MarketplaceBusiness[]> {
   const trimmed = search?.trim();
   return publicDb
     .select({ name: tenants.name, slug: tenants.slug })

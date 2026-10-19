@@ -64,7 +64,7 @@ vi.mock("@/lib/terms/server", () => ({
 import { requireRole } from "@/lib/auth/rbac";
 import {
   acceptInvitation,
-  joinSalonFromInvitation,
+  joinBusinessFromInvitation,
   sendInvitation,
 } from "./team";
 
@@ -114,10 +114,10 @@ describe("invitation accept normalizes the role", () => {
   it.each([
     ["stylist", "provider"],
     ["provider", "provider"],
-  ])("joinSalonFromInvitation stores %s as %s", async (stored, expected) => {
+  ])("joinBusinessFromInvitation stores %s as %s", async (stored, expected) => {
     // invitation lookup, tenant name, then duplicate-membership check (none)
     h.selectQueue = [...invitationRows(stored), []];
-    const result = await joinSalonFromInvitation("tok");
+    const result = await joinBusinessFromInvitation("tok");
     expect(result).toEqual({ success: true, tenantSlug: "salon-x" });
     expect(h.addMembershipAndActivate).toHaveBeenCalledWith(
       "existing-user",

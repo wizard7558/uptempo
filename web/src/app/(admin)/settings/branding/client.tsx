@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { updateBrandingSettings, uploadSalonLogo } from "@/actions/branding";
+import { updateBrandingSettings, uploadBusinessLogo } from "@/actions/branding";
 import { BookingPreview } from "@/components/settings/booking-preview";
 import {
   Card,
@@ -282,7 +282,7 @@ function LogoUploader({
       formData.append("file", file);
       if (logoUrl) formData.append("oldUrl", logoUrl);
 
-      const data = await uploadSalonLogo(formData);
+      const data = await uploadBusinessLogo(formData);
       if (!data.ok) {
         const hint = data.detail ? ` ${data.detail}` : "";
         toast.error(data.error + hint);

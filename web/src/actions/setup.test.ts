@@ -4,6 +4,7 @@ const rows = vi.hoisted(() => ({
   current: [] as Array<{ slug: string }>,
 }));
 const inserted = vi.hoisted(() => ({ current: [] as unknown[] }));
+const existingSlugs = vi.hoisted(() => ({ current: new Set<string>() }));
 
 vi.mock("@/lib/db", () => ({
   publicDb: {
@@ -35,7 +36,9 @@ vi.mock("@/lib/auth/server", () => ({
   },
 }));
 vi.mock("@/lib/tenant/registry", () => ({
-  getTenantBySlug: vi.fn(async () => null),
+  getTenantBySlug: vi.fn(async (slug: string) =>
+    existingSlugs.current.has(slug) ? { slug } : null,
+  ),
 }));
 vi.mock("@/lib/analytics/events", () => ({
   trackEvent: vi.fn(),
@@ -60,6 +63,7 @@ const input = {
 beforeEach(() => {
   rows.current = [];
   inserted.current = [];
+  existingSlugs.current.clear();
   clearSingleTenantSlugCache();
   vi.unstubAllEnvs();
 });
@@ -96,5 +100,33 @@ describe("createSingleBusiness", () => {
       industry: "barber",
       modules: ["memberships", "walk_in_queue", "slot_waitlist", "gift_cards"],
     });
+  });
+
+  it.each(["!!!", "東京"])(
+    "uses the business slug fallback for %s and preserves its display name",
+    async (businessName) => {
+      vi.stubEnv("UPTEMPO_MODE", "single");
+      await expect(
+        createSingleBusiness({ ...input, businessName }),
+      ).resolves.toEqual({ success: true, slug: "business" });
+      expect(inserted.current[0]).toMatchObject({ name: businessName, slug: "business" });
+    },
+  );
+
+  it("adds a unique suffix when the business fallback slug is occupied", async () => {
+    vi.stubEnv("UPTEMPO_MODE", "single");
+    existingSlugs.current.add("business");
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.123456789);
+    try {
+      const result = await createSingleBusiness({ ...input, businessName: "!!!" });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.slug).toMatch(/^business-[a-z0-9]+$/);
+        expect(existingSlugs.current.has(result.slug)).toBe(false);
+        expect(inserted.current[0]).toMatchObject({ name: "!!!", slug: result.slug });
+      }
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 });

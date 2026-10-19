@@ -132,7 +132,7 @@ export function PaymentsStep({
             disabled={isPending}
             onClick={() => {
               // Without a Stripe key payments are off. Record that as a skip,
-              // or launchSalon keeps sending the owner back to this step.
+              // or launchBusiness keeps sending the owner back to this step.
               if (selfHosted.configured) {
                 onMarkComplete();
                 onContinue();

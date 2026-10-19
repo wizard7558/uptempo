@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Search, ArrowRight } from "lucide-react";
-import { listMarketplaceSalons } from "@/lib/tenant/registry";
+import { listMarketplaceBusinesses } from "@/lib/tenant/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +23,7 @@ export default async function DiscoverPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const salons = await listMarketplaceSalons(q);
+  const businesses = await listMarketplaceBusinesses(q);
 
   return (
     <div className="mx-auto w-full max-w-lg px-4 py-8 sm:px-6 md:max-w-xl lg:max-w-2xl">
@@ -52,7 +52,7 @@ export default async function DiscoverPage({
         </div>
       </form>
 
-      {salons.length === 0 ? (
+      {businesses.length === 0 ? (
         <p className="py-12 text-center text-sm text-[var(--ink-soft)]">
           {q
             ? `No businesses found for “${q}”.`
@@ -60,14 +60,14 @@ export default async function DiscoverPage({
         </p>
       ) : (
         <ul className="space-y-2">
-          {salons.map((salon) => (
-            <li key={salon.slug}>
+          {businesses.map((business) => (
+            <li key={business.slug}>
               <Link
-                href={`/book/${salon.slug}`}
+                href={`/book/${business.slug}`}
                 className="group flex items-center justify-between rounded-lg border border-[var(--line)] px-4 py-3 transition-colors hover:border-[var(--ink)]"
               >
                 <span className="text-base text-[var(--ink)]">
-                  {salon.name}
+                  {business.name}
                 </span>
                 <ArrowRight
                   className="size-4 text-[var(--ink-soft)] transition-transform group-hover:translate-x-0.5"

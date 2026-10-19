@@ -97,8 +97,8 @@ async function getOnboardingSlug(): Promise<string> {
 /**
  * Slug + role for the current user's active tenant, requiring owner/admin.
  * Onboarding mutations run on the root domain and are called from a public
- * server-action surface, so they must enforce their own role check (a stylist
- * or assistant must not be able to flip flags or launch the salon).
+ * server-action surface, so they must enforce their own role check (a provider
+ * or assistant must not be able to flip flags or launch the business).
  */
 async function getOnboardingSlugAsManager(): Promise<
   { ok: true; slug: string } | { ok: false; error: string }
@@ -143,7 +143,7 @@ export async function checkSlugAvailability(slug: string): Promise<{ available: 
 }
 
 /**
- * Generate a URL-safe slug from a salon name, appending a suffix if taken.
+ * Generate a URL-safe slug from a business name, appending a suffix if taken.
  */
 async function generateUniqueSlug(businessName: string): Promise<string> {
   const base = businessName
@@ -152,7 +152,7 @@ async function generateUniqueSlug(businessName: string): Promise<string> {
     .replace(/^[^a-z]+/, "")
     .replace(/-+$/, "")
     .slice(0, 40)
-    .replace(/-+$/, "") || "salon";
+    .replace(/-+$/, "") || "business";
 
   if (base.length >= 3) {
     const existing = await getTenantBySlug(base);
@@ -171,8 +171,8 @@ async function generateUniqueSlug(businessName: string): Promise<string> {
 
 const SIGNUP_OFF = "Sign-up is turned off on this install.";
 
-export async function createSalonAccount(data: {
-  salonName: string;
+export async function createBusinessAccount(data: {
+  businessName: string;
   timezone: string;
   ownerName: string;
   email: string;
@@ -184,8 +184,8 @@ export async function createSalonAccount(data: {
   if (!packResult.ok) return { success: false, error: packResult.error };
   const pack = packResult.pack;
   try {
-    // Auto-generate a unique slug from salon name
-    const slug = await generateUniqueSlug(data.salonName);
+    // Auto-generate a unique slug from the business name
+    const slug = await generateUniqueSlug(data.businessName);
 
     // Create the user via Better Auth
     const newUser = await auth.api.signUpEmail({
@@ -205,7 +205,7 @@ export async function createSalonAccount(data: {
     try {
       await publicDb.insert(tenants).values(
         newTenantValues({
-          name: data.salonName,
+          name: data.businessName,
           slug,
           timezone: data.timezone,
           pack,
@@ -247,8 +247,8 @@ export async function createSalonAccount(data: {
   }
 }
 
-export async function setupSalonForOAuthUser(data: {
-  salonName: string;
+export async function setupBusinessForOAuthUser(data: {
+  businessName: string;
   slug: string;
   timezone: string;
   industry: string;
@@ -279,7 +279,7 @@ export async function setupSalonForOAuthUser(data: {
     // Create tenant registry row (fast — no schema provisioning yet)
     await publicDb.insert(tenants).values(
       newTenantValues({
-        name: data.salonName,
+        name: data.businessName,
         slug: data.slug,
         timezone: data.timezone,
         pack,
@@ -307,12 +307,12 @@ export async function setupSalonForOAuthUser(data: {
 }
 
 /**
- * For a user who already belongs to at least one salon (e.g. assistant on another account):
- * create a **new** tenant, add an owner membership, and switch their active salon to it.
- * Existing memberships are unchanged — they can switch salons from the sidebar.
+ * For a user who already belongs to at least one business (e.g. assistant on another account):
+ * create a **new** tenant, add an owner membership, and switch their active business to it.
+ * Existing memberships are unchanged — they can switch businesses from the sidebar.
  */
-export async function createAdditionalSalonAsOwner(data: {
-  salonName: string;
+export async function createAdditionalBusinessAsOwner(data: {
+  businessName: string;
   slug: string;
   timezone: string;
   industry: string;
@@ -339,7 +339,7 @@ export async function createAdditionalSalonAsOwner(data: {
 
     await publicDb.insert(tenants).values(
       newTenantValues({
-        name: data.salonName,
+        name: data.businessName,
         slug: data.slug,
         timezone: data.timezone,
         pack,
@@ -377,12 +377,12 @@ export async function createAdditionalSalonAsOwner(data: {
 }
 
 export async function saveBusinessDetails(input: {
-  salonName: string;
+  businessName: string;
   phone: string;
   address: string;
 }): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug, userId } = await requireStaff("owner", "admin");
-  const businessName = input.salonName.trim();
+  const businessName = input.businessName.trim();
   const phone = input.phone.trim();
   const address = input.address.trim();
   if (!businessName || !phone || !address) {
@@ -623,7 +623,7 @@ export async function completeHoursStep(): Promise<{
 
 /**
  * Explicitly skip Stripe during onboarding. Closes the card-on-file trap: a
- * salon without Stripe cannot process cards, so if `require_card_on_file` is
+ * business without Stripe cannot process cards, so if `require_card_on_file` is
  * still on we turn it off (and say so) — otherwise the public booking flow
  * would demand cards it can't charge. A prompt on Settings → Billing offers to
  * re-enable it once Stripe is connected.
@@ -689,7 +689,7 @@ export async function skipStripeForNow(): Promise<
   return { success: true, cardRequirementDisabled };
 }
 
-export async function launchSalon(): Promise<
+export async function launchBusiness(): Promise<
   | { success: true }
   | { success: false; error: string; missing?: LaunchPrereq[] }
 > {
@@ -746,7 +746,7 @@ export async function launchSalon(): Promise<
       await ensureHostedSubscription(slug, { trialDays: HOSTED_TRIAL_DAYS });
     } catch (billingError) {
       console.error(
-        `launchSalon: hosted subscription setup failed for ${slug}:`,
+        `launchBusiness: hosted subscription setup failed for ${slug}:`,
         billingError,
       );
     }

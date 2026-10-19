@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
-import { createSalonAccount } from "@/actions/onboarding";
+import { createBusinessAccount } from "@/actions/onboarding";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import {
@@ -52,7 +52,7 @@ function AccountFields({
   const [ownerName, setOwnerName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [salonName, setSalonName] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [timezone, setTimezone] = useState(getDefaultTimezone());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,8 +65,8 @@ function AccountFields({
     setIsSubmitting(true);
 
     try {
-      const result = await createSalonAccount({
-        salonName,
+      const result = await createBusinessAccount({
+        businessName,
         timezone,
         ownerName,
         email,
@@ -145,12 +145,12 @@ function AccountFields({
           />
         </Field>
 
-        <Field htmlFor="salonName" label={t("account.placeName")} required>
+        <Field htmlFor="businessName" label={t("account.placeName")} required>
           <Field.Input
-            id="salonName"
+            id="businessName"
             type="text"
-            value={salonName}
-            onChange={(e) => setSalonName(e.target.value)}
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
             required
           />
         </Field>

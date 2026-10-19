@@ -94,7 +94,7 @@ export default async function OnboardingPage({
   const onboardingState = await getOnboardingState(tenantSlug);
   const homePath = landingPathForRole(await getUserRole());
 
-  // A launched shop goes home. launchSalon revalidates this page, and that
+  // A launched shop goes home. launchBusiness revalidates this page, and that
   // re-render (a Next-Action request) must leave the owner on the link they
   // just published.
   if (onboardingState?.launched && !(await headers()).has("next-action")) {

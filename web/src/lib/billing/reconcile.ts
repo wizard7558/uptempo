@@ -25,7 +25,7 @@ export async function reconcileHostedBilling(): Promise<ReconcileResult> {
   const result: ReconcileResult = { checked: 0, created: [], synced: [], failed: [] };
   if (isSingleMode()) return result;
 
-  // "Launched" is the onboarding step flag that launchSalon sets.
+  // "Launched" is the onboarding step flag that launchBusiness sets.
   const rows = await publicDb
     .select({
       slug: tenants.slug,

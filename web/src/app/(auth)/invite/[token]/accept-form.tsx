@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import {
   acceptInvitation,
-  joinSalonFromInvitation,
+  joinBusinessFromInvitation,
 } from "@/actions/team";
 import { authClient } from "@/lib/auth/client";
 import { landingPathForRole } from "@/lib/auth/landing";
@@ -47,7 +47,7 @@ export function AcceptInviteForm({
     setError(null);
     setIsSubmitting(true);
     try {
-      const result = await joinSalonFromInvitation(token);
+      const result = await joinBusinessFromInvitation(token);
       if (result.success) {
         router.push(landingPath);
       } else {

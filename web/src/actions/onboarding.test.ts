@@ -1,4 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 const h = vi.hoisted(() => {
   const state: {
@@ -9,6 +13,7 @@ const h = vi.hoisted(() => {
     requireCardOnFile: number;
     industry: "hair_salon" | "barber" | "tattoo";
     inserted: unknown[];
+    existingSlugs: Set<string>;
   } = {
     role: "owner",
     tenant: null,
@@ -17,6 +22,7 @@ const h = vi.hoisted(() => {
     requireCardOnFile: 1,
     industry: "hair_salon",
     inserted: [],
+    existingSlugs: new Set<string>(),
   };
 
   const updateTenantOnboardingSteps = vi.fn(async () => {});
@@ -83,7 +89,10 @@ const ensureHostedSubscription = vi.hoisted(() => vi.fn(async () => ({})));
 vi.mock("@/lib/billing/subscriptions", () => ({ ensureHostedSubscription }));
 vi.mock("@/lib/tenant/provision", () => ({ provisionTenantSchema: vi.fn() }));
 vi.mock("@/lib/tenant/registry", () => ({
-  getTenantBySlug: vi.fn(async () => h.state.tenant),
+  getTenantBySlug: vi.fn(async (slug: string) => {
+    if (slug === "salon-x") return h.state.tenant;
+    return h.state.existingSlugs.has(slug) ? { slug } : null;
+  }),
   updateTenantOnboardingSteps: h.updateTenantOnboardingSteps,
 }));
 vi.mock("@/lib/tenant/slug-validation", () => ({ slugSchema: { safeParse: vi.fn() } }));
@@ -132,8 +141,8 @@ const TBL = {
 };
 
 import {
-  createSalonAccount,
-  launchSalon,
+  createBusinessAccount,
+  launchBusiness,
   markOnboardingStepComplete,
   skipStripeForNow,
 } from "./onboarding";
@@ -148,7 +157,7 @@ function tenant(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe("launchSalon", () => {
+describe("launchBusiness", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     h.state.role = "owner";
@@ -159,7 +168,7 @@ describe("launchSalon", () => {
   });
 
   it("launches when all prerequisites are met", async () => {
-    const result = await launchSalon();
+    const result = await launchBusiness();
     expect(result).toEqual({ success: true });
     const written = h.updateTenantOnboardingSteps.mock.calls[0] as unknown[];
     expect(written[1]).toMatchObject({ launched: true, policies: true });
@@ -173,7 +182,7 @@ describe("launchSalon", () => {
     ["payments", () => { h.state.tenant = tenant({ onboardingSteps: { policies: true } }); }],
   ] as const)("rejects with missing=%s", async (key, arrange) => {
     arrange();
-    const result = await launchSalon();
+    const result = await launchBusiness();
     expect(result.success).toBe(false);
     if (!result.success) expect(result.missing).toContain(key);
     expect(h.updateTenantOnboardingSteps).not.toHaveBeenCalled();
@@ -184,12 +193,12 @@ describe("launchSalon", () => {
       stripeConnectAccountId: "acct_1",
       onboardingSteps: { policies: true },
     });
-    expect((await launchSalon()).success).toBe(true);
+    expect((await launchBusiness()).success).toBe(true);
   });
 
   it.each(["stylist", "provider"])("rejects non-manager role %s", async (role) => {
     h.state.role = role;
-    const result = await launchSalon();
+    const result = await launchBusiness();
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toMatch(/owner/i);
     expect(h.updateTenantOnboardingSteps).not.toHaveBeenCalled();
@@ -198,14 +207,14 @@ describe("launchSalon", () => {
   it("says shop, not salon, for a barber tenant", async () => {
     h.state.role = "provider";
     h.state.industry = "barber";
-    const result = await launchSalon();
+    const result = await launchBusiness();
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toBe("Only the shop owner can do this");
   });
 
   it("keeps the old salon text for hair_salon", async () => {
     h.state.role = "provider";
-    const result = await launchSalon();
+    const result = await launchBusiness();
     expect(result).toMatchObject({
       success: false,
       error: "Only the salon owner can do this",
@@ -213,7 +222,7 @@ describe("launchSalon", () => {
   });
 
   it("starts the hosted trial for the launching business after success", async () => {
-    const result = await launchSalon();
+    const result = await launchBusiness();
     expect(result).toEqual({ success: true });
     expect(ensureHostedSubscription).toHaveBeenCalledTimes(1);
     expect(ensureHostedSubscription).toHaveBeenCalledWith("salon-x", {
@@ -223,14 +232,14 @@ describe("launchSalon", () => {
 
   it("does not start a trial when launch is rejected", async () => {
     h.state.servicesCount = 0;
-    await launchSalon();
+    await launchBusiness();
     expect(ensureHostedSubscription).not.toHaveBeenCalled();
   });
 
   it("still succeeds when the hosted subscription setup throws", async () => {
     ensureHostedSubscription.mockRejectedValueOnce(new Error("stripe down"));
     const err = vi.spyOn(console, "error").mockImplementation(() => {});
-    const result = await launchSalon();
+    const result = await launchBusiness();
     expect(result).toEqual({ success: true });
     expect(err).toHaveBeenCalled();
     err.mockRestore();
@@ -240,18 +249,27 @@ describe("launchSalon", () => {
     h.state.tenant = tenant({
       onboardingSteps: { policies: true, stripeSkipped: true, futureKey: true },
     });
-    await launchSalon();
+    await launchBusiness();
     const written = h.updateTenantOnboardingSteps.mock.calls[0] as unknown[];
     expect(written[1]).toMatchObject({ futureKey: true, launched: true });
   });
 });
 
-describe("createSalonAccount", () => {
+describe("createBusinessAccount", () => {
+  beforeEach(() => {
+    vi.unstubAllEnvs();
+    vi.clearAllMocks();
+    h.state.tenant = null;
+    h.state.existingSlugs.clear();
+    h.inserted.length = 0;
+    vi.stubEnv("UPTEMPO_MODE", "multi");
+  });
+
   it("is blocked in single mode", async () => {
     vi.stubEnv("UPTEMPO_MODE", "single");
     await expect(
-      createSalonAccount({
-        salonName: "Ada Salon",
+      createBusinessAccount({
+        businessName: "Ada Salon",
         timezone: "America/New_York",
         ownerName: "Ada",
         email: "ada@example.com",
@@ -263,6 +281,43 @@ describe("createSalonAccount", () => {
       error: "Sign-up is turned off on this install.",
     });
     vi.unstubAllEnvs();
+  });
+
+  it.each(["!!!", "東京"])(
+    "uses the business slug fallback for %s and preserves its display name",
+    async (businessName) => {
+      const result = await createBusinessAccount({
+        businessName,
+        timezone: "America/New_York",
+        ownerName: "Ada",
+        email: "ada@example.com",
+        password: "password1",
+        industry: "hair_salon",
+      });
+
+      expect(result).toEqual({ success: true, slug: "business" });
+      expect(h.inserted[0]).toMatchObject({ name: businessName, slug: "business" });
+    },
+  );
+
+  it("adds a unique suffix when the business fallback slug is occupied", async () => {
+    h.state.existingSlugs.add("business");
+
+    const result = await createBusinessAccount({
+      businessName: "!!!",
+      timezone: "America/New_York",
+      ownerName: "Ada",
+      email: "ada@example.com",
+      password: "password1",
+      industry: "hair_salon",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.slug).toMatch(/^business-[a-z0-9]+$/);
+      expect(h.state.existingSlugs.has(result.slug)).toBe(false);
+      expect(h.inserted[0]).toMatchObject({ name: "!!!", slug: result.slug });
+    }
   });
 });
 
@@ -328,16 +383,19 @@ describe("markOnboardingStepComplete", () => {
   });
 });
 
-describe("createSalonAccount industry", () => {
+describe("createBusinessAccount industry", () => {
   beforeEach(() => {
+    vi.unstubAllEnvs();
+    vi.stubEnv("UPTEMPO_MODE", "multi");
     vi.clearAllMocks();
     h.state.tenant = null;
+    h.state.existingSlugs.clear();
     h.inserted.length = 0;
   });
 
   it("stores tattoo industry and the tattoo pack modules", async () => {
-    const result = await createSalonAccount({
-      salonName: "Ink Room",
+    const result = await createBusinessAccount({
+      businessName: "Ink Room",
       timezone: "America/New_York",
       ownerName: "Ada",
       email: "ada@example.com",

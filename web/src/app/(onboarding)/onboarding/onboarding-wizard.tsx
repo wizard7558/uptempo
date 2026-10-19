@@ -19,10 +19,10 @@ import { CheckCircle2, Circle, Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   checkSlugAvailability,
-  launchSalon,
+  launchBusiness,
   markOnboardingStepComplete,
   saveBusinessDetails,
-  setupSalonForOAuthUser,
+  setupBusinessForOAuthUser,
 } from "@/actions/onboarding";
 import type { LaunchPrereq } from "@/lib/onboarding/state";
 import type { DaySchedule } from "@/lib/scheduling/week";
@@ -175,8 +175,8 @@ export function OnboardingWizard({
     setProfileError(null);
     startTransition(async () => {
       try {
-        const result = await setupSalonForOAuthUser({
-          salonName: profileBusinessName,
+        const result = await setupBusinessForOAuthUser({
+          businessName: profileBusinessName,
           slug: profileSlug,
           timezone: profileTimezone,
           industry,
@@ -198,7 +198,7 @@ export function OnboardingWizard({
     startTransition(async () => {
       try {
         const result = await saveBusinessDetails({
-          salonName: businessName,
+          businessName,
           phone,
           address,
         });
@@ -234,7 +234,7 @@ export function OnboardingWizard({
   function handlePublish() {
     startTransition(async () => {
       try {
-        const result = await launchSalon();
+        const result = await launchBusiness();
         if (result.success) {
           setPublished(true);
           toast.success(t("wizard.live"));

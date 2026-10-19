@@ -5,7 +5,7 @@ export type UploadLogoToBlobResult =
   | { ok: false; error: string; detail?: string };
 
 /**
- * Store a salon logo in Vercel Blob (server-only). Used by the `uploadSalonLogo`
+ * Store a business logo in Vercel Blob (server-only). Used by the `uploadBusinessLogo`
  * server action. Thin wrapper over the shared image-blob upload.
  */
 export async function uploadLogoToBlobStorage(input: {

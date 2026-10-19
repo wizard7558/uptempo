@@ -21,7 +21,7 @@ async function generateUniqueSlug(businessName: string): Promise<string> {
       .replace(/^[^a-z]+/, "")
       .replace(/-+$/, "")
       .slice(0, 40)
-      .replace(/-+$/, "") || "salon";
+      .replace(/-+$/, "") || "business";
 
   if (base.length >= 3) {
     const existing = await getTenantBySlug(base);
