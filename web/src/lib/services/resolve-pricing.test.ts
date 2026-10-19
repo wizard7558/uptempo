@@ -16,6 +16,7 @@ vi.mock("@/lib/db/tenant", () => ({
 
 import { withTenantDb } from "@/lib/db/tenant";
 import { resolveServicePricing } from "./resolve-pricing";
+import { getMultiServiceDuration } from "./duration";
 
 interface ServiceRow {
   id: string;
@@ -101,7 +102,7 @@ describe("resolveServicePricing", () => {
   });
 
   it("returns empty result for empty serviceIds", async () => {
-    const result = await resolveServicePricing([], "client-1", "stylist-1");
+    const result = await resolveServicePricing([], "client-1", "staff-1");
     expect(result).toEqual({ services: [], totalMinutes: 0, totalCents: 0 });
   });
 
@@ -154,7 +155,7 @@ describe("resolveServicePricing", () => {
     expect(result.totalCents).toBe(0);
   });
 
-  it("applies stylist override when no client override exists", async () => {
+  it("applies staff override when no client override exists", async () => {
     mockTenantDb({
       services: [
         {
@@ -183,18 +184,18 @@ describe("resolveServicePricing", () => {
     const result = await resolveServicePricing(
       ["svc-1"],
       "client-1",
-      "stylist-1",
+      "staff-1",
     );
     const r = result.services[0];
     expect(r.durationMinutes).toBe(75);
     expect(r.priceCents).toBe(12500);
-    expect(r.durationSource).toBe("stylist");
-    expect(r.priceSource).toBe("stylist");
+    expect(r.durationSource).toBe("staff");
+    expect(r.priceSource).toBe("staff");
     expect(r.isOverride).toBe(true);
     expect(r.isPriceOverride).toBe(true);
   });
 
-  it("client override beats stylist override beats catalog (per field)", async () => {
+  it("client override beats staff override beats catalog (per field)", async () => {
     mockTenantDb({
       services: [
         {
@@ -232,18 +233,18 @@ describe("resolveServicePricing", () => {
     const result = await resolveServicePricing(
       ["svc-1"],
       "client-1",
-      "stylist-1",
+      "staff-1",
     );
     const r = result.services[0];
-    // duration: stylist wins (client null, stylist 150)
+    // duration: staff wins (client null, staff 150)
     expect(r.durationMinutes).toBe(150);
-    expect(r.durationSource).toBe("stylist");
+    expect(r.durationSource).toBe("staff");
     // price: client wins
     expect(r.priceCents).toBe(10000);
     expect(r.priceSource).toBe("client");
   });
 
-  it("stylist customName wins over catalog name", async () => {
+  it("staff customName wins over catalog name", async () => {
     mockTenantDb({
       services: [
         {
@@ -271,7 +272,7 @@ describe("resolveServicePricing", () => {
     const result = await resolveServicePricing(
       ["svc-1"],
       null,
-      "stylist-1",
+      "staff-1",
     );
     expect(result.services[0].serviceName).toBe(
       "Riley's signature haircut",
@@ -306,12 +307,12 @@ describe("resolveServicePricing", () => {
     const result = await resolveServicePricing(
       ["svc-1"],
       null,
-      "stylist-1",
+      "staff-1",
     );
     expect(result.services[0].isHiddenByStaffMember).toBe(true);
   });
 
-  it("skips client/stylist queries when ids are null", async () => {
+  it("skips client/staff queries when ids are null", async () => {
     mockTenantDb({
       services: [
         {
@@ -392,7 +393,7 @@ describe("resolveServicePricing", () => {
     const result = await resolveServicePricing(
       ["svc-1", "svc-2"],
       null,
-      "stylist-1",
+      "staff-1",
     );
     expect(result.totalMinutes).toBe(90);
     expect(result.totalCents).toBe(16500);
@@ -426,10 +427,115 @@ describe("resolveServicePricing", () => {
     const result = await resolveServicePricing(
       ["svc-1"],
       null,
-      "stylist-1",
+      "staff-1",
     );
     expect(result.services[0].activeMinutes).toBe(60);
-    // processing falls through to catalog default since stylist did not override it
+    // processing falls through to catalog default since staff did not override it
     expect(result.services[0].processingMinutes).toBe(35);
+  });
+
+  it("keeps zero-valued staff and client price overrides with their sources", async () => {
+    mockTenantDb({
+      services: [
+        {
+          id: "staff-zero",
+          name: "Staff price",
+          defaultDurationMinutes: 30,
+          priceCents: 5000,
+          category: "cut",
+          activeMinutes: null,
+          processingMinutes: null,
+        },
+        {
+          id: "client-zero",
+          name: "Client price",
+          defaultDurationMinutes: 30,
+          priceCents: 7000,
+          category: "cut",
+          activeMinutes: null,
+          processingMinutes: null,
+        },
+      ],
+      staffOverrides: [
+        {
+          serviceId: "staff-zero",
+          durationMinutes: null,
+          priceCents: 0,
+          activeMinutes: null,
+          processingMinutes: null,
+          customName: null,
+          isOffered: 1,
+        },
+        {
+          serviceId: "client-zero",
+          durationMinutes: null,
+          priceCents: 9000,
+          activeMinutes: null,
+          processingMinutes: null,
+          customName: null,
+          isOffered: 1,
+        },
+      ],
+      clientOverrides: [
+        {
+          serviceId: "client-zero",
+          durationMinutes: null,
+          priceCents: 0,
+          activeMinutes: null,
+          processingMinutes: null,
+        },
+      ],
+    });
+
+    const result = await resolveServicePricing(
+      ["staff-zero", "client-zero"],
+      "client-1",
+      "staff-1",
+    );
+
+    expect(result.services.map((service) => service.priceCents)).toEqual([0, 0]);
+    expect(result.services.map((service) => service.priceSource)).toEqual([
+      "staff",
+      "client",
+    ]);
+    expect(result.services.every((service) => service.isPriceOverride)).toBe(true);
+    expect(result.totalCents).toBe(0);
+  });
+
+  it("forwards staff provenance through the duration wrapper", async () => {
+    mockTenantDb({
+      services: [
+        {
+          id: "svc-1",
+          name: "Haircut",
+          defaultDurationMinutes: 60,
+          priceCents: 8500,
+          category: "cut",
+          activeMinutes: null,
+          processingMinutes: null,
+        },
+      ],
+      staffOverrides: [
+        {
+          serviceId: "svc-1",
+          durationMinutes: 75,
+          priceCents: 12500,
+          activeMinutes: null,
+          processingMinutes: null,
+          customName: null,
+          isOffered: 1,
+        },
+      ],
+    });
+
+    const result = await getMultiServiceDuration(["svc-1"], null, "staff-1");
+
+    expect(result.services[0]).toMatchObject({
+      durationMinutes: 75,
+      priceCents: 12500,
+      durationSource: "staff",
+      priceSource: "staff",
+    });
+    expect(result.totalMinutes).toBe(75);
   });
 });

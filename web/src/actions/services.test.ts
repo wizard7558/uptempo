@@ -1,7 +1,27 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { createServiceSchema, updateServiceSchema } from "@/lib/validators/service";
 import { createClientSchema } from "@/lib/validators/client";
 import { setOverrideSchema } from "@/lib/validators/override";
+
+const actionMocks = vi.hoisted(() => ({
+  requireStaff: vi.fn(),
+  getMultiServiceDuration: vi.fn(),
+  withTenantDb: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/rbac", () => ({
+  AuthError: class MockAuthError extends Error {},
+  requireRole: vi.fn(),
+  requireStaff: actionMocks.requireStaff,
+}));
+vi.mock("@/lib/db/tenant", () => ({ withTenantDb: actionMocks.withTenantDb }));
+vi.mock("@/lib/services/duration", () => ({
+  getMultiServiceDuration: actionMocks.getMultiServiceDuration,
+}));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/analytics/events", () => ({ trackEvent: vi.fn() }));
+
+import { previewBookingPricing } from "./services";
 
 describe("class settings", () => {
   const base = { name: "Bootcamp", defaultDurationMinutes: 45 };
@@ -226,5 +246,67 @@ describe("setOverrideSchema", () => {
       durationMinutes: 500,
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("previewBookingPricing", () => {
+  it("returns staff price provenance and preserves the summed price", async () => {
+    actionMocks.requireStaff.mockResolvedValueOnce({
+      tenantSlug: "test-business",
+    });
+    actionMocks.getMultiServiceDuration.mockResolvedValueOnce({
+      services: [
+        {
+          serviceId: "svc-1",
+          serviceName: "Haircut",
+          priceCents: 12500,
+          isPriceOverride: true,
+          priceSource: "staff",
+          category: "cut",
+        },
+        {
+          serviceId: "svc-2",
+          serviceName: "Toner",
+          priceCents: 4000,
+          isPriceOverride: false,
+          priceSource: "service",
+          category: "color",
+        },
+      ],
+      totalMinutes: 105,
+    });
+
+    const result = await previewBookingPricing(
+      ["svc-1", "svc-2"],
+      "client-1",
+      "staff-1",
+    );
+
+    expect(actionMocks.getMultiServiceDuration).toHaveBeenCalledWith(
+      ["svc-1", "svc-2"],
+      "client-1",
+      "staff-1",
+    );
+    expect(result).toEqual({
+      services: [
+        {
+          serviceId: "svc-1",
+          serviceName: "Haircut",
+          priceCents: 12500,
+          isPriceOverride: true,
+          priceSource: "staff",
+          category: "cut",
+        },
+        {
+          serviceId: "svc-2",
+          serviceName: "Toner",
+          priceCents: 4000,
+          isPriceOverride: false,
+          priceSource: "service",
+          category: "color",
+        },
+      ],
+      totalCents: 16500,
+    });
   });
 });

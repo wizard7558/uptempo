@@ -83,8 +83,8 @@ export async function createService(data: {
           })
           .returning({ id: services.id });
 
-        // Auto-assign new service to every active stylist so it immediately
-        // appears in the new-booking picker (which filters by stylist_services).
+        // Auto-assign new service to every active staff member so it appears
+        // immediately in the new-booking picker (which filters by staff_services).
         const activeStaff = await db
           .select({ id: staff.id })
           .from(staff)
@@ -229,7 +229,7 @@ export async function listServices() {
 
 /**
  * Server action wrapper for getMultiServiceDuration.
- * Pass stylistId so per-stylist price/duration overrides are applied.
+ * Pass staffId so staff price/duration overrides are applied.
  */
 export async function fetchMultiServiceDuration(
   serviceIds: string[],
@@ -241,7 +241,7 @@ export async function fetchMultiServiceDuration(
 }
 
 /**
- * Returns the curated preset catalog filtered down to presets the salon
+ * Returns the curated preset catalog filtered down to presets the business
  * doesn't already have (matched case-insensitively on name).
  */
 export async function listAvailablePresets(): Promise<ServicePreset[]> {
@@ -260,7 +260,7 @@ export async function listAvailablePresets(): Promise<ServicePreset[]> {
 
 /**
  * Bulk-import a list of preset keys as new catalog services. Each created
- * service is auto-linked to all active stylists (matching the per-service
+ * service is auto-linked to all active staff members (matching the per-service
  * createService behaviour). Returns the created service IDs in the same
  * order as `keys`.
  */
