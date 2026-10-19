@@ -98,6 +98,49 @@ afterAll(async () => {
 });
 
 describe("migration 0060 forward domain compatibility (PostgreSQL integration)", () => {
+  itDb("serializes concurrent callers at v59 and applies migration 0060 once", async () => {
+    const { slug, schema } = await provisionAt59("concurrent");
+    const q = schemaPath(schema);
+    const { migrateTenant } = await import("./runner");
+
+    const results = await Promise.all([
+      migrateTenant(slug, 59),
+      migrateTenant(slug, 59),
+    ]);
+
+    expect(results.map((result) => result.error)).toEqual([undefined, undefined]);
+    expect(results.map((result) => result.toVersion)).toEqual([60, 60]);
+    expect(results.reduce((total, result) => total + result.applied, 0)).toBe(1);
+
+    const metadata = await run(`
+      SELECT schema_version::int AS schema_version
+      FROM public.tenants WHERE slug = '${slug}'
+    `);
+    expect(metadata).toEqual([{ schema_version: 60 }]);
+
+    const expectedViews = [
+      "beauty_bank_balances",
+      "beauty_bank_transactions",
+      "salon_policies",
+      "stylist_services",
+      "stylists",
+    ];
+    const views = await run(`
+      SELECT c.relname AS name, c.relkind,
+        coalesce(array_to_string(c.reloptions, ','), '') AS options
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = '${schema}'
+        AND c.relname IN (${expectedViews.map((name) => `'${name}'`).join(",")})
+      ORDER BY c.relname
+    `);
+    expect(views.map((view) => view.name)).toEqual(expectedViews);
+    for (const view of views) {
+      expect(view.relkind).toBe("v");
+      expect(String(view.options)).toContain("security_invoker=true");
+      expect(await run(`SELECT count(*)::int AS count FROM ${q}."${String(view.name)}"`)).toHaveLength(1);
+    }
+  });
+
   itDb(
     "migrates v59 rows and keeps the v39 views and every writable alias in sync",
     async () => {

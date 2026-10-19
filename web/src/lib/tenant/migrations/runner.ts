@@ -18,8 +18,9 @@ export interface MigrationResult {
 
 /**
  * Apply pending schema migrations to a single tenant.
- * Uses row-level locking (SELECT ... FOR UPDATE) to prevent
- * concurrent runners from double-applying migrations.
+ * Uses row-level locking (SELECT ... FOR UPDATE) and chooses each migration
+ * from the schema version read under that lock. `currentVersion` remains the
+ * caller's hint and is returned as `fromVersion` for API compatibility.
  *
  * Each migration runs in its own transaction so a failure
  * mid-sequence stops further migrations for this tenant but
@@ -32,25 +33,36 @@ export async function migrateTenant(
 ): Promise<MigrationResult> {
   const schemaName = `tenant_${slug}`;
   const ceiling = untilVersion ?? Number.POSITIVE_INFINITY;
-  const pending = migrations.filter(
-    (m) => m.version > currentVersion && m.version <= ceiling,
-  );
-
-  if (pending.length === 0) {
-    return { slug, fromVersion: currentVersion, toVersion: currentVersion, applied: 0 };
-  }
-
   let applied = 0;
   let lastVersion = currentVersion;
   const shard = await getShardForSlug(slug);
 
-  for (const migration of pending) {
+  for (;;) {
     try {
-      await publicDb.transaction(async (tx) => {
-        // Acquire row lock to prevent concurrent migration runners
-        await tx.execute(
-          sql`SELECT 1 FROM ${tenants} WHERE ${tenants.slug} = ${slug} FOR UPDATE`,
+      const outcome = await publicDb.transaction(async (tx) => {
+        const lockedRows = Array.from(
+          (await tx.execute(
+            sql`SELECT ${tenants.schemaVersion} AS v FROM ${tenants} WHERE ${tenants.slug} = ${slug} FOR UPDATE`,
+          )) as Iterable<{ v: number | string | null }>,
         );
+        const lockedRow = lockedRows[0];
+        if (!lockedRow) {
+          throw new Error(`tenant "${slug}" not found in public.tenants`);
+        }
+
+        const lockedVersion = Number(lockedRow.v);
+        if (!Number.isInteger(lockedVersion)) {
+          throw new Error(`tenant "${slug}" has invalid schema_version ${String(lockedRow.v)}`);
+        }
+        // Keep failures and no-work results anchored to the value observed under lock.
+        lastVersion = lockedVersion;
+
+        const migration = migrations
+          .filter((m) => m.version > lockedVersion && m.version <= ceiling)
+          .sort((a, b) => a.version - b.version)[0];
+        if (!migration) {
+          return { version: lockedVersion, appliedMigration: false };
+        }
 
         // DDL for another shard cannot share this transaction.
         const statements = migration.up(schemaName);
@@ -70,10 +82,21 @@ export async function migrateTenant(
           .update(tenants)
           .set({ schemaVersion: migration.version, updatedAt: new Date() })
           .where(eq(tenants.slug, slug));
+
+        return { version: migration.version, appliedMigration: true };
       });
 
+      lastVersion = outcome.version;
+      if (!outcome.appliedMigration) {
+        return {
+          slug,
+          fromVersion: currentVersion,
+          toVersion: outcome.version,
+          applied,
+        };
+      }
+
       applied++;
-      lastVersion = migration.version;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       return {
