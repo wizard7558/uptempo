@@ -27,7 +27,7 @@ function slugify(name: string): string {
     .slice(0, 50);
 }
 
-/** List a salon's active categories (defaults + custom), ordered for display. */
+/** List a business's active categories (defaults + custom), ordered for display. */
 export async function listServiceCategories(): Promise<ServiceCategory[]> {
   const slug = await getTenantSlug();
   return withTenantDb(slug, async (db, { serviceCategories }) => {

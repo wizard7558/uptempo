@@ -59,7 +59,7 @@ export async function createTaskType(data: {
 }
 
 /**
- * Seed the standard assistant task catalog for salons that have not customized
+ * Seed the standard assistant task catalog for businesses that have not customized
  * their active catalog yet.
  */
 export async function seedDefaultTaskTypes(): Promise<
@@ -161,7 +161,7 @@ export async function updateTaskType(
 
 /**
  * List all active task types, ordered by name.
- * Any salon staff role can view (returns empty if no catalog entries).
+ * Any business staff role can view (returns empty if no catalog entries).
  */
 export async function listTaskTypes(): Promise<
   Array<{ id: string; name: string; defaultDurationMinutes: number }>

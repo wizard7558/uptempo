@@ -60,7 +60,7 @@ const BOOKED_OUT_HORIZON_DAYS = 84;
 
 export interface DashboardAppointment {
   id: string;
-  /** ISO start instant; the client formats it in the salon timezone. */
+  /** ISO start instant; the client formats it in the business timezone. */
   time: string;
   clientName: string;
   serviceNames: string[];
@@ -81,7 +81,7 @@ export interface DashboardInsights {
 }
 
 export interface DashboardData {
-  /** IANA salon timezone driving today's window and client-side time display. */
+  /** IANA business timezone driving today's window and client-side time display. */
   timezone: string;
   monthRevenueCents: number;
   lastMonthRevenueCents: number;
@@ -156,7 +156,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   ]);
 
   const tenant = await withTenantDb(slug, async (db, t) => {
-    // Salon timezone drives the "today" window.
+    // Business timezone drives the "today" window.
     const [policy] = await db
       .select({ timezone: t.businessSettings.timezone })
       .from(t.businessSettings)

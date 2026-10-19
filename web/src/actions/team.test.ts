@@ -104,12 +104,12 @@ function invitationRows(role: string) {
         id: "inv-1",
         email: "pat@example.com",
         role,
-        tenantSlug: "salon-x",
+        tenantSlug: "business-x",
         status: "pending",
         expiresAt: future,
       },
     ],
-    [{ name: "Salon X" }],
+    [{ name: "Business X" }],
   ];
 }
 
@@ -188,8 +188,8 @@ describe("getInvitationByToken", () => {
     h.selectQueue = [...invitationRows("provider")];
 
     await expect(getInvitationByToken("tok")).resolves.toMatchObject({
-      invitation: { tenantSlug: "salon-x" },
-      businessName: "Salon X",
+      invitation: { tenantSlug: "business-x" },
+      businessName: "Business X",
     });
   });
 });
@@ -212,10 +212,10 @@ describe("invitation accept normalizes the role", () => {
       email: "pat@example.com",
       password: "pw-12345678",
     });
-    expect(result).toEqual({ success: true, tenantSlug: "salon-x" });
+    expect(result).toEqual({ success: true, tenantSlug: "business-x" });
     expect(h.addMembershipAndActivate).toHaveBeenCalledWith(
       "new-user",
-      "salon-x",
+      "business-x",
       expected,
     );
   });
@@ -227,10 +227,10 @@ describe("invitation accept normalizes the role", () => {
     // invitation lookup, tenant name, then duplicate-membership check (none)
     h.selectQueue = [...invitationRows(stored), []];
     const result = await joinBusinessFromInvitation("tok");
-    expect(result).toEqual({ success: true, tenantSlug: "salon-x" });
+    expect(result).toEqual({ success: true, tenantSlug: "business-x" });
     expect(h.addMembershipAndActivate).toHaveBeenCalledWith(
       "existing-user",
-      "salon-x",
+      "business-x",
       expected,
     );
   });
@@ -241,11 +241,11 @@ describe("sendInvitation assistant gating", () => {
     vi.mocked(requireRole).mockResolvedValue({
       userId: "u",
       role: "owner",
-      tenantSlug: "salon-x",
+      tenantSlug: "business-x",
     } as never);
     h.hasModule.mockResolvedValue(false);
     const result = await sendInvitation({ email: "a@b.co", role: "assistant" });
     expect(result).toEqual({ success: false, error: "team.assistantsDisabled" });
-    expect(h.hasModule).toHaveBeenCalledWith("salon-x", "assistant_tasks");
+    expect(h.hasModule).toHaveBeenCalledWith("business-x", "assistant_tasks");
   });
 });

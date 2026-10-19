@@ -164,7 +164,7 @@ export interface OrderConfirmation {
 
 /**
  * Success-page confirmation, straight from Stripe (does not depend on the
- * webhook having landed). Verifies the session belongs to this salon.
+ * webhook having landed). Verifies the session belongs to this business.
  */
 export async function getOrderConfirmation(
   slug: string,

@@ -108,8 +108,8 @@ function mockTenantDb(db: ReturnType<typeof createMockDb>["db"]) {
 describe("seedDefaultTaskTypes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireRole.mockResolvedValue({ tenantSlug: "test-salon" });
-    mocks.getTenantSlug.mockResolvedValue("fallback-salon");
+    mocks.requireRole.mockResolvedValue({ tenantSlug: "test-business" });
+    mocks.getTenantSlug.mockResolvedValue("fallback-business");
     mocks.assertModule.mockResolvedValue(undefined);
   });
 
@@ -123,7 +123,7 @@ describe("seedDefaultTaskTypes", () => {
     });
 
     expect(mocks.requireRole).toHaveBeenCalledWith("owner", "admin");
-    expect(mocks.assertModule).toHaveBeenCalledWith("test-salon", "assistant_tasks");
+    expect(mocks.assertModule).toHaveBeenCalledWith("test-business", "assistant_tasks");
     expect(insertChain.values).toHaveBeenCalledWith(DEFAULT_ASSISTANT_TASKS);
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/settings/assistants");
   });

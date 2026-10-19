@@ -56,7 +56,7 @@ vi.mock("@/lib/db", () => {
     select: () => ({
       from: () => ({
         where: () => ({
-          limit: async () => [{ tenantSlug: "salon-x" }],
+          limit: async () => [{ tenantSlug: "business-x" }],
         }),
       }),
     }),
@@ -90,7 +90,7 @@ vi.mock("@/lib/billing/subscriptions", () => ({ ensureHostedSubscription }));
 vi.mock("@/lib/tenant/provision", () => ({ provisionTenantSchema: vi.fn() }));
 vi.mock("@/lib/tenant/registry", () => ({
   getTenantBySlug: vi.fn(async (slug: string) => {
-    if (slug === "salon-x") return h.state.tenant;
+    if (slug === "business-x") return h.state.tenant;
     return h.state.existingSlugs.has(slug) ? { slug } : null;
   }),
   updateTenantOnboardingSteps: h.updateTenantOnboardingSteps,
@@ -149,8 +149,8 @@ import {
 
 function tenant(overrides: Record<string, unknown> = {}) {
   return {
-    slug: "salon-x",
-    name: "Salon X",
+    slug: "business-x",
+    name: "Business X",
     stripeConnectAccountId: null,
     onboardingSteps: { profile: true },
     ...overrides,
@@ -204,7 +204,7 @@ describe("launchBusiness", () => {
     expect(h.updateTenantOnboardingSteps).not.toHaveBeenCalled();
   });
 
-  it("says shop, not salon, for a barber tenant", async () => {
+  it("uses shop wording for a barber business", async () => {
     h.state.role = "provider";
     h.state.industry = "barber";
     const result = await launchBusiness();
@@ -212,7 +212,7 @@ describe("launchBusiness", () => {
     if (!result.success) expect(result.error).toBe("Only the shop owner can do this");
   });
 
-  it("keeps the old salon text for hair_salon", async () => {
+  it("keeps the default wording for the hair industry", async () => {
     h.state.role = "provider";
     const result = await launchBusiness();
     expect(result).toMatchObject({
@@ -225,7 +225,7 @@ describe("launchBusiness", () => {
     const result = await launchBusiness();
     expect(result).toEqual({ success: true });
     expect(ensureHostedSubscription).toHaveBeenCalledTimes(1);
-    expect(ensureHostedSubscription).toHaveBeenCalledWith("salon-x", {
+    expect(ensureHostedSubscription).toHaveBeenCalledWith("business-x", {
       trialDays: 14,
     });
   });
@@ -269,7 +269,7 @@ describe("createBusinessAccount", () => {
     vi.stubEnv("UPTEMPO_MODE", "single");
     await expect(
       createBusinessAccount({
-        businessName: "Ada Salon",
+        businessName: "Ada Services",
         timezone: "America/New_York",
         ownerName: "Ada",
         email: "ada@example.com",

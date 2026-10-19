@@ -81,9 +81,9 @@ const PUBLIC_ACTIONS: Record<string, string> = {
   "projects.ts#approveDesign":
     "public project link: approves only the project whose access token matches",
   "queue-public.ts#getQueueJoinInfo":
-    "public queue page for a salon slug; live line details require the kiosk token",
+    "public queue page for a business slug; live line details require the kiosk token",
   "queue-public.ts#joinQueue":
-    "public queue join for a published salon slug; the leave token is stored only as a hash",
+    "public queue join for a published business slug; the leave token is stored only as a hash",
   "queue-public.ts#leaveQueue":
     "public queue leave: slug plus the unguessable public token, compared as a hash",
   "quiz.ts#submitQuizResponse":

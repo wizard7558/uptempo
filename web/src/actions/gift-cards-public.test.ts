@@ -60,9 +60,9 @@ describe("public gift card actions", () => {
   });
 
   it("limits balance checks with gc_balance:<ip>", async () => {
-    await checkGiftCardBalance("salon", "ABCDEFGHJKMNPQRS");
+    await checkGiftCardBalance("business", "ABCDEFGHJKMNPQRS");
     expect(h.consumeRateLimit).toHaveBeenCalledWith({
-      tenantSlug: "salon",
+      tenantSlug: "business",
       scope: "ip",
       key: "gc_balance:203.0.113.9",
       limit: 10,
@@ -71,21 +71,21 @@ describe("public gift card actions", () => {
   });
 
   it("returns the same error for an invalid code and an unknown code", async () => {
-    const invalid = await checkGiftCardBalance("salon", "not-a-code");
-    const unknown = await checkGiftCardBalance("salon", "ABCDEFGHJKMNPQRS");
+    const invalid = await checkGiftCardBalance("business", "not-a-code");
+    const unknown = await checkGiftCardBalance("business", "ABCDEFGHJKMNPQRS");
     expect(invalid).toEqual(unknown);
     expect(invalid).toEqual({ success: false, error: "errors.giftCards.notFound" });
   });
 
   it("rejects an amount under $10", async () => {
-    const result = await startGiftCardPurchase("salon", { ...buyer, amountCents: 999 });
+    const result = await startGiftCardPurchase("business", { ...buyer, amountCents: 999 });
     expect(result).toEqual({ success: false, error: "errors.giftCards.amountRange" });
     expect(h.create).not.toHaveBeenCalled();
   });
 
   it("sends the charge to the connected account with the gift card purpose", async () => {
     h.getTenantBySlug.mockResolvedValue({
-      name: "Salon",
+      name: "Business",
       stripeConnectAccountId: "acct_123",
     });
     h.getConnectChargeParams.mockResolvedValue({
@@ -94,7 +94,7 @@ describe("public gift card actions", () => {
     });
     h.create.mockResolvedValue({ url: "https://checkout.stripe.test/cs" });
 
-    const started = await createGiftCardCheckoutSession("salon", {
+    const started = await createGiftCardCheckoutSession("business", {
       ...buyer,
       amountCents: 5000,
       message: "Enjoy",
@@ -105,7 +105,7 @@ describe("public gift card actions", () => {
     expect(params.payment_intent_data.application_fee_amount).toBe(40);
     expect(params.payment_intent_data.metadata.purpose).toBe("gift_card_purchase");
     expect(params.metadata.purpose).toBe("gift_card_purchase");
-    expect(params.metadata.tenantSlug).toBe("salon");
+    expect(params.metadata.tenantSlug).toBe("business");
     expect(params.customer_email).toBe("sam@example.com");
   });
 });

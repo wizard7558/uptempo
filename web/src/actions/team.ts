@@ -63,7 +63,7 @@ const TEAM_INVITATIONS_UNAVAILABLE_MESSAGE =
   "Team invitations are unavailable until the latest database migration is applied.";
 
 /**
- * Create a tenant stylist row for a team member when one does not already exist.
+ * Create a tenant staff row for a team member when one does not already exist.
  */
 async function insertStaffForTeamMember(params: {
   tenantSlug: string;

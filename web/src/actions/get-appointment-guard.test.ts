@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 /**
  * `getAppointment` is a server action, so any browser can call it. It must stay
  * behind the staff guard and must only read the signed-in staff member's own
- * salon. Internal server code (booking confirmations, the cancel and reschedule
+ * business. Internal server code (booking confirmations, the cancel and reschedule
  * pages) uses `loadAppointmentForTenant` instead.
  */
 
@@ -41,11 +41,11 @@ describe("getAppointment action", () => {
     expect(loadAppointmentForTenant).not.toHaveBeenCalled();
   });
 
-  it("loads from the session's salon, not a caller-supplied one", async () => {
-    requireStaff.mockResolvedValue({ userId: "u1", role: "owner", tenantSlug: "salon-a" });
+  it("loads from the session's business, not a caller-supplied one", async () => {
+    requireStaff.mockResolvedValue({ userId: "u1", role: "owner", tenantSlug: "business-a" });
     loadAppointmentForTenant.mockResolvedValue({ id: "appt-1" });
     const { getAppointment } = await import("./appointments");
     await expect(getAppointment("appt-1")).resolves.toEqual({ id: "appt-1" });
-    expect(loadAppointmentForTenant).toHaveBeenCalledWith("salon-a", "appt-1");
+    expect(loadAppointmentForTenant).toHaveBeenCalledWith("business-a", "appt-1");
   });
 });

@@ -100,7 +100,7 @@ export type GiftCardPurchaseStatus = {
   recipientEmailMasked: string;
 };
 
-/** Success page. Confirms the session belongs to this salon. Never returns the code. */
+/** Success page. Confirms the session belongs to this business. Never returns the code. */
 export async function getGiftCardPurchaseStatus(
   slug: string,
   sessionId: string,

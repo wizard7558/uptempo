@@ -437,7 +437,7 @@ export async function refundCharge(chargeId: string) {
         ? (await getT("errors", slug))("charges.refundLedgerNote")
         : "";
 
-    // Credit any Beauty Bank portion back to the client, then mark refunded —
+    // Credit any stored-value portion back to the client, then mark refunded —
     // in one transaction. Idempotent on the charge id so re-refunding is a no-op.
     await withTenantDb(slug, async (db, tables) => {
       await db.transaction(async (tx) => {

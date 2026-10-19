@@ -69,7 +69,7 @@ const NO_UPSELL: MembershipUpsellInfo = {
 };
 
 /**
- * Public: lightweight gating info for the Beauty Bank / membership upsell shown
+ * Public: lightweight gating info for the stored-value membership upsell shown
  * in the booking flow. Returns a safe empty shape (no upsell) on any auth/lookup
  * miss — callers render it unconditionally, so it must never throw.
  */
@@ -107,7 +107,7 @@ export async function getMembershipUpsellInfo(
   });
 }
 
-/** Admin: read the Beauty Bank credit-expiry window (months; null = never). */
+/** Admin: read the stored-value credit-expiry window (months; null = never). */
 export async function getStoredValueExpiryMonths(): Promise<number | null> {
   const { tenantSlug: slug } = await requireStaff();
   await requireSettings();
@@ -120,7 +120,7 @@ export async function getStoredValueExpiryMonths(): Promise<number | null> {
   });
 }
 
-/** Admin: set the Beauty Bank credit-expiry window. null/0 disables expiry. */
+/** Admin: set the stored-value credit-expiry window. null/0 disables expiry. */
 export async function setStoredValueExpiryMonths(months: number | null) {
   const { tenantSlug: slug } = await requireStaff();
   await requireSettings();
@@ -641,7 +641,7 @@ export async function listActiveMembershipPlansPublic(slug: string) {
   });
 }
 
-/** Public: start Beauty Bank subscription after booking session + card on file. */
+/** Public: start stored-value subscription after booking session + card on file. */
 export async function startStoredValueSubscriptionPublic(data: {
   clientId: string;
   planId: string;

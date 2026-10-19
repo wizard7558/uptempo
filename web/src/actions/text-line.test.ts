@@ -3,7 +3,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => ({
   tenant: null as Record<string, unknown> | null,
-  tenantSlug: "owned-salon",
+  tenantSlug: "owned-business",
   singleMode: false,
   requireStaff: vi.fn(),
   startRegistration: vi.fn(),
@@ -65,7 +65,7 @@ import {
 
 const originalProfile = process.env.TWILIO_PRIMARY_CUSTOMER_PROFILE_SID;
 const validInput = {
-  legalBusinessName: "Northwind Salon LLC",
+  legalBusinessName: "Northwind Services LLC",
   businessType: "LLC",
   ein: "12-3456789",
   businessAddress: {
@@ -85,7 +85,7 @@ const validInput = {
 
 function tenant(overrides: Record<string, unknown> = {}) {
   return {
-    slug: "owned-salon",
+    slug: "owned-business",
     comped: 0,
     smsLineStatus: "off",
     smsBrandId: null,
@@ -99,7 +99,7 @@ function tenant(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  h.tenantSlug = "owned-salon";
+  h.tenantSlug = "owned-business";
   h.singleMode = false;
   h.tenant = tenant();
   h.requireStaff.mockResolvedValue({
@@ -140,7 +140,7 @@ describe("text-line owner actions", () => {
   });
 
   it("uses only the authenticated tenant and keeps a full EIN out of the result", async () => {
-    h.tenantSlug = "session-owned-salon";
+    h.tenantSlug = "session-owned-business";
     h.requireStaff.mockResolvedValue({
       userId: "owner-1",
       role: "owner",
@@ -148,12 +148,12 @@ describe("text-line owner actions", () => {
     });
     const result = await submitTextLine({
       ...validInput,
-      tenantSlug: "attacker-salon",
+      tenantSlug: "attacker-business",
     });
     expect(result).toEqual({ ok: true, status: "pending" });
-    expect(h.ensureFee).toHaveBeenCalledWith("session-owned-salon");
+    expect(h.ensureFee).toHaveBeenCalledWith("session-owned-business");
     expect(h.startRegistration).toHaveBeenCalledWith(
-      "session-owned-salon",
+      "session-owned-business",
       expect.objectContaining({ ein: validInput.ein }),
     );
     expect(JSON.stringify(result)).not.toContain("123456789");
@@ -209,7 +209,7 @@ describe("text-line owner actions", () => {
         brandType: "STANDARD",
         einLast4: "6789",
         input: {
-          legalBusinessName: "Northwind Salon LLC",
+          legalBusinessName: "Northwind Services LLC",
           businessType: "LLC",
           addressStreet: "123 Main Street",
           addressCity: "Seattle",
@@ -227,7 +227,7 @@ describe("text-line owner actions", () => {
     expect(result).toMatchObject({
       requiresEin: true,
       formDefaults: {
-        legalBusinessName: "Northwind Salon LLC",
+        legalBusinessName: "Northwind Services LLC",
         businessType: "LLC",
       },
     });
@@ -247,10 +247,10 @@ describe("text-line owner actions", () => {
       ok: true,
       status: "active",
     });
-    expect(h.reactivateRegistrationLine).toHaveBeenCalledWith("owned-salon");
+    expect(h.reactivateRegistrationLine).toHaveBeenCalledWith("owned-business");
     expect(h.ensureFee).not.toHaveBeenCalled();
     expect(h.startRegistration).not.toHaveBeenCalled();
-    expect(h.syncBilling).toHaveBeenCalledWith("owned-salon");
+    expect(h.syncBilling).toHaveBeenCalledWith("owned-business");
   });
 
   it("turns a line off and syncs hosted subscription state", async () => {
@@ -259,8 +259,8 @@ describe("text-line owner actions", () => {
       ok: true,
       status: "off",
     });
-    expect(h.turnOffRegistrationLine).toHaveBeenCalledWith("owned-salon");
-    expect(h.syncBilling).toHaveBeenCalledWith("owned-salon");
+    expect(h.turnOffRegistrationLine).toHaveBeenCalledWith("owned-business");
+    expect(h.syncBilling).toHaveBeenCalledWith("owned-business");
   });
 
   it("resends only through the owner-protected registration action", async () => {
@@ -268,7 +268,7 @@ describe("text-line owner actions", () => {
       ok: true,
       status: "action_needed",
     });
-    expect(h.resendConfirmation).toHaveBeenCalledWith("owned-salon");
+    expect(h.resendConfirmation).toHaveBeenCalledWith("owned-business");
   });
 
   it("does no hosted work in single mode", async () => {

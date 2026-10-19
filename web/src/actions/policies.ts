@@ -85,7 +85,7 @@ export async function updateBusinessSettings(data: {
 }
 
 /**
- * Read the payment method toggle settings from the salon's policy.
+ * Read the payment method toggle settings from business settings.
  * Defaults all methods to enabled (1) if the columns are not yet present
  * (covers tenants that haven't run migration 0002).
  */
@@ -96,8 +96,8 @@ export async function getPaymentMethodSettings() {
 }
 
 /**
- * Update payment method toggle settings for the salon.
- * Validates input with updatePaymentMethodsSchema and persists to salon_policies.
+ * Update payment method toggle settings for the business.
+ * Validates input with updatePaymentMethodsSchema and persists to business_settings.
  */
 export async function updatePaymentMethods(data: {
   applePayEnabled?: number;
@@ -149,7 +149,7 @@ export async function updatePaymentMethods(data: {
 
 /**
  * Send an intake link to the client of an appointment so they can review and
- * sign salon policies and add a card on file. Mirrors the form-request /
+ * sign business policies and add a card on file. Mirrors the form-request /
  * aftercare send pipeline.
  */
 export async function sendIntakeRequest(input: { appointmentId: string }) {

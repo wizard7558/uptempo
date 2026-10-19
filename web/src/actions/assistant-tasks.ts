@@ -64,7 +64,7 @@ export async function assignTask(data: {
     const result = await withTenantDb(
       slug,
       async (db, { assistantTasks, staff }) => {
-        // Verify the assignedTo stylist has role="assistant"
+        // Verify that the `assignedTo` staff member has role="assistant"
         const [assistant] = await db
           .select({ id: staff.id, role: staff.role })
           .from(staff)
@@ -310,7 +310,7 @@ export async function listTasksForAssistant(
   if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
-  // Build day range in UTC -- the caller should pass a date in the salon's timezone
+  // Build day range in UTC -- the caller should pass a date in the business's timezone
   const dayStart = new Date(date);
   dayStart.setHours(0, 0, 0, 0);
   const dayEnd = new Date(date);

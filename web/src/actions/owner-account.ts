@@ -17,14 +17,14 @@ type DeleteResult =
  * Self-serve deletion of the signed-in owner/staff account (Apple Guideline
  * 5.1.1(v)).
  *
- * Guard: if the user is the SOLE owner of any salon, deletion is blocked — they
- * must transfer ownership (invite another owner) or close the salon first, so a
- * salon is never left ownerless and other staff/clients keep working. Once
+ * Guard: if the user is the SOLE owner of any business, deletion is blocked — they
+ * must transfer ownership (invite another owner) or close the business first, so a
+ * business is never left ownerless and other staff/clients keep working. Once
  * another owner exists, deletion proceeds.
  *
  * On success the user row is deleted, which cascades sessions, OAuth accounts,
  * and memberships (all reference user.id with onDelete: cascade). Tenant data
- * (the salon itself) is intentionally retained for the remaining owners.
+ * (the business itself) is intentionally retained for the remaining owners.
  */
 export async function deleteMyOwnerAccount(): Promise<DeleteResult> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -34,7 +34,7 @@ export async function deleteMyOwnerAccount(): Promise<DeleteResult> {
   }
 
   try {
-    // Salons where this user is an owner.
+    // Businesses where this user is an owner.
     const ownerTenants = await publicDb
       .select({ tenantSlug: memberships.tenantSlug })
       .from(memberships)
@@ -42,7 +42,7 @@ export async function deleteMyOwnerAccount(): Promise<DeleteResult> {
         and(eq(memberships.userId, userId), eq(memberships.role, "owner")),
       );
 
-    // Block if they are the only owner of any of those salons.
+    // Block if they are the only owner of any of those businesses.
     const soleOwnerOf: string[] = [];
     for (const { tenantSlug } of ownerTenants) {
       const otherOwners = await publicDb

@@ -4,12 +4,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock tenant context
 vi.mock("@/lib/tenant/context", () => ({
-  getTenantSlug: vi.fn().mockResolvedValue("test-salon"),
+  getTenantSlug: vi.fn().mockResolvedValue("test-business"),
 }));
 
 vi.mock("@/lib/auth/rbac", () => ({
-  requireStaff: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-salon" }),
-  requireRole: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-salon" }),
+  requireStaff: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-business" }),
+  requireRole: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-business" }),
   AuthError: class AuthError extends Error {
     code: string;
     constructor(code: string, message?: string) {
@@ -27,7 +27,7 @@ vi.mock("next/cache", () => ({
 
 // Mock next/headers
 vi.mock("next/headers", () => ({
-  headers: vi.fn().mockResolvedValue(new Map([["x-tenant-slug", "test-salon"]])),
+  headers: vi.fn().mockResolvedValue(new Map([["x-tenant-slug", "test-business"]])),
 }));
 
 // Mock getAppointment and cancelBooking
@@ -38,7 +38,7 @@ vi.mock("@/actions/appointments", () => ({
   cancelBooking: (...args: unknown[]) => mockCancelBooking(...args),
 }));
 
-// Mock getSalonPolicy
+// Mock business policy lookup
 const mockGetBusinessSettings = vi.fn();
 vi.mock("@/actions/policies", () => ({
   getBusinessSettings: () => mockGetBusinessSettings(),
@@ -160,7 +160,7 @@ const CLIENT_UUID = "b2c3d4e5-f6a7-4901-bcde-f12345678901";
 function makeAppointment(overrides: Record<string, unknown> = {}) {
   return {
     id: APPT_UUID,
-    staffId: "stylist-id",
+    staffId: "staff-id",
     client: {
       id: CLIENT_UUID,
       name: "Test Client",
@@ -314,7 +314,7 @@ describe("chargeNoShowFee integration", () => {
         appointmentId: APPT_UUID,
         reason: "no_show",
         clientId: CLIENT_UUID,
-        tenantSlug: "test-salon",
+        tenantSlug: "test-business",
       },
     });
     expect(revalidatePath).toHaveBeenCalledWith("/schedule");
@@ -501,7 +501,7 @@ describe("chargeCancellationFee integration", () => {
         appointmentId: APPT_UUID,
         reason: "late_cancellation",
         clientId: CLIENT_UUID,
-        tenantSlug: "test-salon",
+        tenantSlug: "test-business",
       },
     });
     expect(mockCancelBooking).toHaveBeenCalledWith({ appointmentId: APPT_UUID });

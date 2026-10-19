@@ -7,7 +7,7 @@ import { BookingDepositPreview, previewBookingDepositForTenant, DepositChargeOut
 
 /**
  * Resolve the deposit for a prospective booking (for display on the confirm step).
- * Returns enabled=false when the salon's plan doesn't include deposits.
+ * Returns enabled=false when no services are selected.
  */
 export async function previewBookingDeposit(
   serviceIds: string[],

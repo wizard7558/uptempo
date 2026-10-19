@@ -47,7 +47,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.results = [];
   h.hasModule.mockResolvedValue(true);
-  h.getTenantSlug.mockResolvedValue("salon");
+  h.getTenantSlug.mockResolvedValue("business");
   h.getBookingSession.mockResolvedValue("c1");
   h.consumeRateLimit.mockResolvedValue({ allowed: true });
   h.withTenantDb.mockImplementation(async () => h.results.shift());

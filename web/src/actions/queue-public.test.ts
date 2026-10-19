@@ -27,7 +27,7 @@ vi.mock("@/lib/clients/for-tenant", () => ({
   createClientForTenant: h.createClient,
 }));
 vi.mock("@/lib/sms/consent", () => ({ recordSmsConsent: h.recordSmsConsent }));
-vi.mock("@/actions/booking-public", () => ({ getBusinessBySlug: async () => ({ id: "s", name: "Salon", slug: "salon" }) }));
+vi.mock("@/actions/booking-public", () => ({ getBusinessBySlug: async () => ({ id: "s", name: "Business", slug: "business" }) }));
 vi.mock("@/lib/sms/send", () => ({ sendSms: h.sendSms }));
 vi.mock("@/lib/utils/after", () => ({ runAfterResponse: (fn: () => Promise<unknown>) => void fn() }));
 vi.mock("@/lib/analytics/events", () => ({ trackEvent: vi.fn() }));
@@ -37,7 +37,7 @@ import { joinQueue, leaveQueue } from "./queue-public";
 
 const KIOSK = "kiosk-secret-token";
 const base = {
-  slug: "salon",
+  slug: "business",
   locationId: null,
   name: "  Maria Lopez ",
   phone: "(555) 123-4567",
@@ -163,11 +163,11 @@ describe("joinQueue", () => {
     happyDb(settings({ textOnJoin: 1 }));
     const r = await joinQueue({ ...base, smsConsent: true });
     expect(r.success).toBe(true);
-    expect(h.recordSmsConsent).toHaveBeenCalledWith("salon", "c1", "+15551234567", "queue_join", "203.0.113.9");
+    expect(h.recordSmsConsent).toHaveBeenCalledWith("business", "c1", "+15551234567", "queue_join", "203.0.113.9");
     expect(h.sendSms).toHaveBeenCalledTimes(1);
     const call = h.sendSms.mock.calls[0][0];
-    expect(call).toMatchObject({ to: "+15551234567", messageType: "queue_joined", tenantSlug: "salon" });
-    if (r.success) expect(call.body).toContain(`/q/salon/e/${r.token}`);
+    expect(call).toMatchObject({ to: "+15551234567", messageType: "queue_joined", tenantSlug: "business" });
+    if (r.success) expect(call.body).toContain(`/q/business/e/${r.token}`);
   });
 
   it("never returns the token hash", async () => {
@@ -180,12 +180,12 @@ describe("joinQueue", () => {
 
 describe("leaveQueue", () => {
   it("ignores a token that is the wrong shape", async () => {
-    expect(await leaveQueue("salon", "short")).toEqual({ success: false });
+    expect(await leaveQueue("business", "short")).toEqual({ success: false });
     expect(h.withTenantDb).not.toHaveBeenCalled();
   });
 
   it("refuses when the module is off", async () => {
     h.hasModule.mockResolvedValue(false);
-    expect(await leaveQueue("salon", "a".repeat(32))).toEqual({ success: false, error: "errors.queue.turnedOff" });
+    expect(await leaveQueue("business", "a".repeat(32))).toEqual({ success: false, error: "errors.queue.turnedOff" });
   });
 });

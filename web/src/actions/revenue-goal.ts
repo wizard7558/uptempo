@@ -8,7 +8,7 @@ import { hasPermission } from "@/lib/auth/permissions";
 import { getBusinessSettingsForTenant } from "@/lib/policies/salon-policy";
 
 /**
- * Salon-wide monthly service-revenue goal (cents). Stored on salon_policies;
+ * Business-wide monthly service-revenue goal (cents). Stored in business_settings;
  * NULL means no goal set. Reading is gated to roles that can view revenue;
  * writing is gated to settings managers (owner/admin).
  */
@@ -25,7 +25,7 @@ export async function getMonthlyRevenueGoal(): Promise<number | null> {
 }
 
 /**
- * Set (or clear, with null) the salon's monthly revenue goal in cents.
+ * Set (or clear, with null) the business's monthly revenue goal in cents.
  * Rejects non-integer or negative amounts.
  */
 export async function setMonthlyRevenueGoal(

@@ -898,7 +898,7 @@ export async function cancelBooking(data: {
 
   try {
 
-    // Fetch stylistId for calendar sync before cancellation
+    // Fetch staff ID for calendar sync before cancellation
     const [appt] = await withTenantDb(slug, async (db, { appointments }) => {
       return db
         .select({ staffId: appointments.staffId })
@@ -1235,8 +1235,8 @@ export async function getAppointmentsForDateRange(
 
 /**
  * Consolidated schedule data fetch for schedule views.
- * Fetches all appointments + services + external events for multiple stylists
- * in a single server action call (replaces N per-stylist calls).
+ * Fetches all appointments + services + external events for multiple staff members
+ * in a single server action call (replaces N per-staff calls).
  */
 export async function getScheduleData(
   staffIds: string[],
@@ -1255,7 +1255,7 @@ export async function getScheduleData(
   const rangeStr = `[${startDate.toISOString()},${endDate.toISOString()})`;
 
   return withTenantDb(slug, async (db, { appointments, appointmentServices, clients, clientServiceOverrides, services, externalEvents, locations, timeBlocks, recurrenceRules, clientAddresses, projects }) => {
-    // Initialize empty arrays for all stylistIds
+    // Initialize empty arrays for all staff IDs
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appointmentsByStylelist: Record<string, any[]> = {};
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1268,7 +1268,7 @@ export async function getScheduleData(
       timeBlocksByStaffMember[id] = [];
     }
 
-    // 1. Fetch ALL stylists' appointments in one query
+    // 1. Fetch ALL staff members' appointments in one query
     const rows = await db
       .select({
         id: appointments.id,
@@ -1325,7 +1325,7 @@ export async function getScheduleData(
     // 2a. Apply per-client overrides on top of the snapshot pricing/duration
     // returned above. The schedule view shows current per-client overrides
     // (rather than purely historical snapshots) so revenue + hours-booked
-    // totals match what the stylist sees in the client profile.
+    // totals match what the staff member sees in the client profile.
     //
     // Resolution: client_service_override > appointment snapshot > catalog.
     const apptIdToClientId = new Map<string, string>();
@@ -1436,7 +1436,7 @@ export async function getScheduleData(
       }
     }
 
-    // 3. Group appointments by stylistId
+    // 3. Group appointments by staff member ID
     for (const row of rows) {
       const processingInfo = processingInfoMap.get(row.id);
       appointmentsByStylelist[row.staffId].push({
@@ -1489,7 +1489,7 @@ export async function getScheduleData(
       });
     }
 
-    // 4. Fetch ALL stylists' external events in one query
+    // 4. Fetch ALL staff members' external events in one query
     const externalRows = await db
       .select({
         id: externalEvents.id,
@@ -1508,7 +1508,7 @@ export async function getScheduleData(
         ),
       );
 
-    // 5. Group external events by stylistId
+    // 5. Group external events by staff member ID
     for (const row of externalRows) {
       externalEventsByStaffMember[row.staffId].push({
         id: row.id,

@@ -10,7 +10,7 @@ import {
   mapMembershipSubscriptionStatus,
 } from "@/lib/membership/stripe-subscription-status";
 
-// Server translator without a request scope: hair_salon words, same as the old copy.
+// Server translator without a request scope: default hair-industry terms, matching legacy copy.
 vi.mock("@/lib/terms/server", async () => {
   const { createTermsT } = await import("@/lib/terms/translator");
   const { VERTICALS } = await import("@/lib/verticals");

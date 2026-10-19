@@ -35,7 +35,7 @@ export async function getRevenueTrend(
   const { tenantSlug: slug } = await requireStaff();
 
   return withTenantDb(slug, async (db, { charges, businessSettings }) => {
-    // Get salon timezone
+    // Get business timezone
     const [policy] = await db
       .select({ timezone: businessSettings.timezone })
       .from(businessSettings)
@@ -364,7 +364,7 @@ export async function getExpenseRevenueSummary(dateRange: {
 }
 
 // ---------------------------------------------------------------------------
-// Stylist Utilization
+// Staff Utilization
 // ---------------------------------------------------------------------------
 
 export async function getStaffUtilization(dateRange: {
@@ -376,7 +376,7 @@ export async function getStaffUtilization(dateRange: {
   return withTenantDb(
     slug,
     async (db, { appointments, staff, workingHours }) => {
-      // Step 1: Booked minutes per stylist from non-cancelled appointments.
+      // Step 1: Booked minutes per staff member from non-cancelled appointments.
       // Use explicit range bounds for broad Postgres compatibility.
       const windowRange = sql`tstzrange(${dateRange.start.toISOString()}::timestamptz, ${dateRange.end.toISOString()}::timestamptz, '[]')`;
       const bookedRows = await db
@@ -413,13 +413,13 @@ export async function getStaffUtilization(dateRange: {
         .from(workingHours)
         .where(eq(workingHours.isEnabled, 1));
 
-      // Step 3: Calculate available minutes per stylist
+      // Step 3: Calculate available minutes per staff member
       const days = eachDayOfInterval({
         start: dateRange.start,
         end: dateRange.end,
       });
 
-      // Build a map: stylistId -> total available minutes
+      // Build a map: staffId -> total available minutes
       const availableMap = new Map<string, number>();
       for (const day of days) {
         const dow = getDay(day); // 0=Sunday
@@ -439,7 +439,7 @@ export async function getStaffUtilization(dateRange: {
       }
 
       // Step 4: Combine booked + available
-      // Collect all stylist IDs from both sources
+      // Collect all staff IDs from both sources
       const allStaffIds = new Set<string>();
       for (const row of bookedRows) allStaffIds.add(row.staffId);
       for (const [sid] of availableMap) allStaffIds.add(sid);
@@ -448,8 +448,8 @@ export async function getStaffUtilization(dateRange: {
       const nameMap = new Map<string, string>();
       for (const row of bookedRows) nameMap.set(row.staffId, row.staffName);
 
-      // If a stylist is in availableMap but not bookedRows, we need their name
-      // Query those stylists
+      // If a staff member is in availableMap but not bookedRows, we need their name
+      // Query those staff members
       const missingStaffIds = [...allStaffIds].filter(
         (id) => !nameMap.has(id),
       );

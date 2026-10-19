@@ -20,7 +20,7 @@ export interface AddonOption {
 
 /**
  * For a set of primary services, return each one's offered add-ons (resolved for
- * this client/stylist so prices and durations match what they'll be charged).
+ * this client and staff member so prices and durations match what they'll be charged).
  * Returns a map keyed by primary serviceId.
  */
 export async function getAddonsForServices(

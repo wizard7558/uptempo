@@ -97,7 +97,7 @@ function toView(row: {
   };
 }
 
-/** All products for the current salon, sorted for the admin list. */
+/** All products for the current business, sorted for the admin list. */
 export async function listProducts(): Promise<ProductView[]> {
   const { tenantSlug: slug } = await requireStaff();
   return withTenantDb(slug, async (db, { products }) => {
@@ -204,7 +204,7 @@ export interface StorefrontSettings {
   retailShipFlatCents: number | null;
 }
 
-/** Retail tax + shipping settings for the current salon's storefront. */
+/** Retail tax + shipping settings for the current business's storefront. */
 export async function getStorefrontSettings(): Promise<StorefrontSettings> {
   const { tenantSlug: slug } = await requireStaff();
   return withTenantDb(slug, async (db, { businessSettings }) => {

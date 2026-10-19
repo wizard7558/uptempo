@@ -23,7 +23,7 @@ export interface StaffServiceMatrixRow {
   defaultPriceCents: number | null;
   defaultActiveMinutes: number | null;
   defaultProcessingMinutes: number | null;
-  /** True when a stylist_services row exists at all (offered or hidden). */
+  /** True when a staff_services row exists at all (offered or hidden). */
   isLinked: boolean;
   isOffered: boolean;
   customName: string | null;
@@ -34,8 +34,8 @@ export interface StaffServiceMatrixRow {
 }
 
 /**
- * Returns every active catalog service joined with the stylist's existing
- * link row (if any). Drives the per-stylist services management UI.
+ * Returns every active catalog service joined with the staff member's existing
+ * link row (if any). Drives the per-staff services management UI.
  */
 export async function getStaffServiceMatrix(
   staffId: string,
@@ -79,7 +79,7 @@ export async function getStaffServiceMatrix(
 }
 
 /**
- * Upserts a stylist's offering for a service. Pass null on any override
+ * Upserts a staff member's offering for a service. Pass null on any override
  * field to clear it (revert to catalog default). Setting `isOffered: false`
  * hides the service from the public booking flow without unlinking.
  */
@@ -156,7 +156,7 @@ export async function setStaffServiceOffering(data: {
 }
 
 /**
- * Hard-removes the link entirely. Use this when a stylist truly never offers
+ * Hard-removes the link entirely. Use this when a staff member truly never offers
  * a service. Booking history is preserved because `appointment_services`
  * holds its own snapshot.
  */
@@ -204,11 +204,11 @@ export async function removeStaffServiceOffering(data: {
 }
 
 /**
- * Replace the set of services a stylist offers in one call.
+ * Replace the set of services a staff member offers in one call.
  *
  * - Services in `serviceIds` not yet linked: inserted with all defaults
  *   (no overrides), `is_offered = 1`.
- * - Services not in `serviceIds`: link is deleted entirely (any per-stylist
+ * - Services not in `serviceIds`: link is deleted entirely (any per-staff
  *   overrides on those services are dropped).
  *
  * Existing links remain untouched (their overrides are preserved).
@@ -281,12 +281,12 @@ export async function bulkSetStaffOfferings(data: {
 }
 
 /**
- * Creates a salon-catalog service and links it ONLY to the given stylist.
- * Use this for services unique to a single stylist; it skips the auto-link
- * to all stylists that the catalog `createService` action performs.
+ * Creates a business-catalog service and links it ONLY to the given staff member.
+ * Use this for services unique to a single staff member; it skips the auto-link
+ * to all staff members that the catalog `createService` action performs.
  *
- * The service still lives on the salon catalog (so it can be shared later
- * by linking other stylists), but starts owned by exactly one stylist.
+ * The service still lives on the business catalog (so it can be shared later
+ * by linking other staff members), but starts owned by exactly one staff member.
  */
 export async function createCustomServiceForStaffMember(data: {
   staffId: string;
@@ -389,7 +389,7 @@ export async function createCustomServiceForStaffMember(data: {
 }
 
 /**
- * Returns count of stylists offering each service. Powers the "X stylists
+ * Returns count of staff members offering each service. Powers the "X staff members
  * offer this" column on the catalog page.
  */
 export async function getStaffOfferingCounts(): Promise<

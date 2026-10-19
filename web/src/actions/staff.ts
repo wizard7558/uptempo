@@ -170,7 +170,7 @@ export async function updateStaffMember(data: {
 }
 
 /**
- * Set (or clear) a stylist's Capacity Coach goals. `targetHoursPerWeek` is whole
+ * Set (or clear) a staff member's Capacity Coach goals. `targetHoursPerWeek` is whole
  * hours; `targetHourlyEarningsCents` is the take-home/hour goal in cents. Pass
  * `null` for either to clear it. Both must be set for the coach to evaluate.
  */
@@ -266,7 +266,7 @@ export async function listStaff() {
       .where(eq(staff.isActive, 1))
       .orderBy(asc(staff.displayName));
 
-    // Get assigned services for all stylists in a single batch query
+    // Get assigned services for all staff members in a single batch query
     const staffIds = allStaff.map((s) => s.id);
     const servicesMap = await getServicesForStaff(db, { staffServices, services }, staffIds);
 
