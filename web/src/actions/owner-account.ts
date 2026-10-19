@@ -11,7 +11,7 @@ import { getTenantBySlug } from "@/lib/tenant/registry";
 
 type DeleteResult =
   | { success: true }
-  | { success: false; error: string; blockedSalons?: string[] };
+  | { success: false; error: string; blockedBusinesses?: string[] };
 
 /**
  * Self-serve deletion of the signed-in owner/staff account (Apple Guideline
@@ -69,7 +69,7 @@ export async function deleteMyOwnerAccount(): Promise<DeleteResult> {
         error: (await getT("errors"))("ownerAccount.soleOwner", {
           names: soleOwnerOf.join(", "),
         }),
-        blockedSalons: soleOwnerOf,
+        blockedBusinesses: soleOwnerOf,
       };
     }
 
