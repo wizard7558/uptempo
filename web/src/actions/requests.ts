@@ -92,7 +92,7 @@ type Guard = Awaited<ReturnType<typeof guard>>;
 /** Staff session + module gate. Providers are limited to their own requests via `canTouch`. */
 async function guard() {
   const auth = await requireRole("owner", "admin", "provider");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "requests");
   const actorStaffId = auth.role === "provider" ? await getActorStaffId(slug, auth.userId) : null;

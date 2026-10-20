@@ -22,11 +22,11 @@ const FINISH_ITEMS: ReadonlyArray<{
  * Post-launch "Finish setup" card. Shown only to owners who launched WITHOUT
  * connecting Stripe (they explicitly skipped it during onboarding) and still
  * have an optional item outstanding. Once every item is done it renders
- * nothing. Salons that launched the normal way keep `stripeSkipped === false`
+ * nothing. Businesses that launched the normal way keep `stripeSkipped === false`
  * and never see this card.
  */
 export function OnboardingChecklist({ steps }: OnboardingChecklistProps) {
-  // Only relevant after launch, and only for salons that skipped Stripe.
+  // Only relevant after launch, and only for businesses that skipped Stripe.
   if (!steps.launched || !steps.stripeSkipped) return null;
 
   const outstanding = FINISH_ITEMS.filter((item) => !steps[item.key]);

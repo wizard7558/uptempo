@@ -3,7 +3,7 @@ import { getStorageProvider } from "@/lib/providers/storage";
 export { isVercelBlobUrl, normalizeEnvToken } from "@/lib/providers/storage/vercel-blob";
 
 /**
- * Shared image upload (server-only). One implementation behind the salon-logo
+ * Shared image upload (server-only). One implementation behind the business-logo
  * and product-photo uploads: type allow-list, size cap, old-file cleanup on
  * replace, and public storage so unauthenticated pages can render the images.
  * Storage is delegated to the configured StorageProvider (vercel-blob, local

@@ -40,7 +40,7 @@ const serviceBaseSchema = z.object({
     .max(10_000_000, "Cost must be less than $100,000")
     .nullable()
     .optional(),
-  // Category is a slug referencing a (default or salon-defined) service category.
+  // Category is a slug referencing a (default or business-defined) service category.
   category: z
     .string()
     .min(1)
@@ -53,7 +53,7 @@ const serviceBaseSchema = z.object({
   bookingAudience: z.enum(["all", "new", "returning"]).optional(),
   /** How the price renders on the public booking page. */
   priceDisplay: z.enum(["show", "starting", "hidden"]).default("show"),
-  /** Per-service deposit override. null = inherit the salon's global deposit rule. */
+  /** Per-service deposit override. null = inherit the business's global deposit rule. */
   depositType: z.enum(["none", "percent", "fixed"]).nullable().optional(),
   depositAmount: z
     .number()

@@ -6,11 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { CalendarPlus, ShoppingBag, UserCircle } from "lucide-react";
 import { isNativeApp } from "@/lib/native/client";
 
-const SLUG_COOKIE = "uptempo_last_salon";
+const BUSINESS_SLUG_COOKIE = "uptempo_last_business";
+const LEGACY_SALON_SLUG_COOKIE = "uptempo_last_salon";
 const SLUG_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 
 /**
- * Salon-facing surfaces that get the tab bar. Transactional deep-link pages
+ * Business-facing surfaces that get the tab bar. Transactional deep-link pages
  * (forms, intake, cancel, reschedule, checkout, aftercare, quiz) stay
  * chromeless.
  */
@@ -22,16 +23,30 @@ function slugFromPath(pathname: string): string | null {
 }
 
 function readSlugCookie(): string | null {
-  const m = document.cookie.match(/(?:^|;\s*)uptempo_last_salon=([^;]+)/);
-  return m ? decodeURIComponent(m[1]) : null;
+  function readCookie(name: string): string | null {
+    const prefix = `${name}=`;
+    const entry = document.cookie
+      .split(/;\s*/)
+      .find((cookie) => cookie.startsWith(prefix));
+    if (!entry) return null;
+
+    try {
+      const value = decodeURIComponent(entry.slice(prefix.length));
+      return value.length > 0 ? value : null;
+    } catch {
+      return null;
+    }
+  }
+
+  return readCookie(BUSINESS_SLUG_COOKIE) ?? readCookie(LEGACY_SALON_SLUG_COOKIE);
 }
 
 /**
  * Native-app-only bottom tab bar (Book / Shop / Account) so the client shell
- * feels like a phone app instead of a website. Remembers the last salon the
+ * feels like a phone app instead of a website. Remembers the last business the
  * client visited (cookie, also set server-side on OTP verification) so every
- * tab is salon-scoped, and bounces the app's cold start at /discover straight
- * to that salon. Renders nothing on the plain web.
+ * tab is business-scoped, and bounces the app's cold start at /discover straight
+ * to that business. Renders nothing on the plain web.
  */
 export function NativeTabBar() {
   const pathname = usePathname();
@@ -76,11 +91,15 @@ export function NativeTabBar() {
     };
   }, [showTabBar]);
 
-  // Remember the salon from any salon-scoped path; fall back to the cookie.
+  // Remember the business from any business-scoped path; otherwise use the
+  // canonical cookie, falling back to the legacy name for cached clients.
   useEffect(() => {
     const fromPath = slugFromPath(pathname);
     if (fromPath) {
-      document.cookie = `${SLUG_COOKIE}=${encodeURIComponent(fromPath)};path=/;max-age=${SLUG_COOKIE_MAX_AGE};samesite=lax`;
+      const encodedSlug = encodeURIComponent(fromPath);
+      const attributes = `path=/;max-age=${SLUG_COOKIE_MAX_AGE};samesite=lax`;
+      document.cookie = `${BUSINESS_SLUG_COOKIE}=${encodedSlug};${attributes}`;
+      document.cookie = `${LEGACY_SALON_SLUG_COOKIE}=${encodedSlug};${attributes}`;
       setSlug(fromPath);
     } else {
       setSlug(readSlugCookie());
@@ -88,7 +107,7 @@ export function NativeTabBar() {
   }, [pathname]);
 
   // Cold start lands on /discover (the shell's fixed URL). If we already know
-  // the client's salon, go straight there — once per app session, so tapping
+  // the client's business, go straight there — once per app session, so tapping
   // through to Discover on purpose still works.
   useEffect(() => {
     if (!native || pathname !== "/discover") return;

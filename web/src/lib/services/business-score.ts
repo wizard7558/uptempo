@@ -1,7 +1,7 @@
 /**
  * Business Score
  * --------------
- * A single 0–100 read on how the salon is performing this month, blended from
+ * A single 0–100 read on how the business is performing this month, blended from
  * five signals the dashboard already computes. Pure and deterministic so it can
  * be unit tested exhaustively and rendered without a DB round-trip.
  *

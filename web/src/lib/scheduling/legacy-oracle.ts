@@ -21,8 +21,8 @@ export interface WorkingHoursConfig {
  * Generates available 15-minute time slots for a given day.
  * Excludes slots that overlap with existing appointments.
  *
- * Working-hour boundaries are interpreted in `salonTimezone` (not the process TZ),
- * so availability matches the salon policy on servers running in UTC (CI, Docker, etc.).
+ * Working-hour boundaries are interpreted in `businessTimezone` (not the process TZ),
+ * so availability matches the business policy on servers running in UTC (CI, Docker, etc.).
  *
  * This is a pure function -- no DB calls. Pass in the data it needs.
  */
@@ -30,7 +30,7 @@ export function generateSlots(
   date: Date,
   workingHoursForDay: WorkingHoursConfig,
   existingAppointments: TimeSlot[],
-  salonTimezone: string,
+  businessTimezone: string,
   slotDurationMinutes: number = 15,
 ): TimeSlot[] {
   if (workingHoursForDay.isEnabled === 0) {
@@ -40,13 +40,13 @@ export function generateSlots(
   const [startH, startM] = workingHoursForDay.startTime.split(":").map(Number);
   const [endH, endM] = workingHoursForDay.endTime.split(":").map(Number);
 
-  const cal = new TZDate(date, salonTimezone);
+  const cal = new TZDate(date, businessTimezone);
   const y = cal.getFullYear();
   const mo = cal.getMonth();
   const d = cal.getDate();
 
-  const dayStart = new TZDate(y, mo, d, startH, startM, 0, 0, salonTimezone);
-  const dayEnd = new TZDate(y, mo, d, endH, endM, 0, 0, salonTimezone);
+  const dayStart = new TZDate(y, mo, d, startH, startM, 0, 0, businessTimezone);
+  const dayEnd = new TZDate(y, mo, d, endH, endM, 0, 0, businessTimezone);
 
   const slots: TimeSlot[] = [];
   let currentMs = dayStart.getTime();
@@ -172,17 +172,17 @@ export function findAvailableStartTimes(
   workingHours: WorkingHoursConfig,
   existingAppointments: TimeSlot[],
   totalDurationMinutes: number,
-  salonTimezone: string,
+  businessTimezone: string,
 ): Date[] {
   const slots = generateSlots(
     date,
     workingHours,
     existingAppointments,
-    salonTimezone,
+    businessTimezone,
   );
 
   const [endH, endM] = workingHours.endTime.split(":").map(Number);
-  const cal = new TZDate(date, salonTimezone);
+  const cal = new TZDate(date, businessTimezone);
   const dayEnd = new TZDate(
     cal.getFullYear(),
     cal.getMonth(),
@@ -191,7 +191,7 @@ export function findAvailableStartTimes(
     endM,
     0,
     0,
-    salonTimezone,
+    businessTimezone,
   );
   const dayEndMs = dayEnd.getTime();
 

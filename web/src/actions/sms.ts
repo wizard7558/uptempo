@@ -11,7 +11,7 @@ import { z } from "zod";
 import { recordSmsConsent, revokeSmsConsent } from "@/lib/sms/consent";
 
 /**
- * Get SMS-related settings from salon_policies.
+ * Get SMS-related settings from business_settings.
  */
 export async function getSmsSettings() {
   const { tenantSlug: slug } = await requireStaff();
@@ -42,7 +42,7 @@ const updateSmsSettingsSchema = z.object({
 });
 
 /**
- * Update SMS-related settings in salon_policies.
+ * Update SMS-related settings in business_settings.
  */
 export async function updateSmsSettings(data: {
   smsRemindersEnabled?: number;

@@ -27,11 +27,12 @@ export default async function InvitePage({ params }: InvitePageProps) {
         <div className="w-full max-w-md space-y-6 border border-[var(--line)] bg-[var(--ivory-raised)] p-8 text-center">
           <div className="flex justify-center mb-4">
             <Image
-              src="/uptempo.svg"
+              src="/brand/wordmark.svg"
               alt="Uptempo"
-              width={64}
-              height={64}
+              width={190}
+              height={36}
               priority
+              className="dark:invert"
             />
           </div>
           <h1 className="display text-3xl text-[var(--ink)]">
@@ -59,21 +60,19 @@ export default async function InvitePage({ params }: InvitePageProps) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md space-y-6 border border-[var(--line)] bg-[var(--ivory-raised)] p-8">
         <div className="mb-4 space-y-4 text-center">
-          <div className="mb-4 flex justify-center">
+          <h1 className="mb-4 flex justify-center">
             <Image
-              src="/uptempo.svg"
+              src="/brand/wordmark.svg"
               alt="Uptempo"
-              width={64}
-              height={64}
+              width={190}
+              height={36}
               priority
+              className="dark:invert"
             />
-          </div>
-          <h1 className="text-xs font-medium tracking-[0.16em] text-[var(--ink)]">
-            Uptempo
           </h1>
           <p className="text-sm text-[var(--ink-soft)]">
             You&apos;ve been invited to join{" "}
-            <strong>{result.salonName}</strong> as a{" "}
+            <strong>{result.businessName}</strong> as a{" "}
             <strong>{roleLabel}</strong>
           </p>
         </div>
@@ -82,7 +81,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
           <AcceptInviteForm
             token={token}
             email={result.invitation.email}
-            salonName={result.salonName}
+            businessName={result.businessName}
             role={result.invitation.role}
             canJoinAsSignedInUser={canJoinAsSignedInUser}
             isSignedInWrongEmail={

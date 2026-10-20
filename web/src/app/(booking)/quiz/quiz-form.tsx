@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitQuizResponse } from "@/actions/quiz";
 import { cn } from "@/lib/utils";
-import { QuizWaitlistPrompt } from "./waitlist-prompt";
 
 /**
  * `source` comes from the page's `?src=` param so QR codes and campaign links
@@ -67,13 +66,6 @@ export function QuizForm({ source }: { source: string | null }) {
             Your feedback helps us build the tools you actually need.
           </p>
         </div>
-
-        <QuizWaitlistPrompt
-          name={name}
-          email={email}
-          phone={phone}
-          source={source}
-        />
       </div>
     );
   }

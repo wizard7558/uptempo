@@ -17,6 +17,14 @@ describe("matchesCron", () => {
         hit: "2026-10-11T12:05:00.000Z",
         miss: "2026-10-11T12:07:00.000Z",
       },
+      "*/30 * * * *": {
+        hit: "2026-10-11T12:30:00.000Z",
+        miss: "2026-10-11T12:31:00.000Z",
+      },
+      "0 14 * * *": {
+        hit: "2026-10-11T14:00:00.000Z",
+        miss: "2026-10-11T14:01:00.000Z",
+      },
       "0 * * * *": {
         hit: "2026-10-11T12:00:00.000Z",
         miss: "2026-10-11T12:01:00.000Z",
@@ -32,6 +40,10 @@ describe("matchesCron", () => {
       "0 6 1 * *": {
         hit: "2026-10-01T06:00:00.000Z",
         miss: "2026-10-02T06:00:00.000Z",
+      },
+      "30 2 * * *": {
+        hit: "2026-10-11T02:30:00.000Z",
+        miss: "2026-10-11T02:31:00.000Z",
       },
       "30 3 * * *": {
         hit: "2026-10-11T03:30:00.000Z",
@@ -57,13 +69,20 @@ describe("matchesCron", () => {
     }
   });
 
-  it("matches */5 at :00 and :05, Monday 02:00, and the 1st at 06:00", () => {
+  it("matches */5 and */30, Monday 02:00, and the 1st at 06:00", () => {
     expect(matchesCron("*/5 * * * *", utc("2026-10-11T00:00:00.000Z"))).toBe(true);
     expect(matchesCron("*/5 * * * *", utc("2026-10-11T00:05:00.000Z"))).toBe(true);
     expect(matchesCron("*/5 * * * *", utc("2026-10-11T00:04:00.000Z"))).toBe(false);
+    expect(matchesCron("*/30 * * * *", utc("2026-10-11T00:30:00.000Z"))).toBe(true);
+    expect(matchesCron("*/30 * * * *", utc("2026-10-11T00:31:00.000Z"))).toBe(false);
     expect(matchesCron("0 2 * * 1", utc("2026-10-12T02:00:00.000Z"))).toBe(true);
     expect(matchesCron("0 6 1 * *", utc("2026-10-01T06:00:00.000Z"))).toBe(true);
     expect(matchesCron("0 6 1 * *", utc("2026-10-01T06:01:00.000Z"))).toBe(false);
+  });
+
+  it("runs the billing switch at 14:00 UTC only", () => {
+    expect(matchesCron("0 14 * * *", utc("2026-10-11T14:00:00.000Z"))).toBe(true);
+    expect(matchesCron("0 14 * * *", utc("2026-10-11T14:01:00.000Z"))).toBe(false);
   });
 
   it("matches a list and a range", () => {

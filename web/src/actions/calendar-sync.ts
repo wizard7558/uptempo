@@ -12,7 +12,7 @@ import { and, eq, gt, lt } from "drizzle-orm";
 import { pushBookingToCalendarForTenant, deleteBookingFromCalendarForTenant } from "@/lib/calendar/sync-tenant";
 
 /**
- * Get external events for a stylist on a given day.
+ * Get external events for a staff member on a given day.
  * Used to merge external blocks into availability and schedule display.
  */
 export async function getExternalEventsForDay(
@@ -37,7 +37,7 @@ export async function getExternalEventsForDay(
 
 /**
  * Live free/busy check against the calendar API (not cache) at booking confirmation time.
- * Queries all active calendar connections for the stylist and checks for overlapping busy periods.
+ * Queries all active calendar connections for the staff member and checks for overlapping busy periods.
  */
 export async function isExternalSlotAvailable(
   staffId: string,
@@ -103,7 +103,7 @@ export async function isExternalSlotAvailable(
 }
 
 /**
- * Push a booking to the stylist's designated external calendar.
+ * Push a booking to the staff member's designated external calendar.
  * Creates an event via the calendar provider API.
  * Push failures do not block the booking -- eventual consistency.
  */

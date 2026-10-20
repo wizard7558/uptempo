@@ -18,7 +18,7 @@ import { getBaseUrl } from "@/lib/utils";
 import { getStripe } from "@/lib/stripe/server";
 import { sendEmail } from "@/lib/email/send";
 import { getEmailBranding } from "@/lib/email/branding";
-import { getBusinessSettingsForTenant, mapPolicyToPaymentMethodSettings } from "@/lib/policies/salon-policy";
+import { getBusinessSettingsForTenant, mapPolicyToPaymentMethodSettings } from "@/lib/policies/business-policy";
 
 export async function getBusinessSettings() {
   const { tenantSlug: slug } = await requireStaff();
@@ -85,7 +85,7 @@ export async function updateBusinessSettings(data: {
 }
 
 /**
- * Read the payment method toggle settings from the salon's policy.
+ * Read the payment method toggle settings from business settings.
  * Defaults all methods to enabled (1) if the columns are not yet present
  * (covers tenants that haven't run migration 0002).
  */
@@ -96,8 +96,8 @@ export async function getPaymentMethodSettings() {
 }
 
 /**
- * Update payment method toggle settings for the salon.
- * Validates input with updatePaymentMethodsSchema and persists to salon_policies.
+ * Update payment method toggle settings for the business.
+ * Validates input with updatePaymentMethodsSchema and persists to business_settings.
  */
 export async function updatePaymentMethods(data: {
   applePayEnabled?: number;
@@ -149,7 +149,7 @@ export async function updatePaymentMethods(data: {
 
 /**
  * Send an intake link to the client of an appointment so they can review and
- * sign salon policies and add a card on file. Mirrors the form-request /
+ * sign business policies and add a card on file. Mirrors the form-request /
  * aftercare send pipeline.
  */
 export async function sendIntakeRequest(input: { appointmentId: string }) {
@@ -228,22 +228,22 @@ export async function sendIntakeRequest(input: { appointmentId: string }) {
       getEmailBranding(slug),
       getEmailT(slug, "emails"),
     ]);
-    const salonName = branding.salonName;
+    const businessName = branding.businessName;
 
     if (client.email) {
       const { IntakeRequestEmail } = await import("@/emails/intake-request");
       await sendEmail({
         to: client.email,
-        subject: emailT("intakeMail.subject", { business: salonName }),
+        subject: emailT("intakeMail.subject", { business: businessName }),
         react: IntakeRequestEmail({
           t: emailT,
-          salonName,
+          businessName: businessName,
           clientName: client.name,
           intakeUrl,
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
         }),
-        salonName,
+        businessName: businessName,
       });
     }
 
@@ -264,7 +264,7 @@ export async function sendIntakeRequest(input: { appointmentId: string }) {
       const { sendSms } = await import("@/lib/sms/send");
       await sendSms({
         to: client.phone,
-        body: emailT("intake.sms", { placeName: salonName, url: intakeUrl }),
+        body: emailT("intake.sms", { placeName: businessName, url: intakeUrl }),
         tenantSlug: slug,
         clientId: client.id,
         appointmentId,
@@ -296,7 +296,7 @@ interface IntakeContext {
   signedAt: Date | null;
   clientId: string;
   clientName: string;
-  salonName: string;
+  businessName: string;
   logoUrl: string | null;
 }
 
@@ -353,7 +353,7 @@ export async function getIntakeByToken(
     signedAt: ctx.sig.signedAt,
     clientId: ctx.sig.clientId,
     clientName: ctx.client.name,
-    salonName: branding.salonName,
+    businessName: branding.businessName,
     logoUrl: branding.logoUrl,
   };
 }

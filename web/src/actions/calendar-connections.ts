@@ -48,7 +48,7 @@ export async function saveCalendarConnection(data: {
   const connection = await withTenantDb(
     slug,
     async (db, { calendarConnections }) => {
-      // Delete any existing connection for this stylist+platform (upsert)
+      // Delete any existing connection for this staff member and platform (upsert)
       await db
         .delete(calendarConnections)
         .where(
@@ -82,7 +82,7 @@ export async function saveCalendarConnection(data: {
     { platform: data.platform },
     { tenantSlug: slug },
   );
-  revalidateTag(calendarConnectionsTag(slug));
+  revalidateTag(calendarConnectionsTag(slug), { expire: 0 });
   return connection;
 }
 
@@ -102,12 +102,12 @@ export async function disconnectCalendar(connectionId: string) {
   });
 
   revalidatePath("/settings/calendars");
-  revalidateTag(calendarConnectionsTag(slug));
+  revalidateTag(calendarConnectionsTag(slug), { expire: 0 });
   trackEvent("calendar.disconnected", {}, { tenantSlug: slug });
   return { success: true as const };
 }
 
-/** Get all calendar connections for a stylist */
+/** Get all calendar connections for a staff member */
 export async function getCalendarConnections(staffId: string) {
   const { tenantSlug: slug } = await requireStaff();
   return withTenantDb(slug, async (db, { calendarConnections }) => {
@@ -166,7 +166,7 @@ export async function setCalendarId(
   });
 
   revalidatePath("/settings/calendars");
-  revalidateTag(calendarConnectionsTag(slug));
+  revalidateTag(calendarConnectionsTag(slug), { expire: 0 });
   return { success: true as const };
 }
 
@@ -197,7 +197,7 @@ export async function listCalendarsForConnection(
   return calendars.filter((c) => c.accessRole === "writer" || c.accessRole === "owner");
 }
 
-/** Get active calendar connection for a stylist (for push/sync operations) */
+/** Get active calendar connection for a staff member (for push/sync operations) */
 export async function getActiveConnectionForStaffMember(staffId: string) {
   const { tenantSlug: slug } = await requireStaff();
   return getActiveConnectionForStaffInTenant(slug, staffId);

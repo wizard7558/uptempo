@@ -7,7 +7,7 @@ import { LocationsPageClient } from "./client";
 
 export default async function LocationsPage() {
   const t = await getT("settings");
-  const [locations, gaps, salonSlug] = await Promise.all([
+  const [locations, gaps, businessSlug] = await Promise.all([
     listLocations(),
     getLocationCoverageGaps(),
     getTenantSlug(),
@@ -73,7 +73,7 @@ export default async function LocationsPage() {
         </div>
       )}
 
-      <LocationsPageClient initialLocations={locations} salonSlug={salonSlug} />
+      <LocationsPageClient initialLocations={locations} businessSlug={businessSlug} />
     </div>
   );
 }

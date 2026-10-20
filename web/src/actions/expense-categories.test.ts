@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/auth/rbac", () => ({
   requireRole: mocks.requireRole,
-  requireStaff: async () => ({ userId: "u", role: "owner", tenantSlug: "salon-x" }),
+  requireStaff: async () => ({ userId: "u", role: "owner", tenantSlug: "business-x" }),
   AuthError: class AuthError extends Error {
     code: string;
     constructor(code: string, message?: string) {
@@ -21,7 +21,7 @@ vi.mock("@/lib/auth/rbac", () => ({
     }
   },
 }));
-vi.mock("@/lib/tenant/context", () => ({ getTenantSlug: async () => "salon-x" }));
+vi.mock("@/lib/tenant/context", () => ({ getTenantSlug: async () => "business-x" }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/terms/server", () => ({ getT: async () => (k: string) => k }));
 vi.mock("@/lib/expenses/seed", () => ({
@@ -64,7 +64,7 @@ import {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.rows = [];
-  mocks.requireRole.mockResolvedValue({ userId: "u", role: "owner", tenantSlug: "salon-x" });
+  mocks.requireRole.mockResolvedValue({ userId: "u", role: "owner", tenantSlug: "business-x" });
 });
 
 describe("expense category actions", () => {

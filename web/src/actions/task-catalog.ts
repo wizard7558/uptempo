@@ -7,7 +7,8 @@ import { taskCatalogSchema } from "@/lib/validators/assistant-task";
 import { eq, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { trackEvent } from "@/lib/analytics/events";
-import { DEFAULT_ASSISTANT_TASKS } from "@/lib/services/default-assistant-tasks";
+import { getDefaultAssistantTasksForIndustry } from "@/lib/services/default-assistant-tasks";
+import { getTenantIndustry } from "@/lib/tenant/industry";
 
 /**
  * Create a new task type in the catalog.
@@ -18,7 +19,7 @@ export async function createTaskType(data: {
   defaultDurationMinutes: number;
 }): Promise<{ success: true; id: string } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
     const parsed = taskCatalogSchema.safeParse(data);
@@ -59,17 +60,20 @@ export async function createTaskType(data: {
 }
 
 /**
- * Seed the standard assistant task catalog for salons that have not customized
+ * Seed the standard assistant task catalog for businesses that have not customized
  * their active catalog yet.
  */
 export async function seedDefaultTaskTypes(): Promise<
   { success: true; created: number } | { success: false; error: string }
 > {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
     await assertModule(slug, "assistant_tasks");
+    const defaults = getDefaultAssistantTasksForIndustry(
+      await getTenantIndustry(slug),
+    );
 
     const created = await withTenantDb(slug, async (db, { taskCatalog }) => {
       const existingRows = await db
@@ -78,10 +82,10 @@ export async function seedDefaultTaskTypes(): Promise<
         .where(eq(taskCatalog.isActive, 1));
 
       const existingNames = new Set(
-        existingRows.map((row) => row.name.trim().toLocaleLowerCase()),
+        existingRows.map((row) => row.name.trim().toLowerCase()),
       );
-      const missingTasks = DEFAULT_ASSISTANT_TASKS.filter(
-        (task) => !existingNames.has(task.name.toLocaleLowerCase()),
+      const missingTasks = defaults.filter(
+        (task) => !existingNames.has(task.name.trim().toLowerCase()),
       );
 
       if (missingTasks.length === 0) {
@@ -128,7 +132,7 @@ export async function updateTaskType(
   data: { name?: string; defaultDurationMinutes?: number },
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -161,7 +165,7 @@ export async function updateTaskType(
 
 /**
  * List all active task types, ordered by name.
- * Any salon staff role can view (returns empty if no catalog entries).
+ * Any business staff role can view (returns empty if no catalog entries).
  */
 export async function listTaskTypes(): Promise<
   Array<{ id: string; name: string; defaultDurationMinutes: number }>
@@ -172,7 +176,7 @@ export async function listTaskTypes(): Promise<
     "provider",
     "assistant",
   );
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   return withTenantDb(slug, async (db, { taskCatalog }) => {
@@ -196,7 +200,7 @@ export async function deleteTaskType(
   id: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 

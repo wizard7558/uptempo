@@ -10,7 +10,7 @@ export const maxDuration = 300;
 
 /**
  * Weekly Capacity Coach evaluation. For every active tenant, compares each goal-setting
- * stylist's actual booked hours and effective hourly rate against their goals
+ * provider's actual booked hours and effective hourly rate against their goals
  * and reconciles their dashboard alerts. One tenant failing never blocks the others.
  *
  * Scheduled in `vercel.json`; authorized via the `CRON_SECRET` bearer token.

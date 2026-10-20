@@ -13,7 +13,7 @@ import { getBookingSession } from "@/lib/booking/session-cookie";
 import { getStripe } from "@/lib/stripe/server";
 import { getConnectChargeParams } from "@/lib/stripe/connect-charge-params";
 import { getOrCreateMonthlyPrice } from "@/lib/stripe/membership-prices";
-import { feePercentForTenant } from "@/lib/billing/platform-pricing";
+import { processingFeePercent } from "@/lib/billing/processing-fee";
 import { customAmountError } from "@/lib/membership/custom-amount";
 import {
   appendStoredValueLedger,
@@ -69,7 +69,7 @@ const NO_UPSELL: MembershipUpsellInfo = {
 };
 
 /**
- * Public: lightweight gating info for the Beauty Bank / membership upsell shown
+ * Public: lightweight gating info for the stored-value membership upsell shown
  * in the booking flow. Returns a safe empty shape (no upsell) on any auth/lookup
  * miss — callers render it unconditionally, so it must never throw.
  */
@@ -107,7 +107,7 @@ export async function getMembershipUpsellInfo(
   });
 }
 
-/** Admin: read the Beauty Bank credit-expiry window (months; null = never). */
+/** Admin: read the stored-value credit-expiry window (months; null = never). */
 export async function getStoredValueExpiryMonths(): Promise<number | null> {
   const { tenantSlug: slug } = await requireStaff();
   await requireSettings();
@@ -120,7 +120,7 @@ export async function getStoredValueExpiryMonths(): Promise<number | null> {
   });
 }
 
-/** Admin: set the Beauty Bank credit-expiry window. null/0 disables expiry. */
+/** Admin: set the stored-value credit-expiry window. null/0 disables expiry. */
 export async function setStoredValueExpiryMonths(months: number | null) {
   const { tenantSlug: slug } = await requireStaff();
   await requireSettings();
@@ -546,7 +546,7 @@ async function createStoredValueSubscriptionAndRecord(params: {
 
   const customerId = await ensureStripeCustomer(slug, clientId);
   const connect = await getConnectChargeParams(slug, effectiveAmountCents);
-  const feePercent = applicationFeePercentForTenant(tenant);
+  const feePercent = processingFeePercent(tenant);
 
   const subParams: Stripe.SubscriptionCreateParams = {
     customer: customerId,
@@ -641,7 +641,7 @@ export async function listActiveMembershipPlansPublic(slug: string) {
   });
 }
 
-/** Public: start Beauty Bank subscription after booking session + card on file. */
+/** Public: start stored-value subscription after booking session + card on file. */
 export async function startStoredValueSubscriptionPublic(data: {
   clientId: string;
   planId: string;
@@ -1008,13 +1008,4 @@ export async function createStoredValueTopUpPaymentIntent(data: {
 
   const pi = await getStripe().paymentIntents.create(intentParams);
   return { success: true as const, clientSecret: pi.client_secret };
-}
-
-// Fee percentage now lives in the shared platform-pricing module (single source
-// of truth for the per-transaction application fee and the billing preview).
-function applicationFeePercentForTenant(tenant: {
-  plan: string;
-  platformFeePercent: number | null;
-}): number {
-  return feePercentForTenant(tenant);
 }

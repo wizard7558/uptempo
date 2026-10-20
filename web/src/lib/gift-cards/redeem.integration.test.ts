@@ -29,7 +29,6 @@ vi.mock("next/headers", () => ({ headers: async () => new Map() }));
 vi.mock("@/lib/analytics/events", () => ({ trackEvent: () => undefined }));
 vi.mock("@/lib/services/charge-processing", () => ({
   processOffSessionCharge: (...args: unknown[]) => charge(...args),
-  calculatePlatformFee: () => 0,
 }));
 
 const itDb = process.env.DATABASE_URL ? it : it.skip;
@@ -123,7 +122,7 @@ describe("gift card redemption at checkout", () => {
         tipCents: 2000,
         giftCard: { code: card.code, amountCents: 5000 },
       });
-      expect(result).toEqual({ success: true, chargeId: expect.any(String), totalCents: 12000 });
+      expect(result).toEqual({ success: true, chargeId: expect.any(String), totalCents: 12000, platformFeeCents: 0, processingRateLabel: null });
 
       const s = `"${t.schema}"`;
       const [chargeRow] = await t.run(

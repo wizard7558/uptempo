@@ -43,25 +43,25 @@ describe("native guards", () => {
 
 describe("OAuth state native marker", () => {
   it("round-trips the native app through state", () => {
-    const state = generateOAuthState("stylist-1", "google_calendar", "owner");
+    const state = generateOAuthState("staff-1", "google_calendar", "owner");
     const decoded = validateOAuthState(state);
     expect(decoded).toMatchObject({
-      staffId: "stylist-1",
+      staffId: "staff-1",
       platform: "google_calendar",
       native: "owner",
     });
   });
 
   it("leaves web state (no native) validating with native undefined", () => {
-    const state = generateOAuthState("stylist-1", "google_calendar");
+    const state = generateOAuthState("staff-1", "google_calendar");
     const decoded = validateOAuthState(state);
     expect(decoded?.native).toBeUndefined();
-    expect(decoded?.staffId).toBe("stylist-1");
+    expect(decoded?.staffId).toBe("staff-1");
   });
 
   it("rejects a tampered native marker (signature mismatch)", () => {
     // Take a web token and try to inject native=owner without re-signing.
-    const state = generateOAuthState("stylist-1", "google_calendar");
+    const state = generateOAuthState("staff-1", "google_calendar");
     const json = JSON.parse(Buffer.from(state, "base64url").toString("utf-8"));
     json.native = "owner";
     const tampered = Buffer.from(JSON.stringify(json)).toString("base64url");

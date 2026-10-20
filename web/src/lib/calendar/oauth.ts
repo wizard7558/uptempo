@@ -2,7 +2,7 @@ import { createHmac, randomBytes } from "crypto";
 
 /**
  * OAuth state token generation and validation for calendar connections.
- * Embeds stylistId and platform with HMAC integrity protection.
+ * Embeds staffId and platform with HMAC integrity protection.
  */
 
 const STATE_SECRET =

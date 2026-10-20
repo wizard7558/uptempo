@@ -28,11 +28,11 @@ export async function deliverQuote(slug: string, quoteId: string): Promise<void>
     try {
       await sendEmail({
         to: data.clientEmail,
-        subject: t("quote.subject", { business: branding.salonName }),
-        salonName: branding.salonName,
+        subject: t("quote.subject", { business: branding.businessName }),
+        businessName: branding.businessName,
         react: (
           <QuoteReadyEmail
-            businessName={branding.salonName}
+            businessName={branding.businessName}
             clientName={data.clientName}
             lines={data.lines.map((l) => ({
               description: l.description,
@@ -61,7 +61,7 @@ export async function deliverQuote(slug: string, quoteId: string): Promise<void>
         tenantSlug: slug,
         clientId: data.clientId,
         messageType: "quote",
-        body: t("quote.sms", { business: branding.salonName, total: totalLabel, deposit: depositLabel, link }),
+        body: t("quote.sms", { business: branding.businessName, total: totalLabel, deposit: depositLabel, link }),
       });
     } catch (err) {
       console.error("[requests] quote sms failed:", err);

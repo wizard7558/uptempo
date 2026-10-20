@@ -34,7 +34,7 @@ const staffStep = (terms: VerticalTerms) =>
   wrap(
     terms,
     <ServiceStep
-      salonId="s1"
+      businessId="s1"
       clientId={null}
       selectedStaffId={null}
       selectedServiceIds={[]}
@@ -54,7 +54,7 @@ const staffStepWith = (staff: ReturnType<typeof member>[]) =>
   wrap(
     VERTICALS.hair_salon.terms,
     <ServiceStep
-      salonId="s1"
+      businessId="s1"
       clientId={null}
       selectedStaffId={null}
       selectedServiceIds={[]}
@@ -102,7 +102,7 @@ describe("public booking copy follows industry terms", () => {
         staffId="s1"
         locationId="l1"
         serviceIds={["svc"]}
-        salonTimezone="America/New_York"
+        businessTimezone="America/New_York"
         onComplete={vi.fn()}
         selectedDate={null}
         selectedTime={null}

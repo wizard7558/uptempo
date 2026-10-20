@@ -6,7 +6,7 @@ import { emailHeading, emailMuted, type EmailT } from "./components/score";
 
 interface BookingReminderProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   clientName: string;
   staffName: string;
   services: string[];
@@ -24,7 +24,7 @@ interface BookingReminderProps {
 
 export function BookingReminder({
   t,
-  salonName,
+  businessName,
   clientName,
   staffName,
   services,
@@ -46,8 +46,8 @@ export function BookingReminder({
 
   return (
     <EmailLayout
-      businessName={salonName}
-      previewText={t("reminder.preview", { business: salonName })}
+      businessName={businessName}
+      previewText={t("reminder.preview", { business: businessName })}
       logoUrl={logoUrl}
       t={t}
     >

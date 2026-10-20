@@ -485,7 +485,7 @@ export function AppointmentDetail({
         </>
       )}
 
-      {/* Stylist */}
+      {/* Staff */}
       {staffName && (
         <div className="flex items-center gap-2">
           <Scissors className="h-4 w-4 text-muted-foreground" />
@@ -600,8 +600,7 @@ export function AppointmentDetail({
             appointment.status !== "completed" && (
               <Button
                 variant="ghost"
-                
-                className="h-6 gap-1 px-2 text-xs text-muted-foreground"
+                className="min-h-11 gap-1 px-2 text-xs text-muted-foreground"
                 onClick={() => setEditServicesOpen(true)}
               >
                 <Pencil className="h-3 w-3" />
@@ -729,13 +728,12 @@ export function AppointmentDetail({
 
       {/* Actions — stacked for narrow sheets; avoids horizontal clipping */}
       <div className="space-y-2">
-        <Button variant="outline"  className="w-full" asChild>
+        <Button variant="outline" className="w-full" asChild>
           <Link href={`/appointments/${appointment.id}`}>{tw("detail.openFull")}</Link>
         </Button>
         <Button
           variant="default"
-          
-          className="w-full bg-green-600 text-white hover:bg-green-700"
+          className="w-full"
           onClick={() => setCheckoutOpen(true)}
           disabled={
             appointment.status === "cancelled" ||

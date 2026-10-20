@@ -14,7 +14,7 @@ export type Greeting = "Good morning" | "Good afternoon" | "Good evening";
 /**
  * Hour of day (0–23) for an instant, read in the given IANA timezone. Uses the
  * same `@date-fns/tz` mechanism the rest of the app formats appointment times
- * with, so production (which runs UTC) still greets by the salon's wall clock.
+ * with, so production (which runs UTC) still greets by the business's wall clock.
  */
 export function zonedHour(instant: Date, timeZone: string): number {
   return new TZDate(instant, timeZone).getHours();

@@ -4,13 +4,14 @@ Paste into App Store Connect → App Review Information → Notes. Fill the
 bracketed placeholders before submitting.
 
 ```
-This is the customer app for the Uptempo salon booking platform. Customers find
-a salon, book appointments, and manage their visits.
+This is the customer app for appointment-based businesses using Uptempo.
+Customers discover participating businesses, explore services, and manage
+their appointments. Available businesses and services depend on each business.
 
 HOW TO TEST
-1. On launch the app opens the salon discovery screen.
-2. Search for the demo salon: "[DEMO SALON NAME]" and tap it.
-3. Choose a service and stylist, pick a time, and proceed to book.
+1. On launch the app opens the appointment-business directory.
+2. Search for the demo business: "[DEMO BUSINESS NAME]" and tap it.
+3. Choose a service and provider, pick a time, and proceed to book.
 4. Sign-in uses a one-time code sent by email/SMS. For review, use:
    - Email: [DEMO CLIENT EMAIL — must equal the REVIEW_OTP_EMAIL env var]
    - The verification code is: [REVIEW_OTP_CODE — 6 digits]
@@ -19,11 +20,8 @@ HOW TO TEST
 5. After booking you can view, reschedule, or cancel under "My Account".
 
 PAYMENTS
-Payments are for in-person salon services (haircuts, color, etc.) — physical
-services delivered in the real world. Per Guideline 3.1.3(e)/3.1.5, these are
-processed with Stripe and are not digital content, so In-App Purchase does not
-apply. The app does not sell any digital goods or subscriptions for use within
-the app.
+Payments in the app are for services delivered in person and are processed
+through Stripe. The app does not sell digital content.
 
 ACCOUNT DELETION
 Users can delete their account in-app: My Account → Profile → "Delete my
@@ -36,7 +34,7 @@ the app via Universal Links.
 ```
 
 ## Before you submit — set up the demo
-- Create/seed a demo salon listed in the marketplace (owner app → General
+- Create/seed a demo business listed in the marketplace (owner app → General
   Settings → "App marketplace" toggle ON) and note its name.
 - Provide a working demo client login. Login is OTP-based and reviewers cannot
   receive our SMS/email, so set in Vercel env (production):

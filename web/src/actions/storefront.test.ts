@@ -11,7 +11,7 @@ vi.mock("@/lib/db/tenant", () => ({
 }));
 vi.mock("@/lib/tenant/registry", () => ({
   getTenantBySlug: async () => ({
-    name: "Test Salon",
+    name: "Test Business",
     status: "active",
     schemaVersion: 56,
     modules: ["storefront"],
@@ -101,7 +101,8 @@ describe("getStorefront", () => {
   });
 
   it("sorts a product tagged all ahead of the catalog for a red hair profile", async () => {
-    const data = await getStorefront("test-salon");
+    const data = await getStorefront("test-business");
+    expect(data?.businessName).toBe("Test Business");
     expect(data?.products.map((product) => product.name)).toEqual(["For everyone", "Blonde only"]);
     expect(data?.products.map((product) => product.recommended)).toEqual([true, false]);
     expect(data?.client).toEqual({ id: "client-1", name: "Ada" });

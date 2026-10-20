@@ -65,7 +65,7 @@ export interface LaidOutItem<T> {
 
 /**
  * Assigns each item a lane (column index) and total lanes so overlapping
- * time ranges render side-by-side within the same stylist column.
+ * time ranges render side-by-side within the same staff column.
  * Items that share a cluster (transitively overlap) all receive the same
  * `lanes` count, matching Google Calendar / Vagaro layout.
  */

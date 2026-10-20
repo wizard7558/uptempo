@@ -16,7 +16,7 @@ vi.mock("@/lib/db/tenant", () => ({
 /** A baseline: $100/hr goal, 30h/wk goal, 4-week window. */
 function base(overrides: Partial<StaffGoalActuals> = {}): StaffGoalActuals {
   return {
-    staffId: "stylist-1",
+    staffId: "staff-1",
     staffName: "Emma",
     targetHoursPerWeek: 30,
     targetHourlyEarningsCents: 10_000,
@@ -52,7 +52,7 @@ describe("computeCapacityInsight", () => {
     ).toBeNull();
   });
 
-  it("returns null when the stylist is at/above their target rate", () => {
+  it("returns null when the staff member is at/above their target rate", () => {
     // 100h over 4 weeks at exactly $100/hr (100h × $100 = $10,000 = 1,000,000¢).
     const insight = computeCapacityInsight(
       base({ bookedMinutes: 6000, earningsCents: 1_000_000 }),
@@ -68,7 +68,7 @@ describe("computeCapacityInsight", () => {
     expect(insight).toBeNull();
   });
 
-  it("flags an underpaid, not-overworked stylist as info", () => {
+  it("flags an underpaid, not-overworked staff member as info", () => {
     // 35h/wk (140h/4wk) — under the 40h goal — at $70/hr.
     const insight = computeCapacityInsight(
       base({
@@ -83,10 +83,10 @@ describe("computeCapacityInsight", () => {
     expect(insight!.weeklyHours).toBe(35);
     expect(insight!.hourlyEarningsCents).toBe(7000);
     expect(insight!.title).toMatch(/under your hourly goal/i);
-    expect(insight!.dedupeKey).toBe("capacity_coach:stylist-1");
+    expect(insight!.dedupeKey).toBe("capacity_coach:staff-1");
   });
 
-  it("flags an overworked + underpaid stylist as a warning and caps the increase", () => {
+  it("flags an overworked + underpaid staff member as a warning and caps the increase", () => {
     // 35h/wk over the 30h goal, at $70/hr vs $100 goal.
     const insight = computeCapacityInsight(
       base({
@@ -161,7 +161,7 @@ describe("computeCapacityInsight", () => {
 });
 
 describe("capacityDedupeKey", () => {
-  it("namespaces by stylist", () => {
+  it("namespaces by staff member", () => {
     expect(capacityDedupeKey("abc")).toBe("capacity_coach:abc");
   });
 });
@@ -169,14 +169,14 @@ describe("capacityDedupeKey", () => {
 describe("evaluateCapacityForTenant", () => {
   it("evaluates every tenant with no plan gate", async () => {
     vi.mocked(withTenantDb).mockResolvedValueOnce({
-      slug: "salon-a",
+      slug: "business-a",
       skipped: false,
       staffWithGoals: 0,
       alertsUpserted: 0,
       alertsCleared: 0,
     });
-    const result = await evaluateCapacityForTenant("salon-a", new Date());
-    expect(withTenantDb).toHaveBeenCalledWith("salon-a", expect.any(Function));
+    const result = await evaluateCapacityForTenant("business-a", new Date());
+    expect(withTenantDb).toHaveBeenCalledWith("business-a", expect.any(Function));
     expect(result.skipped).toBe(false);
   });
 });

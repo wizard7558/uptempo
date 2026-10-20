@@ -29,7 +29,7 @@ import { useT } from "@/lib/terms/client";
 /**
  * Danger-zone section letting an owner/staff member permanently delete their
  * account from inside the app (Apple App Store requirement). Deletion is
- * blocked server-side if they are the sole owner of a salon.
+ * blocked server-side if they are the sole owner of a business.
  */
 export function DeleteOwnerAccountSection() {
   const t = useT("settings");

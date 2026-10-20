@@ -135,7 +135,7 @@ export function ServiceSelector({
             const isSelected = selectedServiceIds.includes(service.id);
             // Use per-selection info when the service is checked (matches what
             // createBooking will actually use), otherwise the pre-resolved
-            // entry for this client+stylist so the row still reflects custom
+            // entry for this client+staff member so the row still reflects custom
             // values up front.
             const info =
               perSelectionMap.get(service.id) ?? resolved.get(service.id);

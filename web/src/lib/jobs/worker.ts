@@ -24,6 +24,19 @@ export type WorkerOptions = {
   now?: () => Date;
   fetchImpl?: typeof fetch;
   sql?: SqlClient;
+  scheduler?: WorkerScheduler;
+};
+
+/** Typed timer seam for deterministic acceptance runs; production uses native timers. */
+export type WorkerScheduler = {
+  schedule(callback: () => void, delayMs: number): { cancel(): void };
+};
+
+const nativeScheduler: WorkerScheduler = {
+  schedule(callback, delayMs) {
+    const timer = setTimeout(callback, delayMs);
+    return { cancel: () => clearTimeout(timer) };
+  },
 };
 
 function truncateToUtcMinute(date: Date): Date {
@@ -60,11 +73,12 @@ export function runWorker(options: WorkerOptions): {
   const now = options.now ?? (() => new Date());
   const fetchImpl = options.fetchImpl ?? fetch;
   const sql = options.sql ?? (postgres(options.databaseUrl) as unknown as SqlClient);
+  const scheduler = options.scheduler ?? nativeScheduler;
   const workerId = randomUUID();
   const targetUrl = options.targetUrl.replace(/\/+$/, "");
   const inflight = new Set<Promise<void>>();
   let stopped = false;
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let timer: { cancel(): void } | undefined;
   let lastPurgeDay = "";
   let resolveDone: () => void = () => {};
   const done = new Promise<void>((resolve) => {
@@ -152,7 +166,7 @@ export function runWorker(options: WorkerOptions): {
   }
 
   function arm(delay: number, armedAt: Date) {
-    timer = setTimeout(() => {
+    timer = scheduler.schedule(() => {
       if (stopped) return;
       const slot = truncateToUtcMinute(new Date(armedAt.getTime() + delay));
       tick(slot);
@@ -163,7 +177,7 @@ export function runWorker(options: WorkerOptions): {
   async function stop() {
     if (stopped) return;
     stopped = true;
-    if (timer) clearTimeout(timer);
+    timer?.cancel();
     process.off("SIGTERM", onSignal);
     process.off("SIGINT", onSignal);
     await Promise.race([

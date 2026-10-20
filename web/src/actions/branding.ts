@@ -77,7 +77,7 @@ export async function updateBrandingSettings(data: {
     revalidatePath("/settings/branding");
     // Invalidate the cross-request branding cache used by the public booking
     // layout/metadata (src/lib/booking/cached-lookups.ts).
-    revalidateTag(`branding:${slug}`);
+    revalidateTag(`branding:${slug}`, { expire: 0 });
     trackEvent("branding.updated", {}, { tenantSlug: slug });
     return { success: true as const, data: result[0] };
   } catch (error) {
@@ -111,11 +111,11 @@ export async function getBrandingForBooking() {
 }
 
 /**
- * Upload a new salon logo to Vercel Blob via Server Action (multipart).
+ * Upload a new business logo to Vercel Blob via Server Action (multipart).
  * Prefer this over `/api/upload/logo` — route handlers can return non-JSON 502s
  * behind Edge middleware / proxies on some deployments.
  */
-export async function uploadSalonLogo(formData: FormData): Promise<
+export async function uploadBusinessLogo(formData: FormData): Promise<
   | { ok: true; url: string }
   | { ok: false; error: string; detail?: string }
 > {
@@ -156,14 +156,14 @@ export async function uploadSalonLogo(formData: FormData): Promise<
     return { ok: true, url: result.url };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[uploadSalonLogo] Unhandled:", message);
+    console.error("[uploadBusinessLogo] Unhandled:", message);
     return {
       ok: false,
       error: "Logo upload failed unexpectedly.",
       detail:
         process.env.NODE_ENV === "development"
           ? message
-          : "Check Vercel function logs for [uploadSalonLogo].",
+          : "Check Vercel function logs for [uploadBusinessLogo].",
     };
   }
 }

@@ -15,7 +15,7 @@ function platformLabel(platform: string): string {
 }
 
 /**
- * Notify salon owner by email when a calendar connection breaks (active → error).
+ * Notify the business owner by email when a calendar connection breaks (active → error).
  * No-op if no owner email is found.
  */
 export async function notifyCalendarConnectionError(params: {
@@ -63,11 +63,11 @@ export async function notifyCalendarConnectionError(params: {
   await sendEmail({
     to: owner.email,
     subject: emailT("calendar.subject", { platform: platformName }),
-    salonName: branding.salonName,
+    businessName: branding.businessName,
     react: (
       <CalendarDisconnectEmail
         t={emailT}
-        salonName={branding.salonName}
+        businessName={branding.businessName}
         staffName={staffName}
         platformLabel={platformName}
         settingsUrl={settingsUrl}

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getGiftCardShopInfo } from "@/actions/gift-cards-public";
-import { salonPageMetadata } from "@/lib/seo/tenant-metadata";
+import { businessPageMetadata } from "@/lib/seo/tenant-metadata";
 import { getT } from "@/lib/terms/server";
 import { BuyClient } from "./buy-client";
 
@@ -12,8 +12,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return salonPageMetadata(slug, (salonName) => ({
-    title: `Gift cards from ${salonName}`,
+  return businessPageMetadata(slug, (businessName) => ({
+    title: `Gift cards from ${businessName}`,
     description: `Send a gift card by email.`,
   }));
 }

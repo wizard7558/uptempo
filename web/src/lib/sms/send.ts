@@ -1,5 +1,8 @@
 import { withTenantDb } from "@/lib/db/tenant";
 import { eq } from "drizzle-orm";
+import { publicDb } from "@/lib/db";
+import { tenants } from "@/lib/db/schema";
+import { isSingleMode } from "@/lib/config/mode";
 import { checkSmsConsent } from "./consent";
 import { getSmsProvider } from "@/lib/providers/sms";
 import { isWithinSendWindow } from "./quiet-hours";
@@ -25,7 +28,7 @@ interface SendSmsResult {
  * Send an SMS with consent and quiet hours gates.
  *
  * Gate 1: Checks SMS consent for the recipient phone in the tenant.
- * Gate 2: Checks salon timezone for quiet hours (8 AM - 9 PM).
+ * Gate 2: Checks business timezone for quiet hours (8 AM - 9 PM).
  *
  * If both gates pass, sends via Twilio Messaging Service and logs
  * the message in the sms_messages table.
@@ -42,6 +45,26 @@ export async function sendSms({
   if (!provider.enabled) {
     return { success: false, error: "sms_disabled" };
   }
+  let messagingServiceSid: string | undefined;
+  if (!isSingleMode()) {
+    const [tenant] = await publicDb
+      .select({ smsLineStatus: tenants.smsLineStatus, smsMessagingServiceSid: tenants.smsMessagingServiceSid })
+      .from(tenants)
+      .where(eq(tenants.slug, tenantSlug))
+      .limit(1);
+    if (tenant?.smsLineStatus === "shared") {
+      // Shared beta traffic continues through the platform's pooled sender.
+    } else if (tenant?.smsLineStatus === "active" && tenant.smsMessagingServiceSid) {
+      messagingServiceSid = tenant.smsMessagingServiceSid;
+    } else {
+      return { success: false, error: "text_line_off" };
+    }
+    if (messagingServiceSid && provider.id === "loopmessage") {
+      // LoopMessage cannot select the tenant-owned Twilio service for an active
+      // hosted line; fail closed rather than silently using its send route.
+      return { success: false, error: "sms_provider_incompatible" };
+    }
+  }
   const body = toPlainSms(rawBody);
   // Gate 1: Consent check
   const hasConsent = await checkSmsConsent(tenantSlug, to);
@@ -49,8 +72,8 @@ export async function sendSms({
     return { success: false, error: "no_consent" };
   }
 
-  // Gate 2: Quiet hours check — get salon timezone from policies
-  const salonTimezone = await withTenantDb(
+  // Gate 2: Quiet hours check — get business timezone from policies
+  const businessTimezone = await withTenantDb(
     tenantSlug,
     async (db, { businessSettings }) => {
       const [policy] = await db
@@ -61,7 +84,7 @@ export async function sendSms({
     },
   );
 
-  if (!isWithinSendWindow(salonTimezone)) {
+  if (!isWithinSendWindow(businessTimezone)) {
     return { success: false, error: "quiet_hours" };
   }
 
@@ -70,6 +93,7 @@ export async function sendSms({
     body,
     statusCallbackUrl: `${getBaseUrl()}/api/twilio/status?tenant=${encodeURIComponent(tenantSlug)}`,
     passthrough: tenantSlug,
+    ...(messagingServiceSid ? { messagingServiceSid } : {}),
   });
 
   if (result.success) {

@@ -1,5 +1,6 @@
 "use server";
 
+import { syncBillableStaff } from "@/lib/billing/billable-staff";
 import { getT } from "@/lib/terms/server";
 import { withTenantDb } from "@/lib/db/tenant";
 import {
@@ -51,6 +52,7 @@ export async function createStaffMember(data: {
         return staffMember;
       });
     });
+    await syncBillableStaff(slug);
 
     revalidatePath("/settings/staff");
     trackEvent("stylist.created", {}, { tenantSlug: slug });
@@ -138,6 +140,7 @@ export async function updateStaffMember(data: {
         .where(and(eq(staff.id, id), eq(staff.isActive, 1)))
         .returning({ id: staff.id });
     });
+    await syncBillableStaff(slug);
 
     if (result.length === 0) {
       return {
@@ -167,7 +170,7 @@ export async function updateStaffMember(data: {
 }
 
 /**
- * Set (or clear) a stylist's Capacity Coach goals. `targetHoursPerWeek` is whole
+ * Set (or clear) a staff member's Capacity Coach goals. `targetHoursPerWeek` is whole
  * hours; `targetHourlyEarningsCents` is the take-home/hour goal in cents. Pass
  * `null` for either to clear it. Both must be set for the coach to evaluate.
  */
@@ -208,6 +211,7 @@ export async function updateStaffGoals(data: {
         .where(and(eq(staff.id, id), eq(staff.isActive, 1)))
         .returning({ id: staff.id });
     });
+    await syncBillableStaff(slug);
     if (result.length === 0) {
       return {
         success: false as const,
@@ -232,6 +236,7 @@ export async function deactivateStaffMember(id: string) {
         .where(eq(staff.id, id))
         .returning({ id: staff.id });
     });
+    await syncBillableStaff(slug);
 
     if (result.length === 0) {
       return {
@@ -261,7 +266,7 @@ export async function listStaff() {
       .where(eq(staff.isActive, 1))
       .orderBy(asc(staff.displayName));
 
-    // Get assigned services for all stylists in a single batch query
+    // Get assigned services for all staff members in a single batch query
     const staffIds = allStaff.map((s) => s.id);
     const servicesMap = await getServicesForStaff(db, { staffServices, services }, staffIds);
 
@@ -316,7 +321,7 @@ const windowSchema = z.object({
 
 async function booksGuard() {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   return { slug, ts: await getT("settings", slug) };
 }
@@ -336,6 +341,7 @@ export async function setBooksMode(
       .where(and(eq(staff.id, parsed.data.staffId), eq(staff.isActive, 1)))
       .returning({ id: staff.id }),
   );
+  await syncBillableStaff(slug);
   if (rows.length === 0) return { success: false, error: ts("staffBooks.saveFailed") };
   revalidatePath("/settings/staff");
   return { success: true };

@@ -30,7 +30,7 @@ export interface StorefrontProduct {
 }
 
 export interface StorefrontData {
-  salonName: string;
+  businessName: string;
   products: StorefrontProduct[];
   /** Whether flat-rate shipping is offered (else pickup only). */
   shipAvailable: boolean;
@@ -53,7 +53,7 @@ export async function getStorefront(slug: string): Promise<StorefrontData | null
   // native Shop tab keeps working.
   if (!isModuleEnabled(tenant.modules, "storefront")) {
     return {
-      salonName: tenant.name,
+      businessName: tenant.name,
       products: [],
       shipAvailable: false,
       shippingCents: null,
@@ -122,7 +122,7 @@ export async function getStorefront(slug: string): Promise<StorefrontData | null
     products.sort((a, b) => Number(b.recommended) - Number(a.recommended));
 
     return {
-      salonName: tenant.name,
+      businessName: tenant.name,
       products,
       shipAvailable: policies?.shipFlatCents != null,
       shippingCents: policies?.shipFlatCents ?? null,
@@ -164,7 +164,7 @@ export interface OrderConfirmation {
 
 /**
  * Success-page confirmation, straight from Stripe (does not depend on the
- * webhook having landed). Verifies the session belongs to this salon.
+ * webhook having landed). Verifies the session belongs to this business.
  */
 export async function getOrderConfirmation(
   slug: string,

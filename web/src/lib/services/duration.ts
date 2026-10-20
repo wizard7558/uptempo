@@ -17,9 +17,9 @@ export interface ServiceDurationInfo {
   category: string;
   activeMinutes: number | null;
   processingMinutes: number | null;
-  /** Source of the duration: "client", "stylist", or "service". */
+  /** Source of the duration: "client", "staff", or "service". */
   durationSource: ResolvedServicePricing["durationSource"];
-  /** Source of the price: "client", "stylist", or "service". */
+  /** Source of the price: "client", "staff", or "service". */
   priceSource: ResolvedServicePricing["priceSource"];
   /** Catalog: how the price renders to clients ('show' | 'starting' | 'hidden'). */
   priceDisplay: string;
@@ -27,19 +27,19 @@ export interface ServiceDurationInfo {
   onlineBookable: number;
   /** Catalog: who may self-book online ('all' | 'new' | 'returning'). */
   bookingAudience: string;
-  /** Catalog: per-service deposit override (null = inherit salon rule). */
+  /** Catalog: per-service deposit override (null = inherit business rule). */
   depositType: string | null;
   depositAmount: number | null;
 }
 
 /**
  * Returns per-service duration / price breakdown using the full
- * client → stylist → service catalog resolution chain.
+ * client → staff → service catalog resolution chain.
  *
- * `stylistId` is optional: when omitted, only client overrides and catalog
- * defaults are considered. Existing callers without stylist context still
- * work, and they'll start picking up stylist overrides as soon as they pass
- * the stylist along.
+ * `staffId` is optional: when omitted, only client overrides and catalog
+ * defaults are considered. Existing callers without staff context still
+ * work, and they'll start picking up staff overrides as soon as they pass
+ * the staff member along.
  */
 export async function getMultiServiceDuration(
   serviceIds: string[],

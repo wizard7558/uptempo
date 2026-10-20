@@ -10,14 +10,14 @@ interface CancelFormProps {
   appointmentId: string;
   isLateCancellation: boolean;
   potentialFeeCents: number;
-  salonName: string;
+  businessName: string;
 }
 
 export function CancelForm({
   appointmentId,
   isLateCancellation,
   potentialFeeCents,
-  salonName,
+  businessName,
 }: CancelFormProps) {
   const t = useT("booking");
   const [isPending, startTransition] = useTransition();
@@ -64,7 +64,7 @@ export function CancelForm({
             <div>
               <p className="font-medium text-[var(--ink)]">Late Cancellation</p>
               <p className="text-sm text-[var(--ink-soft)] mt-1">
-                This is a late cancellation. {salonName} may charge a fee of $
+                This is a late cancellation. {businessName} may charge a fee of $
                 {feeDisplay}.
               </p>
             </div>

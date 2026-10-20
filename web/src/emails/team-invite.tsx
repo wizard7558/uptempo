@@ -4,7 +4,7 @@ import { emailButtonStyle, emailCenter, emailFine, emailHeading, emailText, type
 
 interface TeamInviteEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   inviterName: string;
   roleLabel: string;
   acceptUrl: string;
@@ -14,7 +14,7 @@ interface TeamInviteEmailProps {
 
 export function TeamInviteEmail({
   t,
-  salonName,
+  businessName,
   inviterName,
   roleLabel,
   acceptUrl,
@@ -23,14 +23,14 @@ export function TeamInviteEmail({
 }: TeamInviteEmailProps) {
   return (
     <EmailLayout
-      businessName={salonName}
-      previewText={t("team.preview", { business: salonName })}
+      businessName={businessName}
+      previewText={t("team.preview", { business: businessName })}
       logoUrl={logoUrl}
       t={t}
     >
       <Text style={emailHeading}>{t("team.heading")}</Text>
       <Text style={emailText}>
-        {t("team.body", { inviter: inviterName, business: salonName, role: roleLabel })}
+        {t("team.body", { inviter: inviterName, business: businessName, role: roleLabel })}
       </Text>
       <Text style={emailText}>{t("team.next")}</Text>
       <Section style={emailCenter}>

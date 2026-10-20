@@ -1,27 +1,63 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { isNativeApp } from "@/lib/native/client";
+import { registerNativePush } from "@/lib/native/push-register";
 import {
-  registerNativePush,
   handleNativeDeepLinks,
-} from "@/lib/native/push-register";
+  type NativeLinkCleanup,
+} from "@/lib/native/links";
+
+function NativeNavigationObserver({
+  linkCleanupRef,
+}: {
+  linkCleanupRef: { current: NativeLinkCleanup | null };
+}) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = searchParams?.toString() ?? "";
+
+  useEffect(() => {
+    linkCleanupRef.current?.navigationCompleted();
+  }, [linkCleanupRef, pathname, search]);
+
+  return null;
+}
 
 /**
- * Mounts the Capacitor native integrations (push registration + system-browser
- * deep-link return handling) when running inside the iOS shell. Renders nothing
- * and is a no-op on the web. Mounted once per app area (booking + admin layouts).
- *
- * Also stamps `is-native` on <html> so CSS can hide web chrome that the native
- * shells replace (elements marked with data-native-hidden).
+ * Mounts Capacitor integrations for the native shells. All listeners and
+ * pending work are cleaned up when the app area unmounts or React remounts it.
  */
 export function NativeBridge() {
+  const router = useRouter();
+  const linkCleanupRef = useRef<NativeLinkCleanup | null>(null);
+
   useEffect(() => {
-    if (isNativeApp()) {
-      document.documentElement.classList.add("is-native");
-    }
-    void handleNativeDeepLinks();
-    void registerNativePush();
-  }, []);
-  return null;
+    if (!isNativeApp()) return;
+
+    document.documentElement.classList.add("is-native");
+    const lifecycle = new AbortController();
+    const stopPush = registerNativePush(lifecycle.signal);
+    const stopLinks = handleNativeDeepLinks(lifecycle.signal, {
+      navigate: (path) => router.push(path),
+    });
+    linkCleanupRef.current = stopLinks;
+
+    return () => {
+      lifecycle.abort();
+      stopPush();
+      stopLinks();
+      if (linkCleanupRef.current === stopLinks) {
+        linkCleanupRef.current = null;
+      }
+      document.documentElement.classList.remove("is-native");
+    };
+  }, [router]);
+
+  return (
+    <Suspense fallback={null}>
+      <NativeNavigationObserver linkCleanupRef={linkCleanupRef} />
+    </Suspense>
+  );
 }

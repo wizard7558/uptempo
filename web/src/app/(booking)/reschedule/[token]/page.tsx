@@ -1,7 +1,7 @@
 import { getT } from "@/lib/terms/server";
 import { redirect } from "next/navigation";
 import { verifyActionToken } from "@/lib/email/tokens";
-import { getAppointment } from "@/actions/appointments";
+import { loadAppointmentForTenant } from "@/lib/appointments/load";
 import { resolveTenantSlugForAppointment } from "@/lib/tenant/registry";
 
 export default async function ReschedulePage({
@@ -26,7 +26,13 @@ export default async function ReschedulePage({
     );
   }
 
-  const appointment = await getAppointment(payload.appointmentId);
+  // The tenant comes from the signed link's appointment id, never from the
+  // request, and the unguarded loader is used because the client has no staff
+  // session.
+  const slug = await resolveTenantSlugForAppointment(payload.appointmentId);
+  const appointment = slug
+    ? await loadAppointmentForTenant(slug, payload.appointmentId)
+    : null;
 
   if (!appointment) {
     return (
@@ -42,7 +48,6 @@ export default async function ReschedulePage({
     );
   }
 
-  const slug = await resolveTenantSlugForAppointment(payload.appointmentId);
   if (!slug) {
     return (
       <div className="min-h-screen bg-[var(--ivory)] flex items-center justify-center">
@@ -56,11 +61,11 @@ export default async function ReschedulePage({
     );
   }
 
-  // Build redirect URL with pre-filled stylist and services
+  // Build redirect URL with pre-filled staff and services
   const serviceIds = appointment.services
     .map((s) => s.serviceId)
     .join(",");
-  const rescheduleUrl = `/book/${slug}?reschedule=${appointment.id}&stylist=${appointment.staffId}&services=${serviceIds}`;
+  const rescheduleUrl = `/book/${slug}?reschedule=${appointment.id}&staff=${appointment.staffId}&services=${serviceIds}`;
 
   redirect(rescheduleUrl);
 }

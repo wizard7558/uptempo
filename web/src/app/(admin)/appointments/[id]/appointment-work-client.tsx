@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -302,9 +303,13 @@ export function AppointmentWorkClient({
               const kindLabel = t(KIND_KEY[photo.kind]);
               return (
                 <figure key={photo.id} className="space-y-2">
-                  <img
+                  <Image
                     src={photo.url}
                     alt={`${kindLabel} ${photoClock(photo.createdAt, timeZone)}`}
+                    width={720}
+                    height={720}
+                    sizes="(max-width: 640px) 50vw, 320px"
+                    unoptimized
                     className="aspect-square w-full rounded-lg object-cover"
                   />
                   <figcaption>{kindLabel}</figcaption>

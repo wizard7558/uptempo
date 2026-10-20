@@ -18,7 +18,7 @@ import { loadQueueBoard, type QueueBoardEntry } from "@/lib/queue/board";
 import { beginService, claimEntry, endService, type ClaimedEntry } from "@/lib/queue/line";
 import { findClientByPhoneForTenant, createClientForTenant } from "@/lib/clients/for-tenant";
 import { recordSmsConsent } from "@/lib/sms/consent";
-import { getSalonBySlug } from "@/actions/booking-public";
+import { getBusinessBySlug } from "@/actions/booking-public";
 
 /**
  * Front-desk actions for the walk-in line. Every action needs a team session and
@@ -33,7 +33,7 @@ const uuid = z.string().uuid();
 /** Team session + module gate for the daily board actions. */
 async function staffGuard() {
   const auth = await requireRole("owner", "admin", "provider", "assistant");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "walk_in_queue");
   return { slug, userId: auth.userId, te: await getT("errors", slug) };
@@ -42,7 +42,7 @@ async function staffGuard() {
 /** Session + module gate for the settings actions. */
 async function adminGuard() {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "walk_in_queue");
   return { slug, userId: auth.userId, te: await getT("errors", slug) };
@@ -199,7 +199,7 @@ export async function addWalkIn(input: AddWalkInInput): Promise<{ success: true;
   if (parsed.data.smsConsent && phone) {
     const board = await loadQueueBoard(slug, locationId);
     if (board.textOnJoin) {
-      const salon = await getSalonBySlug(slug);
+      const business = await getBusinessBySlug(slug);
       runAfterResponse(() =>
         sendSms({
           to: phone,
@@ -209,7 +209,7 @@ export async function addWalkIn(input: AddWalkInInput): Promise<{ success: true;
             date: "",
             time: "",
             services: "",
-            business: salon?.name ?? "",
+            business: business?.name ?? "",
             link: `${getBaseUrl()}/q/${slug}/e/${token}`,
           }),
           tenantSlug: slug,
@@ -236,7 +236,7 @@ export type CallResult =
 /** Texts the person that it's their turn. Runs after the response; a failure never fails the call. */
 async function textCalled(slug: string, entry: ClaimedEntry) {
   if (!entry.phone) return;
-  const salon = await getSalonBySlug(slug);
+  const business = await getBusinessBySlug(slug);
   const to = entry.phone;
   runAfterResponse(() =>
     sendSms({
@@ -247,7 +247,7 @@ async function textCalled(slug: string, entry: ClaimedEntry) {
         date: "",
         time: "",
         services: "",
-        business: salon?.name ?? "",
+        business: business?.name ?? "",
       }),
       tenantSlug: slug,
       clientId: entry.clientId ?? undefined,

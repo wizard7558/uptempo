@@ -44,12 +44,15 @@ describe("getSingleTenantSlug", () => {
     }
   });
 
-  it("shares a remembered slug across separately loaded copies of the module", async () => {
+  it("shares a remembered slug across separate module instances", async () => {
     limit.mockResolvedValue([]);
     await expect(getSingleTenantSlug()).resolves.toBeNull();
+    // Next loads the setup action and the home page as separate module graphs.
     vi.resetModules();
-    const other = await import("./single");
-    other.rememberSingleTenantSlug("ada");
-    await expect(getSingleTenantSlug()).resolves.toBe("ada");
+    const action = await import("./single");
+    action.rememberSingleTenantSlug("ada");
+    vi.resetModules();
+    const page = await import("./single");
+    await expect(page.getSingleTenantSlug()).resolves.toBe("ada");
   });
 });

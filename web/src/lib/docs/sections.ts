@@ -12,9 +12,9 @@ export const DOC_SECTIONS: DocSection[] = [
     heading: "Self-host quickstart",
     paragraphs: [
       "Uptempo runs one business on a machine you control. The license is AGPL-3.0.",
-      "From the repository root, run ./scripts/init-env.sh and then docker compose up -d.",
-      "Open the site, complete /setup, finish onboarding, and book at /book/<your-slug>.",
-      "The in-repo quickstart is docs/self-hosting.md.",
+      "With Docker installed, from the repository root run ./scripts/init-env.sh to generate .env with required secrets, then run docker compose up -d.",
+      "Open http://127.0.0.1:3000, complete /setup, finish onboarding, and book at /book/<your-slug>.",
+      "Check the generated .env from the repository root with docker compose run --build --rm --no-deps migrate node scripts/check-local-bootstrap.mjs --env-only. This checks configuration without connecting to Postgres.",
     ],
   },
   {

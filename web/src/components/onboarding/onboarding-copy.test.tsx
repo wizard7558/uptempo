@@ -10,17 +10,17 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/actions/team", () => ({ switchActiveTenant: vi.fn() }));
 
-import { OnboardingSalonSwitcher } from "./salon-switcher";
+import { OnboardingBusinessSwitcher } from "./business-switcher";
 
 function render(terms: VerticalTerms) {
   return renderToStaticMarkup(
     <NextIntlClientProvider locale="en" messages={messages}>
       <TermsProvider terms={terms}>
-        <OnboardingSalonSwitcher
+        <OnboardingBusinessSwitcher
           activeTenantSlug="a"
           memberships={[
-            { tenantSlug: "a", role: "owner", salonName: "A" },
-            { tenantSlug: "b", role: "owner", salonName: "B" },
+            { tenantSlug: "a", role: "owner", businessName: "A" },
+            { tenantSlug: "b", role: "owner", businessName: "B" },
           ]}
         />
       </TermsProvider>

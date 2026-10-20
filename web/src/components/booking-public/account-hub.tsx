@@ -1,6 +1,6 @@
 "use client";
 
-import { useT } from "@/lib/terms/client";
+import { useT, useTerms } from "@/lib/terms/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientProfileForm } from "@/components/booking-public/client-profile-form";
 import { ClientFieldsSection } from "@/components/booking-public/client-fields-section";
@@ -45,8 +45,8 @@ export type StoredValueInitial = {
 
 interface AccountHubProps {
   clientId: string;
-  salonName: string;
-  /** Salon slug for `/subscribe/[slug]` when membership plans exist */
+  businessName: string;
+  /** Tenant slug for `/subscribe/[slug]` when membership plans exist */
   subscribeTenantSlug?: string | null;
   hasSubscribeablePlans?: boolean;
   initialProfile: ClientProfileData | null;
@@ -60,12 +60,12 @@ interface AccountHubProps {
     consentedAt: string | null;
     method: string | null;
   };
-  salonTimezone: string;
+  businessTimezone: string;
 }
 
 export function AccountHub({
   clientId,
-  salonName,
+  businessName,
   subscribeTenantSlug,
   hasSubscribeablePlans,
   initialProfile,
@@ -75,16 +75,17 @@ export function AccountHub({
   appointmentsError,
   storedValue,
   smsConsent,
-  salonTimezone,
+  businessTimezone,
 }: AccountHubProps) {
   const t = useT("booking");
+  const { prepaidBalance } = useTerms();
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8 space-y-5 sm:space-y-6">
       <div>
         <h1 className="display text-3xl sm:text-4xl text-[var(--ink)]">
           My account
         </h1>
-        <p className="text-sm text-[var(--ink-soft)] mt-1">{salonName}</p>
+        <p className="text-sm text-[var(--ink-soft)] mt-1">{businessName}</p>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
@@ -96,7 +97,7 @@ export function AccountHub({
         >
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="payment">Payment</TabsTrigger>
-          <TabsTrigger value="beauty-bank">Beauty&nbsp;Bank</TabsTrigger>
+          <TabsTrigger value="stored-value">{prepaidBalance}</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
           <TabsTrigger value="notifications">Alerts</TabsTrigger>
         </TabsList>
@@ -127,7 +128,7 @@ export function AccountHub({
           <CardManagement clientId={clientId} />
         </TabsContent>
 
-        <TabsContent value="beauty-bank" className="mt-4 space-y-6">
+        <TabsContent value="stored-value" className="mt-4 space-y-6">
           <StoredValueSection
             clientId={clientId}
             initialData={storedValue}
@@ -144,14 +145,14 @@ export function AccountHub({
             upcoming={upcoming}
             past={past}
             errorMessage={appointmentsError}
-            salonTimezone={salonTimezone}
+            businessTimezone={businessTimezone}
           />
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-4">
           <ClientNotifications
             clientId={clientId}
-            salonName={salonName}
+            businessName={businessName}
             initialPhone={initialProfile?.phone ?? ""}
             initialConsent={smsConsent}
           />

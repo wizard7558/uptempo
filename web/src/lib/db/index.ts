@@ -2,15 +2,25 @@ import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-let _publicDb: PostgresJsDatabase<typeof schema>;
+let _publicDb: ReturnType<typeof drizzle<typeof schema>> | undefined;
+let _publicClient: ReturnType<typeof postgres> | undefined;
 
 /** Lazily-initialized public DB (avoids build-time env var access). */
 export function getPublicDb(): PostgresJsDatabase<typeof schema> {
   if (!_publicDb) {
-    const client = postgres(process.env.DATABASE_URL!);
-    _publicDb = drizzle(client, { schema });
+    _publicClient = postgres(process.env.DATABASE_URL!);
+    _publicDb = drizzle(_publicClient, { schema });
   }
   return _publicDb;
+}
+
+/** Close and reset the lazy public connection for short-lived scripts. */
+export async function closePublicDb(): Promise<void> {
+  if (!_publicClient) return;
+  const client = _publicClient;
+  _publicClient = undefined;
+  _publicDb = undefined;
+  await client.end({ timeout: 5 });
 }
 
 /** Public schema database instance. Use for auth, tenant registry, and platform_clients only. */

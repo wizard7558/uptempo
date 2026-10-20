@@ -6,11 +6,11 @@ import { getTenantSlug } from "@/lib/tenant/context";
  * Source layers, ordered from highest to lowest priority.
  * The resolver picks the first non-null value for each field.
  */
-export type ResolutionSource = "client" | "stylist" | "service";
+export type ResolutionSource = "client" | "staff" | "service";
 
 export interface ResolvedServicePricing {
   serviceId: string;
-  /** Display name (stylist customName takes precedence over catalog name). */
+  /** Display name (staff customName takes precedence over catalog name). */
   serviceName: string;
   category: string;
   durationMinutes: number;
@@ -21,9 +21,9 @@ export interface ResolvedServicePricing {
   priceSource: ResolutionSource;
   /** Convenience: true if EITHER duration or price was overridden from catalog. */
   isOverride: boolean;
-  /** True if price specifically came from an override (client or stylist). */
+  /** True if price specifically came from an override (client or staff). */
   isPriceOverride: boolean;
-  /** True if the stylist has hidden this service (is_offered = 0). */
+  /** True if the staff member has hidden this service (is_offered = 0). */
   isHiddenByStaffMember: boolean;
   /** Catalog: how the price renders to clients ('show' | 'starting' | 'hidden'). */
   priceDisplay: string;
@@ -31,7 +31,7 @@ export interface ResolvedServicePricing {
   onlineBookable: number;
   /** Catalog: who may self-book online ('all' | 'new' | 'returning'). */
   bookingAudience: string;
-  /** Catalog: per-service deposit override (null = inherit salon rule). */
+  /** Catalog: per-service deposit override (null = inherit business rule). */
   depositType: string | null;
   depositAmount: number | null;
 }
@@ -46,11 +46,11 @@ export interface ResolvedPricingResult {
  * Resolves the effective price, duration, and processing-time split for a set
  * of services using a three-layer priority chain:
  *
- *   client_service_overrides  >  stylist_services overrides  >  services defaults
+ *   client_service_overrides  >  staff_services overrides  >  services defaults
  *
  * Each field resolves independently — a client override on price doesn't
  * affect duration if no client duration override exists. Pass `null` for
- * either client or stylist to skip that layer.
+ * either client or staff to skip that layer.
  */
 export async function resolveServicePricing(
   serviceIds: string[],
@@ -191,6 +191,6 @@ function pickWithSource<T>(
   fallback: T,
 ): { value: T; source: ResolutionSource } {
   if (client != null) return { value: client, source: "client" };
-  if (staffMember != null) return { value: staffMember, source: "stylist" };
+  if (staffMember != null) return { value: staffMember, source: "staff" };
   return { value: fallback, source: "service" };
 }

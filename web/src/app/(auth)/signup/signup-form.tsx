@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { authClient } from "@/lib/auth/client";
-import { createSalonAccount } from "@/actions/onboarding";
+import { createBusinessAccount } from "@/actions/onboarding";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import {
@@ -17,6 +18,7 @@ import {
   identifyPostHogUser,
   trackClientEvent,
 } from "@/lib/analytics/posthog-provider";
+import { notifyNativeAuthSuccess } from "@/lib/native/push-register";
 import { TermsProvider, useT } from "@/lib/terms/client";
 import { IndustryPicker } from "@/components/onboarding/industry-picker";
 import { VERTICALS, type VerticalId } from "@/lib/verticals";
@@ -52,12 +54,14 @@ function AccountFields({
   const [ownerName, setOwnerName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [salonName, setSalonName] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [timezone, setTimezone] = useState(getDefaultTimezone());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requiresSignInRecovery, setRequiresSignInRecovery] = useState(false);
   const chosen =
     industry === "general" ? t("industry.somethingElse") : VERTICALS[industry].label;
+  const loginHref = `/login?callbackUrl=${encodeURIComponent("/onboarding")}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,8 +69,8 @@ function AccountFields({
     setIsSubmitting(true);
 
     try {
-      const result = await createSalonAccount({
-        salonName,
+      const result = await createBusinessAccount({
+        businessName,
         timezone,
         ownerName,
         email,
@@ -75,7 +79,18 @@ function AccountFields({
       });
 
       if (result.success) {
-        await authClient.signIn.email({ email, password });
+        let signInResult;
+        try {
+          signInResult = await authClient.signIn.email({ email, password });
+        } catch {
+          setRequiresSignInRecovery(true);
+          return;
+        }
+        if (signInResult.error) {
+          setRequiresSignInRecovery(true);
+          return;
+        }
+        notifyNativeAuthSuccess();
         identifyPostHogUser(email, {
           email,
           name: ownerName,
@@ -93,6 +108,20 @@ function AccountFields({
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (requiresSignInRecovery) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          Your business account was created, but automatic sign-in failed. Sign
+          in with your new account to continue.
+        </p>
+        <Button className="w-full" variant="default" asChild>
+          <Link href={loginHref}>Sign in</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -145,12 +174,12 @@ function AccountFields({
           />
         </Field>
 
-        <Field htmlFor="salonName" label={t("account.placeName")} required>
+        <Field htmlFor="businessName" label={t("account.placeName")} required>
           <Field.Input
-            id="salonName"
+            id="businessName"
             type="text"
-            value={salonName}
-            onChange={(e) => setSalonName(e.target.value)}
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
             required
           />
         </Field>
@@ -185,8 +214,8 @@ function AccountFields({
   );
 }
 
-export function SignupForm() {
-  const [industry, setIndustry] = useState<VerticalId | null>(null);
+export function SignupForm({ initialIndustry = null }: { initialIndustry?: VerticalId | null }) {
+  const [industry, setIndustry] = useState<VerticalId | null>(initialIndustry);
   const terms = VERTICALS[industry ?? "general"].terms;
   return (
     <TermsProvider terms={terms}>

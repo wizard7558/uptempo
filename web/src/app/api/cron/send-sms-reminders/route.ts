@@ -179,7 +179,7 @@ async function sendReminderWindow(
       const rescheduleToken = createActionToken(appt.id, "reschedule");
       const rescheduleUrl = `${baseUrl}/reschedule/${rescheduleToken}`;
 
-      // Format date/time in salon timezone
+      // Format date/time in business timezone
       const apptDate = new TZDate(appt.during.start, tz);
       const dateStr = format(apptDate, "EEEE, MMMM d");
       const timeStr = format(apptDate, "h:mm a");
@@ -251,7 +251,7 @@ async function sendReminderWindow(
 async function sendSmsRemindersForTenant(
   tenantSlug: string,
 ): Promise<{ sent: number; failed: number; skipped: number }> {
-  // Get SMS settings from salon_policies
+  // Get SMS settings from business_settings
   const settings = await withTenantDb(
     tenantSlug,
     async (db, { businessSettings }) => {

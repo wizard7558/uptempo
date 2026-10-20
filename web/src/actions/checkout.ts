@@ -1,5 +1,6 @@
 "use server";
 
+import { destinationRefundParamsForIntent } from "@/lib/stripe/refund-params";
 import { AuthError, requireStaff } from "@/lib/auth/rbac";
 
 import { getEmailT } from "@/lib/terms/email";
@@ -7,13 +8,14 @@ import { getEmailBranding } from "@/lib/email/branding";
 import { getT } from "@/lib/terms/server";
 import type Stripe from "stripe";
 import { withTenantDb } from "@/lib/db/tenant";
-import { getPaymentMethodSettingsForTenant } from "@/lib/policies/salon-policy";
+import { getPaymentMethodSettingsForTenant } from "@/lib/policies/business-policy";
 import { getStripe } from "@/lib/stripe/server";
 import { calculateAppointmentPrice } from "@/lib/services/policy-engine";
 import { processOffSessionCharge } from "@/lib/services/charge-processing";
 import { createActionToken, verifyActionToken } from "@/lib/email/tokens";
 import { sendEmail } from "@/lib/email/send";
-import { resolveTenantSlugForAppointment } from "@/lib/tenant/registry";
+import { getTenantBySlug, resolveTenantSlugForAppointment } from "@/lib/tenant/registry";
+import { processingRateBps, processingRateLabel } from "@/lib/billing/processing-fee";
 import { CheckoutLinkEmail } from "@/emails/checkout-link";
 import { ReceiptEmail } from "@/emails/receipt";
 import { sendSms } from "@/lib/sms/send";
@@ -232,9 +234,9 @@ export async function getCheckoutData(appointmentId: string, finalProjectSession
  */
 export async function completeAppointment(data: {
   appointmentId: string;
-  paymentMethod: "card_on_file" | "new_card" | "cash" | "beauty_bank" | "gift_card";
+  paymentMethod: "card_on_file" | "new_card" | "cash" | "stored_value" | "gift_card";
   stripePaymentIntentId?: string;
-  /** Gratuity in cents (added on top of service total; Beauty Bank applies to services only). */
+  /** Gratuity in cents (added on top of service total; stored value applies to services only). */
   tipCents?: number;
   /** Multi-session projects: apply the project's whole deposit credit (this is its last session). */
   finalProjectSession?: boolean;
@@ -283,7 +285,7 @@ export async function completeAppointment(data: {
         // Step 2: Line items with prices (all members of a group)
         const apptServices = set.services;
 
-        // Step 3: Calculate total, optional tip, and Beauty Bank application (server-side)
+        // Step 3: Calculate total, optional tip, and stored value application (server-side)
         const totalCents = calculateAppointmentPrice(apptServices);
         const tipCents = Math.min(
           Math.max(0, Math.round(Number(data.tipCents ?? 0))),
@@ -310,7 +312,7 @@ export async function completeAppointment(data: {
         // A credit-covered visit takes nothing from the prepaid balance (computeCheckoutAmounts
         // zeroes it), so the prepaid-balance eligibility checks do not apply.
         const te = await getT("errors", slug);
-        if (data.paymentMethod === "beauty_bank" && !set.creditCovered) {
+        if (data.paymentMethod === "stored_value" && !set.creditCovered) {
           if (tipCents > 0) {
             return {
               success: false as const,
@@ -330,7 +332,7 @@ export async function completeAppointment(data: {
             };
           }
         }
-        if (data.paymentMethod === "beauty_bank" && data.giftCard) {
+        if (data.paymentMethod === "stored_value" && data.giftCard) {
           return { success: false as const, error: te("giftCards.withFullPrepaid") };
         }
 
@@ -364,7 +366,7 @@ export async function completeAppointment(data: {
           giftAppliedCents,
           remainderCents,
         } = amountsForSet(set, {
-          payingFullFromPrepaid: data.paymentMethod === "beauty_bank",
+          payingFullFromPrepaid: data.paymentMethod === "stored_value",
           totalCents,
           tipCents,
           preview: bbPreview,
@@ -417,8 +419,7 @@ export async function completeAppointment(data: {
               if (data.paymentMethod === "new_card" && data.stripePaymentIntentId) {
                 await getStripe().refunds.create({
                   payment_intent: data.stripePaymentIntentId,
-                  reverse_transfer: true,
-                  refund_application_fee: true,
+                  ...(await destinationRefundParamsForIntent(data.stripePaymentIntentId, { undo: true })),
                 });
               }
               return { success: false as const, error: te("giftCards.balanceChanged") };
@@ -432,6 +433,8 @@ export async function completeAppointment(data: {
         let stripePaymentIntentId: string | null = null;
         const failureReason: string | null = null;
         let step4Error: string | null = null;
+        // The application fee actually sent to Stripe: only the card part carries one.
+        let cardFeeCents = 0;
 
         if (remainderCents > 0 && data.paymentMethod === "card_on_file") {
           const [client] = await db
@@ -470,6 +473,7 @@ export async function completeAppointment(data: {
             } else {
               chargeStatus = chargeResult.status as "completed";
               stripePaymentIntentId = chargeResult.stripePaymentIntentId;
+              cardFeeCents = connectParamsRemainder?.platformFeeCents ?? 0;
             }
           }
         } else if (remainderCents > 0 && data.paymentMethod === "new_card") {
@@ -484,6 +488,7 @@ export async function completeAppointment(data: {
               step4Error = "Payment amount does not match balance due";
             } else {
               chargeStatus = "completed";
+              cardFeeCents = pi.application_fee_amount ?? 0;
             }
           }
         } else if (remainderCents > 0 && data.paymentMethod === "cash") {
@@ -510,7 +515,7 @@ export async function completeAppointment(data: {
             status: chargeStatus,
             stripePaymentIntentId,
             failureReason,
-            platformFeeCents: connectParamsFull?.platformFeeCents ?? null,
+            platformFeeCents: cardFeeCents > 0 ? cardFeeCents : null,
             connectAccountId: connectParamsFull?.connectAccountId ?? null,
             storedValueCents: bankAppliedCents,
             depositAppliedCents: depositPaidCents,
@@ -518,7 +523,7 @@ export async function completeAppointment(data: {
             giftCardCents: giftAppliedCents > 0 ? giftAppliedCents : null,
             giftCardTxId: giftDebit?.txId ?? null,
             ledgerNote:
-              data.paymentMethod === "beauty_bank" && bankAppliedCents < totalCents
+              data.paymentMethod === "stored_value" && bankAppliedCents < totalCents
                 ? te("checkout.ledgerNoteMemberDiscount")
                 : "Service checkout",
           });
@@ -570,7 +575,7 @@ export async function completeAppointment(data: {
               getEmailT(slug, "emails"),
               getEmailBranding(slug),
             ]);
-            const salonName = branding.salonName;
+            const businessName = branding.businessName;
 
             const policies = await getNotificationSettingsForTenant(slug);
 
@@ -581,16 +586,16 @@ export async function completeAppointment(data: {
               );
               await sendEmailFn({
                 to: clientData.email,
-                subject: emailT("aftercare.subject", { business: salonName }),
+                subject: emailT("aftercare.subject", { business: businessName }),
                 react: AftercareEmail({
                   t: emailT,
-                  salonName,
+                  businessName,
                   clientName: clientData.name,
                   templates: aftercareList,
                   logoUrl: branding.logoUrl,
                   brandColor: branding.brandColor,
                 }),
-                salonName,
+                businessName,
               });
             }
 
@@ -604,7 +609,7 @@ export async function completeAppointment(data: {
                 168,
               );
               const url = `${getBaseUrl()}/aftercare/${data.appointmentId}?token=${encodeURIComponent(token)}`;
-              const smsBody = `${salonName}: your aftercare instructions — ${url}`;
+              const smsBody = `${businessName}: your aftercare instructions — ${url}`;
               await sendSms({
                 to: clientData.phone,
                 body: smsBody,
@@ -633,10 +638,24 @@ export async function completeAppointment(data: {
           { tenantSlug: slug },
         );
 
+        // The fee Stripe took on the card part (same as stored on the charge row),
+        // and the rate the business is on, for the done screen. No card fee means
+        // the screen shows no card processing line.
+        const storedFeeCents = cardFeeCents;
+        let processingLabel: string | null = null;
+        if (storedFeeCents > 0) {
+          const tenant = await getTenantBySlug(slug);
+          if (tenant) {
+            processingLabel = processingRateLabel(processingRateBps(tenant));
+          }
+        }
+
         return {
           success: true as const,
           chargeId: charge.id,
           totalCents: totalWithTip,
+          platformFeeCents: storedFeeCents,
+          processingRateLabel: processingLabel,
         };
       },
     );
@@ -685,7 +704,7 @@ export async function createCheckoutPaymentIntent(
     500_000,
   );
 
-  // Fetch appointment, total, Beauty Bank remainder for card charge
+  // Fetch appointment, total, stored-value remainder for card charge
   const data = await withTenantDb(
     slug,
     async (db, tables) => {
@@ -930,14 +949,14 @@ export async function sendCheckoutLink(appointmentId: string) {
     getEmailT(slug, "emails"),
     getEmailBranding(slug),
   ]);
-  const salonName = branding.salonName;
+  const businessName = branding.businessName;
 
   const result = await sendEmail({
     to: data.clientEmail,
-    subject: emailT("checkout.subject", { business: salonName }),
+    subject: emailT("checkout.subject", { business: businessName }),
     react: CheckoutLinkEmail({
       t: emailT,
-      salonName,
+      businessName,
       clientName: data.clientName,
       staffName: data.staffName,
       services: data.services,
@@ -947,7 +966,7 @@ export async function sendCheckoutLink(appointmentId: string) {
       logoUrl: branding.logoUrl,
       brandColor: branding.brandColor,
     }),
-    salonName,
+    businessName,
   });
 
   return { success: result.success };
@@ -1174,7 +1193,7 @@ export async function sendReceipt(data: {
       getEmailT(slug, "emails"),
       getEmailBranding(slug),
     ]);
-    const salonName = branding.salonName;
+    const businessName = branding.businessName;
     const paidAtLabel = format(
       charge.createdAt instanceof Date
         ? charge.createdAt
@@ -1211,10 +1230,10 @@ export async function sendReceipt(data: {
       }
       const r = await sendEmail({
         to: client.email,
-        subject: emailT("receiptMail.subject", { business: salonName }),
+        subject: emailT("receiptMail.subject", { business: businessName }),
         react: ReceiptEmail({
           t: emailT,
-          salonName,
+          businessName,
           clientName: client.name,
           lineItems,
           tipCents,
@@ -1223,7 +1242,7 @@ export async function sendReceipt(data: {
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
         }),
-        salonName,
+        businessName,
       });
       return r.success
         ? ({ success: true as const } as const)
@@ -1242,7 +1261,7 @@ export async function sendReceipt(data: {
       )
       .join("; ");
     const bodyLines = [
-      `${salonName} — receipt (${paidAtLabel})`,
+      `${businessName} — receipt (${paidAtLabel})`,
       `Total ${fmt(charge.amountCents)}`,
       svcPart.slice(0, 220) + (svcPart.length > 220 ? "…" : ""),
     ];

@@ -1,0 +1,7 @@
+# Paths that must never appear in a public cut. `git archive` honors export-ignore,
+# so the Phase 5 section 7 cut (`git archive <SHA> | tar -x`) leaves them out.
+/.agent-plans export-ignore
+/.planning export-ignore
+/CURRENT_PROGRESS.md export-ignore
+/.vade-report export-ignore
+/docs/superpowers export-ignore

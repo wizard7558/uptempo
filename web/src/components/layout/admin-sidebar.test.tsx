@@ -6,6 +6,7 @@ import { TermsProvider } from "@/lib/terms/client";
 import messages from "@/i18n/messages/en.json";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
+import type { UserMembershipRow } from "@/actions/team";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/schedule",
@@ -17,13 +18,24 @@ vi.mock("@/lib/native/push-register", () => ({ revokeNativePush: vi.fn() }));
 
 import { AdminSidebar } from "./admin-sidebar";
 
-function render(terms: (typeof VERTICALS)["barber"]["terms"], enabledModules?: ModuleId[]) {
+function render(
+  terms: (typeof VERTICALS)["barber"]["terms"],
+  enabledModules?: ModuleId[],
+  memberships: UserMembershipRow[] = [],
+  activeTenantSlug: string | null = null,
+) {
   return renderToStaticMarkup(
     <NextIntlClientProvider locale="en" messages={messages} timeZone="UTC">
       <TermsProvider terms={terms}>
         <ThemeProvider>
           <SidebarProvider>
-            <AdminSidebar role="owner" tenantSlug="demo" enabledModules={enabledModules} />
+            <AdminSidebar
+              role="owner"
+              tenantSlug="demo"
+              enabledModules={enabledModules}
+              memberships={memberships}
+              activeTenantSlug={activeTenantSlug}
+            />
           </SidebarProvider>
         </ThemeProvider>
       </TermsProvider>
@@ -52,6 +64,24 @@ function labelIndexes(html: string, labels: string[]): number[] {
 }
 
 describe("AdminSidebar", () => {
+  it("shows the active business name", () => {
+    const html = render(
+      VERTICALS.hair_salon.terms,
+      undefined,
+      [
+        { tenantSlug: "other", role: "provider", businessName: "Other Shop" },
+        { tenantSlug: "demo", role: "owner", businessName: "Northwind Hair" },
+      ],
+      "demo",
+    );
+    expect(html).toContain(">Northwind Hair<");
+    expect(html).not.toContain(">Scheduling<");
+  });
+
+  it("falls back to Scheduling when there is no membership name", () => {
+    expect(render(VERTICALS.hair_salon.terms)).toContain(">Scheduling<");
+  });
+
   it("lists the calendar-first order for a hair salon", () => {
     const html = render(VERTICALS.hair_salon.terms, [
       "walk_in_queue",
@@ -72,7 +102,7 @@ describe("AdminSidebar", () => {
     expect(html).not.toContain('href="/revenue"');
     expect(html).not.toContain('href="/dashboard"');
     expect(html).toContain(">Get help<");
-    expect(html).toContain('href="mailto:support@bookuptempo.com"');
+    expect(html).toContain('href="mailto:riley@bellaso.ai"');
   });
 
   it("uses home-services words for customers and services", () => {

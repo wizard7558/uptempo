@@ -2,6 +2,7 @@
 
 import { withTenantDb } from "@/lib/db/tenant";
 import { getTenantSlug } from "@/lib/tenant/context";
+import { loadFormsForServices } from "@/lib/forms/for-services";
 import { eq, and, inArray, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { trackEvent } from "@/lib/analytics/events";
@@ -215,49 +216,7 @@ export async function getFormTemplate(id: string) {
  */
 export async function getFormsForServices(serviceIds: string[]) {
   if (serviceIds.length === 0) return [];
-
-  const slug = await getTenantSlug();
-
-  return withTenantDb(
-    slug,
-    async (db, { formTemplates, serviceFormAssignments }) => {
-      const rows = await db
-        .select({
-          id: formTemplates.id,
-          name: formTemplates.name,
-          description: formTemplates.description,
-          fields: formTemplates.fields,
-        })
-        .from(serviceFormAssignments)
-        .innerJoin(
-          formTemplates,
-          eq(serviceFormAssignments.formTemplateId, formTemplates.id),
-        )
-        .where(
-          and(
-            inArray(serviceFormAssignments.serviceId, serviceIds),
-            eq(formTemplates.isActive, 1),
-          ),
-        );
-
-      // Deduplicate by template ID
-      const seen = new Set<string>();
-      const unique: typeof rows = [];
-      for (const row of rows) {
-        if (!seen.has(row.id)) {
-          seen.add(row.id);
-          unique.push(row);
-        }
-      }
-
-      return unique.map((r) => ({
-        id: r.id,
-        name: r.name,
-        description: r.description,
-        fields: r.fields as unknown as FormField[],
-      }));
-    },
-  );
+  return loadFormsForServices(await getTenantSlug(), serviceIds);
 }
 
 /**
@@ -564,7 +523,7 @@ export async function updateIdRetention(days: number) {
     return { success: false as const, error: "Choose one of the listed times." };
   }
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = session.tenantSlug;
   const keepDays = parsed.data;
 
@@ -677,7 +636,7 @@ export async function uploadIdPhoto(
 /** Staff mark an uploaded ID as checked (owner, admin or provider). */
 export async function verifyConsentId(formResponseId: string) {
   const session = await requireRole("owner", "admin", "provider");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = session.tenantSlug;
   if (!z.uuid().safeParse(formResponseId).success) {
     return { success: false as const, error: "Form not found" };

@@ -4,7 +4,7 @@ import { withTenantDb } from "@/lib/db/tenant";
 import { createServiceSchema, updateServiceSchema } from "@/lib/validators/service";
 import { getMultiServiceDuration as _getMultiServiceDuration } from "@/lib/services/duration";
 import {
-  SERVICE_PRESETS,
+  getServicePresetsForIndustry,
   filterUnusedPresets,
   type ServicePreset,
 } from "@/lib/services/preset-catalog";
@@ -16,6 +16,7 @@ import {
 } from "@/lib/validators/resource";
 import { revalidatePath } from "next/cache";
 import { trackEvent } from "@/lib/analytics/events";
+import { getTenantIndustry } from "@/lib/tenant/industry";
 
 export async function createService(data: {
   name: string;
@@ -83,8 +84,8 @@ export async function createService(data: {
           })
           .returning({ id: services.id });
 
-        // Auto-assign new service to every active stylist so it immediately
-        // appears in the new-booking picker (which filters by stylist_services).
+        // Auto-assign new service to every active staff member so it appears
+        // immediately in the new-booking picker (which filters by staff_services).
         const activeStaff = await db
           .select({ id: staff.id })
           .from(staff)
@@ -229,7 +230,7 @@ export async function listServices() {
 
 /**
  * Server action wrapper for getMultiServiceDuration.
- * Pass stylistId so per-stylist price/duration overrides are applied.
+ * Pass staffId so staff price/duration overrides are applied.
  */
 export async function fetchMultiServiceDuration(
   serviceIds: string[],
@@ -241,11 +242,12 @@ export async function fetchMultiServiceDuration(
 }
 
 /**
- * Returns the curated preset catalog filtered down to presets the salon
+ * Returns the curated preset catalog filtered down to presets the business
  * doesn't already have (matched case-insensitively on name).
  */
 export async function listAvailablePresets(): Promise<ServicePreset[]> {
   const { tenantSlug: slug } = await requireStaff();
+  const presets = getServicePresetsForIndustry(await getTenantIndustry(slug));
   const existing = await withTenantDb(slug, async (db, { services }) => {
     return db
       .select({ name: services.name })
@@ -253,30 +255,40 @@ export async function listAvailablePresets(): Promise<ServicePreset[]> {
       .where(eq(services.isActive, 1));
   });
   return filterUnusedPresets(
-    SERVICE_PRESETS,
+    presets,
     existing.map((s) => s.name),
   );
 }
 
 /**
  * Bulk-import a list of preset keys as new catalog services. Each created
- * service is auto-linked to all active stylists (matching the per-service
+ * service is auto-linked to all active staff members (matching the per-service
  * createService behaviour). Returns the created service IDs in the same
  * order as `keys`.
  */
 export async function importServicePresets(keys: string[]) {
   const { tenantSlug: slug } = await requireStaff();
-  if (keys.length === 0) return { success: true as const, ids: [] };
-
-  const lookup = new Map(SERVICE_PRESETS.map((p) => [p.key, p]));
-  const presets = keys.map((k) => lookup.get(k)).filter(
-    (p): p is ServicePreset => !!p,
-  );
-  if (presets.length === 0) {
+  if (!Array.isArray(keys) || !keys.every((key) => typeof key === "string" && key.length > 0)) {
     return { success: false as const, error: { message: "No valid presets" } };
   }
+  if (keys.length === 0) return { success: true as const, ids: [] };
 
   try {
+    const presetsForIndustry = getServicePresetsForIndustry(
+      await getTenantIndustry(slug),
+    );
+    const lookup = new Map(presetsForIndustry.map((preset) => [preset.key, preset]));
+    const seen = new Set<string>();
+    const presets: ServicePreset[] = [];
+    for (const key of keys) {
+      const preset = lookup.get(key);
+      if (!preset || seen.has(key)) {
+        return { success: false as const, error: { message: "No valid presets" } };
+      }
+      seen.add(key);
+      presets.push(preset);
+    }
+
     const ids = await withTenantDb(
       slug,
       async (db, { services, staff, staffServices }) => {
@@ -292,6 +304,10 @@ export async function importServicePresets(keys: string[]) {
                 category: p.category,
                 activeMinutes: p.activeMinutes ?? null,
                 processingMinutes: p.processingMinutes ?? null,
+                depositType: p.depositType ?? null,
+                depositAmount: p.depositAmount ?? null,
+                isClass: p.isClass ?? 0,
+                classCapacity: p.isClass === 1 ? (p.classCapacity ?? null) : null,
               })),
             )
             .returning({ id: services.id });
@@ -409,7 +425,7 @@ export async function setServiceNeeds(
   needs: ServiceNeedInput[],
 ): Promise<{ success: true } | { success: false; error: { message: string } }> {
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = setServiceNeedsSchema.safeParse({ serviceId, needs });
   if (!parsed.success) {
     return { success: false, error: { message: "Invalid needs" } };

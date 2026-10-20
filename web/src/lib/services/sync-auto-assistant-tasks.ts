@@ -37,7 +37,7 @@ function trackSkip(
 /**
  * Recompute auto-generated assistant tasks for an appointment from:
  * - services with assistant_workflow = 1 in the booked line items
- * - the booked stylist's default_assistant_id (must be an active assistant)
+ * - the booked staff member's default_assistant_id (must be an active assistant)
  *
  * Deletes prior auto tasks for this appointment, then inserts at most one task
  * covering the full appointment window (avoids overlap conflicts on the assistant).

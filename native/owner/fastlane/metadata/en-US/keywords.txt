@@ -1,1 +1,1 @@
-salon,scheduling,booking,clients,calendar,appointment,stylist,manage,payments,revenue,business
+appointments,scheduling,clients,calendar,services,staff,payments,booking,small business,operations

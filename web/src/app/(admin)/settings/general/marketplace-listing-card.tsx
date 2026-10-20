@@ -15,7 +15,7 @@ import { useT } from "@/lib/terms/client";
 import { setMarketplaceListing } from "@/actions/marketplace";
 
 /**
- * Owner toggle: opt the salon into the public client app marketplace, where
+ * Owner toggle: opt the business into the public client app marketplace, where
  * clients can discover and book it from the Uptempo iOS app. Off by default.
  */
 export function MarketplaceListingCard({ initialListed }: { initialListed: boolean }) {

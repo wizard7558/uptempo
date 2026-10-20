@@ -18,7 +18,7 @@ import { getStripe } from "@/lib/stripe/server";
  * Strategy: stop all future billing, detach payment data from Stripe, then
  * anonymize the client record rather than hard-deleting it — appointment and
  * charge history reference the client row and must stay referentially intact
- * for the salon's financial records. After this runs there is no PII left and
+ * for the business's financial records. After this runs there is no PII left and
  * the session is cleared.
  */
 export async function deleteMyClientAccount(): Promise<
@@ -31,7 +31,7 @@ export async function deleteMyClientAccount(): Promise<
 
   const slug = await getTenantSlugForBookingClient(clientId);
   if (!slug) {
-    // No resolvable salon for this client — nothing to delete; just sign out.
+    // No resolvable business for this client — nothing to delete; just sign out.
     await clearBookingSession();
     return { success: true };
   }

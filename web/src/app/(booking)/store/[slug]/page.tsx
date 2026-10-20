@@ -2,7 +2,7 @@ import { getT } from "@/lib/terms/server";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getStorefront } from "@/actions/storefront";
-import { salonPageMetadata } from "@/lib/seo/tenant-metadata";
+import { businessPageMetadata } from "@/lib/seo/tenant-metadata";
 import { StorePageSkeleton } from "@/components/booking-public/page-skeletons";
 import { StoreClient } from "./store-client";
 
@@ -14,16 +14,16 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return salonPageMetadata(slug, (salonName) => ({
-    title: `Shop ${salonName}`,
-    description: `Shop the products ${salonName} uses and recommends — order online for pickup or delivery.`,
+  return businessPageMetadata(slug, (businessName) => ({
+    title: `Shop ${businessName}`,
+    description: `Shop the products ${businessName} uses and recommends — order online for pickup or delivery.`,
   }));
 }
 
 /**
- * Public salon storefront. Shows the salon's retail catalog, with products
+ * Public business storefront. Shows the business's retail catalog, with products
  * matching the signed-in client's hair profile surfaced first, and hands off
- * to Stripe-hosted checkout. The booking group layout supplies salon branding
+ * to Stripe-hosted checkout. The booking group layout supplies business branding
  * and header chrome, so this page renders only its own heading + catalog.
  */
 export default async function StorePage({
@@ -55,7 +55,7 @@ async function StorePageContent({ slug }: { slug: string }) {
     <div className="mx-auto w-full max-w-lg px-4 py-8 sm:px-6 md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
       <div className="mb-6">
         <h1 className="display text-4xl text-[var(--ink)]">
-          {data.salonName} Shop
+          {data.businessName} Shop
         </h1>
         <p className="mt-1 text-sm text-[var(--ink-soft)]">
           {firstName

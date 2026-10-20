@@ -30,9 +30,12 @@ export function DocArticle({
               {section.title}
             </Link>
           ))}
-          <Link className="underline underline-offset-4" href="/docs/self-hosting">
-            docs/self-hosting.md
-          </Link>
+          <a
+            className="underline underline-offset-4"
+            href="https://github.com/wizard7558/uptempo/blob/main/docs/self-hosting.md"
+          >
+            Full self-hosting guide
+          </a>
         </nav>
       </article>
     </div>

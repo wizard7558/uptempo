@@ -163,7 +163,7 @@ describe("consent age gate against a real tenant schema", () => {
     const { confirmBooking } = await import("@/actions/booking-public");
     state.sessionClientId = ids.public;
     const input = {
-      salonId: t.slug,
+      businessId: t.slug,
       staffId: ids.staff,
       clientId: ids.public,
       serviceIds: [ids.flash],
@@ -208,7 +208,7 @@ describe("consent age gate against a real tenant schema", () => {
     const adult = await newClient("Public Adult");
     state.sessionClientId = adult;
     const res = await confirmBooking({
-      salonId: t.slug,
+      businessId: t.slug,
       staffId: ids.staff,
       clientId: adult,
       serviceIds: [ids.flash],

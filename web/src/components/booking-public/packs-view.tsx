@@ -9,13 +9,13 @@ import { formatCurrency } from "@/lib/format";
 import { buyPackage, type PublicPackage } from "@/actions/packages";
 
 interface Props {
-  salonId: string;
-  salonName: string;
+  businessId: string;
+  businessName: string;
   packs: PublicPackage[];
   signedIn: boolean;
 }
 
-export function PacksView({ salonId, salonName, packs, signedIn: initiallySignedIn }: Props) {
+export function PacksView({ businessId, businessName, packs, signedIn: initiallySignedIn }: Props) {
   const t = useT("packages");
   const [signedIn, setSignedIn] = useState(initiallySignedIn);
   /** The pack the client picked; kept while they sign in or add a card. */
@@ -54,7 +54,7 @@ export function PacksView({ salonId, salonName, packs, signedIn: initiallySigned
 
   const header = (
     <div className="text-center">
-      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{salonName}</h1>
+      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{businessName}</h1>
       <p className="mt-1 text-sm font-light text-[var(--ink)]">{t("publicSubtitle")}</p>
     </div>
   );
@@ -78,7 +78,7 @@ export function PacksView({ salonId, salonName, packs, signedIn: initiallySigned
         {header}
         <h2 className="display text-2xl text-[var(--ink)]">{t("signInFirst")}</h2>
         <IdentityStep
-          salonId={salonId}
+          businessId={businessId}
           onComplete={() => {
             setSignedIn(true);
             // Carry on with the pack they picked.

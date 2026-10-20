@@ -41,7 +41,7 @@ interface TimeStepProps {
   needsAddress?: boolean | null;
   clientId?: string | null;
   serviceIds: string[];
-  salonTimezone: string;
+  businessTimezone: string;
   onComplete: (
     date: string,
     time: string,
@@ -61,6 +61,8 @@ interface TimeStepProps {
   sampleSchedule?: {
     dates: DateEntry[];
     slots: SlotEntry[];
+    /** yyyy-MM-dd. Pins the calendar's "today" so server and client markup match. */
+    today?: string;
   };
 }
 
@@ -81,7 +83,7 @@ export function TimeStep({
   needsAddress = false,
   clientId,
   serviceIds,
-  salonTimezone,
+  businessTimezone,
   onComplete,
   onLocation = () => {},
   onAddress = () => {},
@@ -243,16 +245,16 @@ export function TimeStep({
 
   const grouped = useMemo(() => {
     const list = slots ?? NO_SLOTS;
-    const morning = list.filter((slot) => slotPart(slot.time, salonTimezone) === "morning");
-    const afternoon = list.filter((slot) => slotPart(slot.time, salonTimezone) === "afternoon");
+    const morning = list.filter((slot) => slotPart(slot.time, businessTimezone) === "morning");
+    const afternoon = list.filter((slot) => slotPart(slot.time, businessTimezone) === "afternoon");
     return [
       { part: "morning" as const, items: morning },
       { part: "afternoon" as const, items: afternoon },
     ];
-  }, [salonTimezone, slots]);
+  }, [businessTimezone, slots]);
 
   function formatSlotTime(isoString: string): string {
-    return format(new TZDate(new Date(isoString), salonTimezone), "h:mm a");
+    return format(new TZDate(new Date(isoString), businessTimezone), "h:mm a");
   }
 
   async function saveAddress() {
@@ -280,7 +282,7 @@ export function TimeStep({
         staffId={staffId}
         locationId={locationId}
         activeDate={activeDate}
-        salonTimezone={salonTimezone}
+        businessTimezone={businessTimezone}
         clientPhone={clientPhone}
       />
     ) : null;
@@ -342,7 +344,7 @@ export function TimeStep({
                 aria-pressed={isSelected}
                 className={cn(
                   "flex min-h-11 w-full items-start gap-3 border border-[var(--line)] p-4 text-left",
-                  isSelected && "border-[var(--ink)] bg-[var(--ivory-raised)]",
+                  isSelected && "border-accent bg-accent/10",
                 )}
               >
                 <MapPinIcon className="mt-0.5 size-4 shrink-0 text-[var(--ink-soft)]" />
@@ -367,6 +369,7 @@ export function TimeStep({
             showOutsideDays={false}
             selected={activeDate ? parseISO(activeDate) : undefined}
             defaultMonth={dates[0] ? parseISO(dates[0].date) : undefined}
+            today={sampleSchedule?.today ? parseISO(sampleSchedule.today) : undefined}
             onDayClick={(day) => {
               const key = format(day, "yyyy-MM-dd");
               if (!enabled.has(key)) return;
@@ -381,6 +384,7 @@ export function TimeStep({
                   <CalendarDayButton
                     {...props}
                     className="[&>span]:text-[13px]"
+                    isSelected={key === activeDate}
                     {...(enabled.has(key) ? { "data-booking-date": key } : {})}
                   />
                 );
@@ -424,12 +428,12 @@ export function TimeStep({
                             onClick={() => setActiveTime(slot.time)}
                             className={cn(
                               "flex min-h-14 flex-col items-center justify-center border-2 border-[var(--line)] px-3 py-2 text-sm font-medium",
-                              isSelected && "border-[var(--ink)] bg-[var(--ink)] text-[var(--ivory)]",
+                              isSelected && "border-accent bg-accent text-accent-foreground",
                             )}
                           >
                             <span>{formatSlotTime(slot.time)}</span>
                             {slot.isDoubleBook && (
-                              <span className={cn("text-[13px]", isSelected ? "text-[var(--ivory)]" : "text-[var(--ink-soft)]")}>
+                              <span className={cn("text-[13px]", isSelected ? "text-accent-foreground" : "text-[var(--ink-soft)]")}>
                                 (flex)
                               </span>
                             )}

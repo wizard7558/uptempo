@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_ASSISTANT_TASKS } from "@/lib/services/default-assistant-tasks";
+import {
+  DEFAULT_ASSISTANT_TASKS,
+  getDefaultAssistantTasksForIndustry,
+} from "@/lib/services/default-assistant-tasks";
 import {
   SERVICE_CATEGORY_LABELS,
   SERVICE_CATEGORY_OPTIONS,
@@ -57,6 +60,15 @@ describe("verticals registry", () => {
       }
     });
 
+    it("resolves assistant tasks from the pack without inventing defaults", () => {
+      expect(getDefaultAssistantTasksForIndustry(pack.id)).toEqual(
+        (pack.taskPresets ?? []).map((task) => ({
+          name: task.name,
+          defaultDurationMinutes: task.minutes,
+        })),
+      );
+    });
+
     it("has no duplicate template names", () => {
       const names = pack.serviceTemplates.map((t) => t.name);
       expect(new Set(names).size).toBe(names.length);
@@ -89,5 +101,13 @@ describe("hair_salon legacy parity", () => {
   });
   it("default assistant tasks match the fixture", () => {
     expect(DEFAULT_ASSISTANT_TASKS).toEqual(legacy.DEFAULT_ASSISTANT_TASKS);
+  });
+  it("unknown industries resolve assistant tasks from the general pack", () => {
+    expect(getDefaultAssistantTasksForIndustry("unknown-industry")).toEqual(
+      (VERTICALS.general.taskPresets ?? []).map((task) => ({
+        name: task.name,
+        defaultDurationMinutes: task.minutes,
+      })),
+    );
   });
 });

@@ -9,7 +9,7 @@ export interface ReceiptLineItem {
 
 interface ReceiptEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   clientName: string;
   lineItems: ReceiptLineItem[];
   tipCents: number;
@@ -25,7 +25,7 @@ function formatMoney(cents: number): string {
 
 export function ReceiptEmail({
   t,
-  salonName,
+  businessName,
   clientName,
   lineItems,
   tipCents,
@@ -35,13 +35,13 @@ export function ReceiptEmail({
 }: ReceiptEmailProps) {
   return (
     <EmailLayout
-      businessName={salonName}
-      previewText={t("receiptMail.preview", { business: salonName })}
+      businessName={businessName}
+      previewText={t("receiptMail.preview", { business: businessName })}
       logoUrl={logoUrl}
       t={t}
     >
       <Text style={emailHeading}>{t("receiptMail.greeting", { name: clientName })}</Text>
-      <Text style={emailMuted}>{t("receiptMail.body", { business: salonName, paidAt: paidAtLabel })}</Text>
+      <Text style={emailMuted}>{t("receiptMail.body", { business: businessName, paidAt: paidAtLabel })}</Text>
       <Text style={emailMuted}>{t("receiptMail.withStaff")}</Text>
       <Section style={tableSection}>
         {lineItems.map((row, i) => (

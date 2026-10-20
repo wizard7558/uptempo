@@ -26,8 +26,8 @@ const GUARD_CALLS = new Set([
 
 /** Intentionally public actions: "file#fn" -> why it is safe to expose. */
 const PUBLIC_ACTIONS: Record<string, string> = {
-  "booking-public.ts#getSalonBySlug":
-    "public catalog: salon id/name by slug (booking page entry)",
+  "booking-public.ts#getBusinessBySlug":
+    "public catalog: business id/name by slug (booking page entry)",
   "booking-public.ts#getBookingStaff":
     "public catalog: active staff for the booking host; tenant from the middleware header on /book paths",
   "booking-public.ts#servicesNeedAddress":
@@ -60,12 +60,12 @@ const PUBLIC_ACTIONS: Record<string, string> = {
     "public booking read: whether a postal code is inside the host's travel area",
   "onboarding.ts#checkSlugAvailability":
     "public signup: validated slug availability check",
-  "onboarding.ts#createSalonAccount":
+  "onboarding.ts#createBusinessAccount":
     "public signup: creates a new user and tenant",
-  "onboarding.ts#setupSalonForOAuthUser":
-    "session-only (checks getSession): provisions a new salon for the signed-in user, not an existing tenant",
-  "onboarding.ts#createAdditionalSalonAsOwner":
-    "session-only (checks getSession): creates another salon for the signed-in user, refuses a slug that already exists",
+  "onboarding.ts#setupBusinessForOAuthUser":
+    "session-only (checks getSession): provisions a new business for the signed-in user, not an existing tenant",
+  "onboarding.ts#createAdditionalBusinessAsOwner":
+    "session-only (checks getSession): creates another business for the signed-in user, refuses a slug that already exists",
   "owner-account.ts#deleteMyOwnerAccount":
     "session-only (checks getSession): deletes the caller's own account",
   "packages.ts#listPackagesPublic":
@@ -81,9 +81,9 @@ const PUBLIC_ACTIONS: Record<string, string> = {
   "projects.ts#approveDesign":
     "public project link: approves only the project whose access token matches",
   "queue-public.ts#getQueueJoinInfo":
-    "public queue page for a salon slug; live line details require the kiosk token",
+    "public queue page for a business slug; live line details require the kiosk token",
   "queue-public.ts#joinQueue":
-    "public queue join for a published salon slug; the leave token is stored only as a hash",
+    "public queue join for a published business slug; the leave token is stored only as a hash",
   "queue-public.ts#leaveQueue":
     "public queue leave: slug plus the unguessable public token, compared as a hash",
   "quiz.ts#submitQuizResponse":
@@ -116,7 +116,7 @@ const PUBLIC_ACTIONS: Record<string, string> = {
     "invitation token lookup (unguessable token, expiry and status checked)",
   "team.ts#acceptInvitation":
     "invitation token; creates the invited user's account",
-  "team.ts#joinSalonFromInvitation":
+  "team.ts#joinBusinessFromInvitation":
     "invitation token plus signed-in session",
   "team.ts#listUserMemberships":
     "session-only (checks getSession): the caller's own memberships",

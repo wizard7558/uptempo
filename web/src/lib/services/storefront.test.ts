@@ -27,7 +27,7 @@ describe("priceOrder", () => {
       ],
       taxBps: 0,
       shippingCents: 0,
-      feePercent: 0,
+      feeOnSubtotal: () => 0,
     });
     expect(pricing.subtotalCents).toBe(9_000);
     expect(pricing.taxCents).toBe(0);
@@ -41,7 +41,7 @@ describe("priceOrder", () => {
       items: [item({ unitCents: 9_000, quantity: 1 })],
       taxBps: 725,
       shippingCents: 0,
-      feePercent: 0,
+      feeOnSubtotal: () => 0,
     });
     expect(pricing.taxCents).toBe(653);
     expect(pricing.totalCents).toBe(9_653);
@@ -52,7 +52,7 @@ describe("priceOrder", () => {
       items: [item({ unitCents: 10_000 })],
       taxBps: 1000, // 10%
       shippingCents: 1_000,
-      feePercent: 0,
+      feeOnSubtotal: () => 0,
     });
     expect(pricing.taxCents).toBe(1_000); // 10% of subtotal only
     expect(pricing.shippingCents).toBe(1_000);
@@ -64,7 +64,7 @@ describe("priceOrder", () => {
       items: [item({ unitCents: 10_000 })],
       taxBps: 725,
       shippingCents: 1_000,
-      feePercent: 2,
+      feeOnSubtotal: (subtotal) => Math.round((subtotal * 2) / 100),
     });
     expect(pricing.platformFeeCents).toBe(200); // 2% of $100
   });
@@ -75,7 +75,7 @@ describe("priceOrder", () => {
         items: [item({ quantity: 0 })],
         taxBps: 0,
         shippingCents: 0,
-        feePercent: 0,
+        feeOnSubtotal: () => 0,
       }),
     ).toThrow(/empty/i);
   });
@@ -85,7 +85,7 @@ describe("priceOrder", () => {
       items: [item()],
       taxBps: -50,
       shippingCents: -100,
-      feePercent: Number.NaN,
+      feeOnSubtotal: () => Number.NaN,
     });
     expect(pricing.taxCents).toBe(0);
     expect(pricing.shippingCents).toBe(0);

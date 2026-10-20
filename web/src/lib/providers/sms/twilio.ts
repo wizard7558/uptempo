@@ -11,7 +11,7 @@ export function createTwilioSmsProvider(): SmsProvider {
         const client: ReturnType<typeof twilio> = getTwilioClient();
         const message = await client.messages.create({
           body: input.body,
-          messagingServiceSid: getMessagingServiceSid(),
+          messagingServiceSid: input.messagingServiceSid ?? getMessagingServiceSid(),
           to: input.to,
           ...(input.statusCallbackUrl
             ? { statusCallback: input.statusCallbackUrl }

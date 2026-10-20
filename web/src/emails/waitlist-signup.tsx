@@ -20,7 +20,7 @@ export interface WaitlistSignupEmailProps {
   phone: string | null;
   source: string | null;
   submittedAt: string;
-  salonName?: string;
+  businessName?: string;
   logoUrl?: string | null;
 }
 
@@ -31,7 +31,7 @@ export function WaitlistSignupEmail({
   phone,
   source,
   submittedAt,
-  salonName = PLATFORM_PRODUCT_NAME,
+  businessName = PLATFORM_PRODUCT_NAME,
   logoUrl,
 }: WaitlistSignupEmailProps) {
   const rows: Array<[string, string | null]> = [
@@ -43,7 +43,7 @@ export function WaitlistSignupEmail({
   const filled = rows.filter((row): row is [string, string] => row[1] != null && row[1] !== "");
 
   return (
-    <EmailLayout businessName={salonName} previewText={t("waitlistSignup.preview")} logoUrl={logoUrl} t={t}>
+    <EmailLayout businessName={businessName} previewText={t("waitlistSignup.preview")} logoUrl={logoUrl} t={t}>
       <Text style={emailHeading}>{t("waitlistSignup.heading")}</Text>
       <Text style={emailMuted}>{t("waitlistSignup.joined", { when: submittedAt })}</Text>
       <Text style={emailMuted}>{t("waitlistSignup.note")}</Text>

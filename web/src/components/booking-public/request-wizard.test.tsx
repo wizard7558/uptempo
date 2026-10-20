@@ -35,9 +35,9 @@ function renderWizard(props: Partial<RequestWizardProps> = {}) {
     <NextIntlClientProvider locale="en" messages={messages}>
       <TermsProvider terms={VERTICALS.tattoo.terms}>
         <RequestWizard
-          salonId="s1"
-          salonName="Ink"
-          hasSalonLogo={false}
+          businessId="s1"
+          businessName="Ink"
+          hasBusinessLogo={false}
           clientSession={{ clientId: "c1", clientName: "Casey" }}
           fields={resolveRequestFields(VERTICALS.tattoo.requestFields)}
           services={[{ id: "svc-1", name: "Half-day session" }]}

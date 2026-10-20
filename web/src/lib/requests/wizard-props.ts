@@ -7,12 +7,13 @@ import { getBookingBrandingCached } from "@/lib/booking/cached-lookups";
 import { resolveRequestFields } from "./fields";
 import { earliestOpening, loadBooks, openStaffIds } from "./books";
 import { loadSchedulingSettings } from "@/lib/scheduling/load";
+import { getBookingVerificationChannel } from "@/lib/booking/verification-channel";
 import type { RequestWizardProps } from "@/components/booking-public/request-wizard";
 
 /** Everything the public request form needs, loaded for one tenant. */
 export async function loadRequestWizardProps(
   slug: string,
-  salon: { id: string; name: string },
+  business: { id: string; name: string },
 ): Promise<RequestWizardProps> {
   const tenant = await getTenantBySlug(slug);
   const vertical = getVertical(tenant?.industry);
@@ -67,9 +68,10 @@ export async function loadRequestWizardProps(
   }
 
   return {
-    salonId: salon.id,
-    salonName: salon.name,
-    hasSalonLogo: Boolean(branding?.logoUrl?.trim()),
+    verificationChannel: getBookingVerificationChannel(),
+    businessId: business.id,
+    businessName: business.name,
+    hasBusinessLogo: Boolean(branding?.logoUrl?.trim()),
     clientSession: data.client ? { clientId: data.client.id, clientName: data.client.name } : null,
     fields: resolveRequestFields(vertical.requestFields),
     services: data.serviceRows,

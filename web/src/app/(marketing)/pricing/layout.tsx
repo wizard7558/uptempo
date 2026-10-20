@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Pricing — Uptempo Bookings",
-  description:
-    "Simple, transparent pricing for the all-in-one platform to run your salon. Start free, upgrade when you're ready.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("marketing.pricing");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default function PricingLayout({
   children,

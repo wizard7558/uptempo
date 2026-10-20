@@ -38,13 +38,13 @@ export function BookingPreview({ settings }: { settings: BookingThemeSettings })
       >
         <div className="space-y-8">
           <ServiceStep
-            salonId="preview"
+            businessId="preview"
             clientId={null}
             selectedStaffId="any"
             selectedServiceIds={["signature"]}
             initialStaff={[
               {
-                id: "preview-stylist",
+                id: "preview-staff",
                 displayName: t("branding.previewStaff"),
                 photoUrl: null,
                 bio: null,
@@ -76,7 +76,7 @@ export function BookingPreview({ settings }: { settings: BookingThemeSettings })
             onLocation={() => {}}
             onAddress={() => {}}
             serviceIds={["signature"]}
-            salonTimezone="UTC"
+            businessTimezone="UTC"
             selectedDate={null}
             selectedTime={null}
             sampleSchedule={{

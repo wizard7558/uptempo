@@ -22,7 +22,7 @@ export async function updateBookingRules(
   data: BookingRules,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const session = await requireRole("owner", "admin");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = bookingRulesSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: "Invalid booking rules" };

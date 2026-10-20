@@ -1,5 +1,5 @@
 /**
- * Beauty Bank credit expiry — pure FIFO calculation.
+ * Stored value credit expiry — pure FIFO calculation.
  *
  * Credits are consumed oldest-first. Given the full ledger (oldest→newest) and a
  * cutoff time, we replay debits against credit "lots" and return the total of any

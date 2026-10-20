@@ -21,13 +21,13 @@ function requestHostname(headersList: Headers): string {
 }
 
 /**
- * Resolve the tenant slug from middleware header, the authenticated user's
- * record, or preview env.
+ * Resolve the tenant slug from the middleware header, the authenticated user's
+ * record, or an explicitly configured preview tenant.
  *
  * Order matters: `x-tenant-slug` (e.g. /book/:slug) wins first. If the user is
- * logged in with `user.tenant_slug` set, that comes **before** preview defaults
- * so admin/dashboard requests use the salon they belong to instead of the
- * preview pilot tenant (which would break feature gates like assistant seats).
+ * logged in with `user.tenant_slug` set, that wins before the preview slug so
+ * admin/dashboard requests use the business they belong to instead of an
+ * explicitly configured preview tenant (which would break feature gates like assistant seats).
  */
 async function resolveSlug(): Promise<string | null> {
   if (isSingleMode()) return getSingleTenantSlug();
@@ -65,7 +65,7 @@ async function resolveSlug(): Promise<string | null> {
 
 /**
  * Read tenant slug: middleware header, then authenticated user's tenant_slug,
- * then preview pilot slug when applicable.
+ * then the explicitly configured preview slug when applicable.
  */
 export async function getTenantSlug(): Promise<string> {
   const slug = await resolveSlug();

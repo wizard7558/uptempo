@@ -38,8 +38,9 @@ describe("schedule copy follows industry terms", () => {
     expect(html).not.toContain("tylist");
   });
 
-  it("keeps stylists for hair_salon", () => {
-    const html = render(VERTICALS.hair_salon.terms);
-    expect(html).toContain("No stylists configured. Add stylists in Settings.");
+  it.each(Object.values(VERTICALS))("uses the staff term for $id", (vertical) => {
+    const html = render(vertical.terms);
+    const plural = vertical.terms.staff.other.toLowerCase();
+    expect(html).toContain(`No ${plural} configured. Add ${plural} in Settings.`);
   });
 });

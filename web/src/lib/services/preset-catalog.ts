@@ -2,29 +2,32 @@ import {
   HAIR_SALON_PRESET_KEYS,
   hairSalon,
 } from "@/lib/verticals/hair-salon";
-import type { ServiceCategory } from "./categories";
+import { getVertical } from "@/lib/verticals";
 
 /**
- * Curated salon-service templates owners can one-click add to their catalog.
+ * Curated service templates business owners can add to their catalog with one click.
  * Each preset becomes a row in `services` with the listed defaults; owners
- * can edit afterwards or use it verbatim. Stylists then opt in and override
+ * can edit afterwards or use it verbatim. Staff members then opt in and override
  * pricing per their own services page.
  *
  * Pricing is a sensible national-average suggestion, not a recommendation.
  */
 export interface ServicePreset {
-  /** Stable identifier (snake_case). Used so a preset isn't re-added when
-   * already present in the catalog (matched on name). */
+  /** Stable identifier used by preset import; non-hair keys are pack-scoped. */
   key: string;
   name: string;
   description: string;
-  category: ServiceCategory;
+  category: string;
   defaultDurationMinutes: number;
   /** Suggested price in cents; owner overrides on save. */
   suggestedPriceCents: number;
   /** Optional active/processing split for color/perm services. */
   activeMinutes?: number;
   processingMinutes?: number;
+  depositType?: "fixed" | "percent";
+  depositAmount?: number;
+  isClass?: number;
+  classCapacity?: number;
 }
 
 export const SERVICE_PRESETS: ServicePreset[] = hairSalon.serviceTemplates.map(
@@ -33,7 +36,7 @@ export const SERVICE_PRESETS: ServicePreset[] = hairSalon.serviceTemplates.map(
       key: HAIR_SALON_PRESET_KEYS[i],
       name: t.name,
       description: t.description ?? "",
-      category: t.category as ServiceCategory,
+      category: t.category,
       defaultDurationMinutes: t.minutes,
       suggestedPriceCents: t.priceCents,
     };
@@ -45,8 +48,44 @@ export const SERVICE_PRESETS: ServicePreset[] = hairSalon.serviceTemplates.map(
   },
 );
 
+/** Returns the service templates for an industry pack as importable presets. */
+export function getServicePresetsForIndustry(
+  industry: string | null | undefined,
+): ServicePreset[] {
+  const vertical = getVertical(industry);
+  if (vertical.id === "hair_salon") return SERVICE_PRESETS;
+
+  return vertical.serviceTemplates.map((template) => {
+    const preset: ServicePreset = {
+      key: `${vertical.id}:${encodeURIComponent(template.name)}`,
+      name: template.name,
+      description: template.description ?? "",
+      category: template.category,
+      defaultDurationMinutes: template.minutes,
+      suggestedPriceCents: template.priceCents,
+    };
+    if (template.activeMinutes !== undefined) {
+      preset.activeMinutes = template.activeMinutes;
+    }
+    if (template.processingMinutes !== undefined) {
+      preset.processingMinutes = template.processingMinutes;
+    }
+    if (template.deposit !== undefined) {
+      preset.depositType = template.deposit.type;
+      preset.depositAmount = template.deposit.amount;
+    }
+    if (template.isClass !== undefined) {
+      preset.isClass = template.isClass ? 1 : 0;
+    }
+    if (template.capacity !== undefined) {
+      preset.classCapacity = template.capacity;
+    }
+    return preset;
+  });
+}
+
 /**
- * Returns presets that don't already exist in the salon catalog
+ * Returns presets that don't already exist in the business catalog
  * (matched case-insensitively on name).
  */
 export function filterUnusedPresets(

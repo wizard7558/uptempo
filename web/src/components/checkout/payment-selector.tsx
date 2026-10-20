@@ -8,21 +8,21 @@ export type PaymentMethod =
   | "card_on_file"
   | "new_card"
   | "cash"
-  | "beauty_bank";
+  | "stored_value";
 
 interface PaymentSelectorProps {
   hasCardOnFile: boolean;
   onSelect: (method: PaymentMethod) => void;
   selectedMethod: PaymentMethod | null;
   disabled?: boolean;
-  /** Member can pay full discounted services from BB (still disabled if tip > 0). */
+  /** Member can pay full discounted services from stored value (still disabled if tip > 0). */
   eligibleForFullBb: boolean;
   tipCents: number;
   memberDiscountPercent: number;
 }
 
 const cardOptions: {
-  value: Exclude<PaymentMethod, "beauty_bank">;
+  value: Exclude<PaymentMethod, "stored_value">;
   label: string;
   icon: typeof CreditCard;
   requiresCard?: boolean;
@@ -93,10 +93,10 @@ export function PaymentSelector({
         type="button"
         title={storedValueTitle}
         disabled={disabled || !storedValueUsable}
-        onClick={() => onSelect("beauty_bank")}
+        onClick={() => onSelect("stored_value")}
         className={cn(
           "flex w-full flex-col items-center gap-1.5 rounded-lg border p-3 text-sm transition-colors",
-          selectedMethod === "beauty_bank"
+          selectedMethod === "stored_value"
             ? "ring-2 ring-primary border-primary bg-primary/5"
             : "border-border hover:bg-muted/50",
           (disabled || !storedValueUsable) && "opacity-50 cursor-not-allowed",

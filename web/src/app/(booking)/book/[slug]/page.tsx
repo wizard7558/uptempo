@@ -2,19 +2,19 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { getStaffServices } from "@/actions/booking-public";
 import { getBookingSession } from "@/lib/booking/session-cookie";
-import { getBusinessSettingsForTenant } from "@/lib/policies/salon-policy";
+import { getBusinessSettingsForTenant } from "@/lib/policies/business-policy";
 import { withTenantDb } from "@/lib/db/tenant";
 import { getTenantSlug } from "@/lib/tenant/context";
 import { eq } from "drizzle-orm";
 import { clearBookingSession } from "@/lib/booking/session-cookie";
 import {
-  getSalonBySlugCached,
+  getBusinessBySlugCached,
   getBookingBrandingCached,
 } from "@/lib/booking/cached-lookups";
 import { getTenantBySlug, isTenantProvisioned } from "@/lib/tenant/registry";
 import { isBookingPageOpen } from "@/lib/onboarding/state";
 import { getT } from "@/lib/terms/server";
-import { salonPageMetadata } from "@/lib/seo/tenant-metadata";
+import { businessPageMetadata } from "@/lib/seo/tenant-metadata";
 import { BookingPageSkeleton } from "@/components/booking-public/page-skeletons";
 import { BookingWizard } from "./booking-wizard";
 import { getPublicBookingFlow } from "@/lib/requests/flow";
@@ -23,6 +23,7 @@ import { RequestWizard } from "@/components/booking-public/request-wizard";
 import { hasModule } from "@/lib/tenant/modules";
 import { hasUpcomingClasses } from "@/lib/classes/public";
 import { ClassScheduleCard } from "./classes/class-schedule";
+import { getBookingVerificationChannel } from "@/lib/booking/verification-channel";
 
 export async function generateMetadata({
   params,
@@ -30,9 +31,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return salonPageMetadata(slug, (salonName) => ({
-    title: `Book at ${salonName}`,
-    description: `Book your next appointment at ${salonName} — pick your service and time online, 24/7.`,
+  return businessPageMetadata(slug, (businessName) => ({
+    title: `Book at ${businessName}`,
+    description: `Book your next appointment at ${businessName} — pick your service and time online, 24/7.`,
   }));
 }
 
@@ -65,6 +66,7 @@ async function BookingPageContent({
 
   // Extract reschedule pre-fill params
   const rescheduleId = typeof query.reschedule === "string" ? query.reschedule : undefined;
+  // Keep stylist as a legacy alias for links already shared with clients.
   const prefillStaffId =
     (typeof query.staff === "string" ? query.staff : undefined) ??
     (typeof query.stylist === "string" ? query.stylist : undefined);
@@ -74,8 +76,8 @@ async function BookingPageContent({
   const locationParam =
     typeof query.location === "string" ? query.location.trim() : undefined;
 
-  const salon = await getSalonBySlugCached(slug);
-  if (!salon || !(await isTenantProvisioned(slug))) {
+  const business = await getBusinessBySlugCached(slug);
+  if (!business || !(await isTenantProvisioned(slug))) {
     notFound();
   }
 
@@ -84,7 +86,7 @@ async function BookingPageContent({
     const t = await getT("booking", slug);
     return (
       <main className="mx-auto max-w-lg px-6 py-16">
-        <h1 className="text-2xl font-medium">{salon.name}</h1>
+        <h1 className="text-2xl font-medium">{business.name}</h1>
         <p className="mt-3 text-sm">{t("unpublished")}</p>
       </main>
     );
@@ -111,8 +113,8 @@ async function BookingPageContent({
       : Promise.resolve(null),
   ]);
 
-  const salonTimezone = policy.timezone;
-  const hasSalonLogo = Boolean(branding?.logoUrl?.trim());
+  const businessTimezone = policy.timezone;
+  const hasBusinessLogo = Boolean(branding?.logoUrl?.trim());
 
   // Check for returning client session
   let clientSession: { clientId: string; clientName: string; clientPhone: string | null } | null = null;
@@ -146,7 +148,7 @@ async function BookingPageContent({
     );
   }
 
-  // Resolve prefill display data server-side (stylist name, service summary, duration)
+  // Resolve prefill display data server-side (staff name, service summary, duration)
   let prefillStaffName: string | undefined;
   let prefillServiceSummary: string | undefined;
   let prefillTotalDuration: number | undefined;
@@ -177,7 +179,7 @@ async function BookingPageContent({
   // when the module is on. ?flow=book always forces the classic wizard.
   const flow = query.flow === "book" ? "book" : await getPublicBookingFlow(tenantSlug);
   if (flow === "request") {
-    return <RequestWizard {...(await loadRequestWizardProps(tenantSlug, salon))} />;
+    return <RequestWizard {...(await loadRequestWizardProps(tenantSlug, business))} />;
   }
   // Class-first businesses open on the schedule. ?flow=book still reaches the wizard.
   if (flow === "class") redirect(`/book/${slug}/classes`);
@@ -190,11 +192,12 @@ async function BookingPageContent({
 
   const wizard = (
     <BookingWizard
-      salonId={salon.id}
-      salonSlug={slug}
-      salonName={salon.name}
-      hasSalonLogo={hasSalonLogo}
-      salonTimezone={salonTimezone}
+      verificationChannel={getBookingVerificationChannel()}
+      businessId={business.id}
+      businessSlug={slug}
+      businessName={business.name}
+      hasBusinessLogo={hasBusinessLogo}
+      businessTimezone={businessTimezone}
       requireCardOnFile={policy.requireCardOnFile === 1}
       clientSession={clientSession}
       waitlistEnabled={waitlistEnabled}

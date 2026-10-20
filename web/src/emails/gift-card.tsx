@@ -14,7 +14,7 @@ import {
 
 export interface GiftCardEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   purchaser: string;
   amount: string;
   code: string;
@@ -26,7 +26,7 @@ export interface GiftCardEmailProps {
 
 export function GiftCardEmail({
   t,
-  salonName,
+  businessName,
   purchaser,
   amount,
   code,
@@ -36,14 +36,14 @@ export function GiftCardEmail({
 }: GiftCardEmailProps) {
   return (
     <EmailLayout
-      businessName={salonName}
+      businessName={businessName}
       previewText={t("giftCard.heading")}
       logoUrl={logoUrl}
       t={t}
     >
       <Text style={emailHeading}>{t("giftCard.heading")}</Text>
       <Text style={emailText}>
-        {t("giftCard.body", { purchaser, amount, business: salonName })}
+        {t("giftCard.body", { purchaser, amount, business: businessName })}
       </Text>
       {message ? <Text style={emailText}>{message}</Text> : null}
       <Section style={codeBox}>
@@ -54,7 +54,7 @@ export function GiftCardEmail({
       <Link href={balanceUrl} style={linkStyle}>
         {t("giftCard.balanceLink")}
       </Link>
-      <Text style={fromStyle}>{t("giftCard.fromBusiness", { business: salonName })}</Text>
+      <Text style={fromStyle}>{t("giftCard.fromBusiness", { business: businessName })}</Text>
     </EmailLayout>
   );
 }

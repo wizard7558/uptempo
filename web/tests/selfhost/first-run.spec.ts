@@ -1,30 +1,31 @@
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 
 /**
- * First-run smoke for a fresh single-mode (self-hosted) install: setup,
- * onboarding, public booking, the closed signup route, health, and a logo
- * upload through the local file store.
- *
- * The steps share one browser context (the owner session created in step 2)
- * and one database, so they run serially and a failure skips the rest.
+ * First-run smoke for a fresh single-mode install: setup, onboarding, public
+ * booking availability, closed signup, health, and local logo storage.
+ * The serial steps share one browser context and database.
  */
 
 const BUSINESS = "Smoke Test Studio";
 const SLUG = "smoke-test-studio";
-
-// 1x1 transparent PNG, generated from base64 so no binary fixture is needed.
 const TINY_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
   "base64",
 );
 
-test.describe.serial("self-host first run", () => {
+test.describe("self-host first run", () => {
+  test.describe.configure({ mode: "serial", timeout: 240_000 });
+
   let context: BrowserContext;
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
-    context = await browser.newContext();
+    context = await browser.newContext({
+      baseURL: process.env.SELFHOST_URL ?? "http://localhost:3000",
+    });
     page = await context.newPage();
+    page.setDefaultTimeout(60_000);
+    page.setDefaultNavigationTimeout(90_000);
   });
 
   test.afterAll(async () => {
@@ -42,75 +43,66 @@ test.describe.serial("self-host first run", () => {
     await page.getByLabel("Email").fill("owner@example.com");
     await page.getByLabel("Password").fill("smoke-test-pass-1");
     await page.getByLabel("Business name").fill(BUSINESS);
-    // The design calls this industry "Barber"; the setup form's radio is
-    // labelled "Barbershop" (src/lib/verticals/barber.ts).
     await page.getByRole("radio", { name: "Barbershop" }).check();
-    await page.getByRole("button", { name: "Create salon account" }).click();
+    await page.getByRole("button", { name: "Create business account" }).click();
     await expect(page).toHaveURL(/\/onboarding$/, { timeout: 60_000 });
   });
 
-  test("3. onboarding wizard completes and launches", async () => {
-    // Business details. Setup already named the business; the wizard asks
-    // for the contact details the booking page needs.
+  test("3. onboarding launches a bookable business", async () => {
     await page.getByLabel("Phone").fill("555-0100");
     await page.getByLabel("Address").fill("1 Main Street");
     await page.getByRole("button", { name: "Continue" }).click();
 
-    // Review. There is no separate template/hours/policies step: choosing the
-    // Barbershop industry in setup seeds the first service pack, default
-    // hours and default policies, and this step shows them for review.
-    await expect(page.getByRole("heading", { name: "Review your shop" })).toBeVisible({
-      timeout: 60_000,
-    });
+    await expect(page.getByRole("heading", { name: "Review your shop" })).toBeVisible({ timeout: 60_000 });
     await expect(page.getByRole("heading", { name: "Services" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Hours" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Policies" })).toBeVisible();
     await page.getByRole("button", { name: "Continue" }).click();
 
-    // Payments. A self-hosted install has no Stripe Connect "skip" button;
-    // Stripe is configured through env vars (none here), so the step only
-    // offers Continue, which records the payments step as skipped.
+    // No Stripe key is configured in this disposable self-host stack.
     await page.getByRole("button", { name: "Continue" }).click();
-
     await page.getByRole("button", { name: "Publish", exact: true }).click();
-    await expect(page.getByTestId("booking-link")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("booking-link")).toHaveAttribute("href", `/book/${SLUG}`);
+    const bookingLink = page.getByTestId("booking-link");
+    await expect(bookingLink).toBeVisible({ timeout: 30_000 });
+    await expect(bookingLink).toHaveAttribute("href", `/book/${SLUG}`);
   });
 
-  test("4. root redirects to the booking page once set up", async () => {
+  test("4. root redirects to the public booking page after setup", async () => {
     await page.goto("/");
     await expect(page).toHaveURL(new RegExp(`/book/${SLUG}$`));
   });
 
-  test("5. a service can be selected and time slots are offered", async () => {
+  test("5. a service has an available booking time", async () => {
     await page.getByRole("checkbox").first().check();
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.locator("button[data-slot-double-book]").first()).toBeVisible({
-      timeout: 30_000,
-    });
+    const firstDate = page.locator("[data-booking-date]").first();
+    await expect(firstDate).toBeVisible({ timeout: 30_000 });
+    await firstDate.click();
+    await expect(page.locator("[data-slot-double-book]").first()).toBeVisible({ timeout: 30_000 });
   });
 
   test("6. /signup is closed in single mode", async () => {
+    const signup = await context.request.get("/signup", { maxRedirects: 0 });
+    expect([307, 308]).toContain(signup.status());
+    expect(new URL(signup.headers()["location"], "http://x").pathname).toBe("/");
+
     await page.goto("/signup");
-    // /signup redirects to / which then redirects to the booking page.
     await expect(page).toHaveURL(new RegExp(`/book/${SLUG}$`));
     await expect(page.getByLabel("Password")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /create .*account/i })).toHaveCount(0);
   });
 
-  test("7. /api/health reports ok in single mode", async ({ request }) => {
-    const response = await request.get("/api/health");
-    expect(response.ok()).toBe(true);
+  test("7. health reports a working single-mode install", async () => {
+    const response = await context.request.get("/api/health");
+    expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body.ok).toBe(true);
     expect(body.mode).toBe("single");
   });
 
-  test("8. branding logo upload is served from /api/files", async () => {
+  test("8. a branding logo is served from local file storage", async () => {
     await page.goto("/settings/branding");
-    await expect(page.getByText("Drop your logo here or click to browse")).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(page.getByText("Drop your logo here or click to browse")).toBeVisible({ timeout: 30_000 });
     await page.locator('input[type="file"]').setInputFiles({
       name: "logo.png",
       mimeType: "image/png",

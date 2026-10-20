@@ -45,7 +45,7 @@ interface CategoryMeta {
 }
 
 interface ServiceStepProps {
-  salonId: string;
+  businessId: string;
   clientId: string | null;
   selectedStaffId: string | null;
   selectedServiceIds: string[];
@@ -88,7 +88,7 @@ function priceLabel(priceCents: number | undefined, priceDisplay: string | undef
 }
 
 export function ServiceStep({
-  salonId,
+  businessId,
   clientId,
   selectedStaffId,
   selectedServiceIds,
@@ -130,7 +130,7 @@ export function ServiceStep({
     return () => {
       cancelled = true;
     };
-  }, [sample, salonId]);
+  }, [sample, businessId]);
 
   useEffect(() => {
     if (sample) return;
@@ -290,7 +290,13 @@ export function ServiceStep({
     const addons = isChecked ? addonsByPrimary[service.serviceId] ?? [] : [];
     return (
       <div key={service.serviceId} className="space-y-1">
-        <label className="flex min-h-11 cursor-pointer items-center gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--ivory-raised)] has-[:checked]:bg-[var(--ivory-raised)] has-[:checked]:shadow-[inset_3px_0_0_0_var(--ink)]">
+        <label
+          style={{ borderColor: isChecked ? "var(--accent)" : "var(--line)" }}
+          className={cn(
+            "flex min-h-11 cursor-pointer items-center gap-3 border border-[var(--line)] px-4 py-3.5 transition-colors hover:bg-[var(--ivory-raised)]",
+            isChecked && "bg-accent/10",
+          )}
+        >
           <Checkbox
             checked={isChecked}
             onCheckedChange={() =>
@@ -323,9 +329,11 @@ export function ServiceStep({
               return (
                 <label
                   key={addon.serviceId}
-                  className={`flex min-h-11 items-center gap-3 border border-[var(--line)] p-3 text-sm ${
-                    alsoPrimary ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-[var(--ivory-raised)]"
-                  } has-[:checked]:border-[var(--ink)] has-[:checked]:bg-[var(--ivory-raised)]`}
+                  className={cn(
+                    "flex min-h-11 items-center gap-3 border border-[var(--line)] p-3 text-sm",
+                    alsoPrimary ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-[var(--ivory-raised)]",
+                    addonChecked && "border-accent bg-accent/10",
+                  )}
                 >
                   <Checkbox
                     checked={addonChecked}
@@ -380,14 +388,14 @@ export function ServiceStep({
               className={cn(
                 "flex min-h-11 flex-col justify-center gap-1 border border-[var(--line)] p-4 text-left transition-all",
                 selectedId === ANY_STAFF_ID
-                  ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--ivory)] shadow-sm"
+                  ? "border-accent bg-accent text-accent-foreground shadow-sm"
                   : "hover:border-[var(--ink)] hover:bg-[var(--ivory-raised)]",
               )}
             >
-              <p className={cn("text-base font-medium", selectedId === ANY_STAFF_ID ? "text-[var(--ivory)]" : "text-[var(--ink)]")}>
+              <p className={cn("text-base font-medium", selectedId === ANY_STAFF_ID ? "text-accent-foreground" : "text-[var(--ink)]")}>
                 {t("staffStep.anyTitle")}
               </p>
-              <p className={cn("text-sm", selectedId === ANY_STAFF_ID ? "text-[var(--ivory)]/70" : "text-[var(--ink-soft)]")}>
+              <p className={cn("text-sm", selectedId === ANY_STAFF_ID ? "text-accent-foreground" : "text-[var(--ink-soft)]")}>
                 {t("staffStep.anyBody")}
               </p>
             </button>
@@ -402,7 +410,7 @@ export function ServiceStep({
                   className={cn(
                     "flex min-h-11 gap-3 border border-[var(--line)] p-4 text-left transition-all",
                     isSelected
-                      ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--ivory)] shadow-sm"
+                      ? "border-accent bg-accent text-accent-foreground shadow-sm"
                       : "hover:border-[var(--ink)] hover:bg-[var(--ivory-raised)]",
                   )}
                 >
@@ -411,11 +419,11 @@ export function ServiceStep({
                     <AvatarFallback className="text-sm">{getInitials(member.displayName)}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <p className={cn("text-base font-medium", isSelected ? "text-[var(--ivory)]" : "text-[var(--ink)]")}>
+                    <p className={cn("text-base font-medium", isSelected ? "text-accent-foreground" : "text-[var(--ink)]")}>
                       {member.displayName}
                     </p>
                     {member.bio && (
-                      <p className={cn("mt-0.5 line-clamp-2 text-sm", isSelected ? "text-[var(--ivory)]/70" : "text-[var(--ink-soft)]")}>
+                      <p className={cn("mt-0.5 line-clamp-2 text-sm", isSelected ? "text-accent-foreground" : "text-[var(--ink-soft)]")}>
                         {member.bio}
                       </p>
                     )}

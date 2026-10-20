@@ -1,4 +1,5 @@
 import { withTenantDb } from "@/lib/db/tenant";
+import { destinationRefundParams } from "@/lib/stripe/refund-params";
 import { getMultiServiceDuration } from "@/lib/services/duration";
 import { resolveBookingDeposit, type DepositPolicy } from "@/lib/services/deposits";
 import { processOffSessionCharge } from "@/lib/services/charge-processing";
@@ -173,6 +174,7 @@ export async function refundBookingDepositForTenant(
         stripePaymentIntentId: charges.stripePaymentIntentId,
         amountCents: charges.amountCents,
         status: charges.status,
+        connectAccountId: charges.connectAccountId,
       })
       .from(charges)
       .where(
@@ -187,6 +189,7 @@ export async function refundBookingDepositForTenant(
   try {
     const refund = await getStripe().refunds.create({
       payment_intent: completed.stripePaymentIntentId!,
+      ...destinationRefundParams(completed.connectAccountId),
     });
     await withTenantDb(slug, async (db, { charges }) => {
       await db

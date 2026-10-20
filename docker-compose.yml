@@ -72,11 +72,39 @@ services:
     depends_on:
       minio: { condition: service_healthy }
     entrypoint:
-      [
-        "/bin/sh",
-        "-c",
-        "mc alias set local http://minio:9000 \"$$S3_ACCESS_KEY_ID\" \"$$S3_SECRET_ACCESS_KEY\" && mc mb --ignore-existing local/$$S3_BUCKET && mc anonymous set download local/$$S3_BUCKET",
-      ]
+      - /bin/sh
+      - -euc
+      - |
+        : "$${S3_ACCESS_KEY_ID:?S3_ACCESS_KEY_ID is required}"
+        : "$${S3_SECRET_ACCESS_KEY:?S3_SECRET_ACCESS_KEY is required}"
+        : "$${S3_BUCKET:?S3_BUCKET is required}"
+
+        export LC_ALL=C
+        case "$${S3_BUCKET}" in
+          [a-z0-9]*[a-z0-9]) ;;
+          *) printf '%s\n' 'S3_BUCKET must be a valid DNS-style bucket name' >&2; exit 1 ;;
+        esac
+        case "$${S3_BUCKET}" in
+          *[!a-z0-9.-]*|*..*) printf '%s\n' 'S3_BUCKET must be a valid DNS-style bucket name' >&2; exit 1 ;;
+        esac
+        bucket_length=$${#S3_BUCKET}
+        if [ "$$bucket_length" -lt 3 ] || [ "$$bucket_length" -gt 63 ]; then
+          printf '%s\n' 'S3_BUCKET must be between 3 and 63 characters' >&2
+          exit 1
+        fi
+
+        mc alias set local http://minio:9000 "$${S3_ACCESS_KEY_ID}" "$${S3_SECRET_ACCESS_KEY}"
+        mc mb --ignore-existing "local/$${S3_BUCKET}"
+        mc anonymous set none "local/$${S3_BUCKET}"
+
+        policy_file=$$(mktemp)
+        trap 'rm -f "$$policy_file"' 0
+        trap 'exit 1' HUP INT TERM
+
+        cat > "$$policy_file" <<EOF
+        {"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":"*","Action":"s3:GetObject","Resource":"arn:aws:s3:::$${S3_BUCKET}/private/*","Condition":{"StringEquals":{"aws:PrincipalType":"Anonymous"}}},{"Effect":"Allow","Principal":"*","Action":"s3:GetObject","Resource":"arn:aws:s3:::$${S3_BUCKET}/*","Condition":{"StringEquals":{"aws:PrincipalType":"Anonymous"}}}]}
+        EOF
+        mc anonymous set-json "$$policy_file" "local/$${S3_BUCKET}"
 volumes:
   db-data: {}
   uploads: {}

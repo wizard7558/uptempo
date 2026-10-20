@@ -19,7 +19,7 @@ const minutes = z
 const baseShape = {
   staffId: z.string().uuid("Invalid staff ID"),
   serviceId: z.string().uuid("Invalid service ID"),
-  /** Per-stylist overrides; null clears the override and restores the catalog default. */
+  /** Per-staff overrides; null clears the override and restores the catalog default. */
   priceCents: cents,
   durationMinutes: z
     .number()

@@ -25,7 +25,7 @@ export async function renderFormRequestPreview(data: {
   const html = await render(
     FormRequestEmail({
       t,
-      salonName: branding.salonName,
+      businessName: branding.businessName,
       clientName: "Jane",
       formName: data.formName,
       formDescription: data.formDescription,
@@ -49,7 +49,7 @@ export async function renderAftercarePreview(data: {
   const html = await render(
     AftercareEmail({
       t,
-      salonName: branding.salonName,
+      businessName: branding.businessName,
       clientName: "Jane",
       templates: data.templates,
       logoUrl: branding.logoUrl,

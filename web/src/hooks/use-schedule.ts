@@ -23,13 +23,16 @@ export function useSchedule(initialDate?: Date) {
   const [dayAxis, setDayAxis] = useState<DayAxis>("people");
 
   const navigateDate = useCallback(
-    (direction: "prev" | "next") => {
-      if (viewMode === "month") {
+    (
+      direction: "prev" | "next",
+      navigationViewMode: ViewMode = viewMode,
+    ) => {
+      if (navigationViewMode === "month") {
         setCurrentDate((prev) =>
           direction === "next" ? addMonths(prev, 1) : subMonths(prev, 1),
         );
       } else {
-        const days = viewMode === "day" ? 1 : 7;
+        const days = navigationViewMode === "day" ? 1 : 7;
         setCurrentDate((prev) =>
           direction === "next" ? addDays(prev, days) : addDays(prev, -days),
         );

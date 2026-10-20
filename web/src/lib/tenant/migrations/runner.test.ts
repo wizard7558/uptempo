@@ -22,6 +22,11 @@ vi.mock("@/lib/db/schema", () => ({
   },
 }));
 
+vi.mock("@/lib/db/shards", () => ({
+  getShardForSlug: vi.fn(async () => "primary"),
+  getShardClient: vi.fn(),
+}));
+
 vi.mock("@/lib/tenant/registry", () => ({
   listActiveTenants: vi.fn(),
 }));
@@ -46,95 +51,192 @@ const mockMigrations = migrations as Array<{
   down?: ReturnType<typeof vi.fn>;
 }>;
 
+function mockForwardTransactions(
+  initialVersion: number,
+  failAtVersion?: { version: number; message: string },
+) {
+  let version = initialVersion;
+  let transactionCount = 0;
+  const lockedVersions: number[] = [];
+  const transactions: Array<{
+    execute: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  }> = [];
+
+  mockPublicDb.transaction.mockImplementation(
+    async (callback: (tx: unknown) => Promise<unknown>) => {
+      transactionCount++;
+      const lockedVersion = version;
+      lockedVersions.push(lockedVersion);
+      let executeCount = 0;
+      const tx = {
+        execute: vi.fn(async () => {
+          executeCount++;
+          if (executeCount === 1) return [{ v: lockedVersion }];
+          if (failAtVersion?.version === lockedVersion) {
+            throw new Error(failAtVersion.message);
+          }
+          return [];
+        }),
+        update: vi.fn(() => ({
+          set: vi.fn((values: { schemaVersion: number }) => {
+            version = values.schemaVersion;
+            return { where: vi.fn() };
+          }),
+        })),
+      };
+      transactions.push(tx);
+      return callback(tx);
+    },
+  );
+
+  return {
+    transactions,
+    lockedVersions,
+    get transactionCount() {
+      return transactionCount;
+    },
+    get version() {
+      return version;
+    },
+  };
+}
+
+function makeForwardTx(
+  lockedVersion: number | undefined,
+  onVersionUpdate?: (version: number) => void,
+) {
+  let executeCount = 0;
+  return {
+    execute: vi.fn(async () => {
+      executeCount++;
+      return executeCount === 1 && lockedVersion !== undefined
+        ? [{ v: lockedVersion }]
+        : [];
+    }),
+    update: vi.fn(() => ({
+      set: vi.fn((values: { schemaVersion: number }) => {
+        onVersionUpdate?.(values.schemaVersion);
+        return { where: vi.fn() };
+      }),
+    })),
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockMigrations.length = 0;
 });
 
 describe("migrateTenant", () => {
-  it("skips tenant already at latest version", async () => {
+  it("returns the locked version when there is no pending migration", async () => {
     mockMigrations.push({
       version: 2,
-      description: "test migration",
+      description: "already applied",
+      up: vi.fn(() => [sql`SELECT 1`]),
+    }, {
+      version: 3,
+      description: "also applied",
       up: vi.fn(() => [sql`SELECT 1`]),
     });
+    const db = mockForwardTransactions(3);
 
     const result = await migrateTenant("test", 2);
 
     expect(result).toEqual({
       slug: "test",
       fromVersion: 2,
-      toVersion: 2,
+      toVersion: 3,
       applied: 0,
     });
-    expect(mockPublicDb.transaction).not.toHaveBeenCalled();
+    expect(mockPublicDb.transaction).toHaveBeenCalledTimes(1);
+    expect(db.lockedVersions).toEqual([3]);
+    expect(mockMigrations.every((migration) => !migration.up.mock.calls.length)).toBe(true);
   });
 
-  it("applies pending migration and updates version", async () => {
-    const mockStmt = sql`ALTER TABLE test ADD COLUMN foo text`;
+  it("runs migrations in registry order from the locked version up to untilVersion", async () => {
+    const order: number[] = [];
     mockMigrations.push({
+      version: 3,
+      description: "third",
+      up: vi.fn(() => { order.push(3); return [sql`SELECT 3`]; }),
+    }, {
       version: 2,
-      description: "add foo column",
-      up: vi.fn(() => [mockStmt]),
+      description: "second",
+      up: vi.fn(() => { order.push(2); return [sql`SELECT 2`]; }),
+    }, {
+      version: 4,
+      description: "fourth",
+      up: vi.fn(() => { order.push(4); return [sql`SELECT 4`]; }),
     });
+    const db = mockForwardTransactions(1);
 
-    const mockTx = {
-      execute: vi.fn(),
-      update: vi.fn(() => ({
-        set: vi.fn(() => ({
-          where: vi.fn(),
-        })),
-      })),
-    };
-
-    mockPublicDb.transaction.mockImplementation(async (cb: (tx: typeof mockTx) => Promise<void>) => {
-      await cb(mockTx);
-    });
-
-    const result = await migrateTenant("test", 1);
+    const result = await migrateTenant("test", 0, 2);
 
     expect(result).toEqual({
       slug: "test",
-      fromVersion: 1,
+      fromVersion: 0,
       toVersion: 2,
       applied: 1,
     });
-    // Should have called execute for the row lock + migration statement
-    expect(mockTx.execute).toHaveBeenCalledTimes(2);
-    // Should have called update to set schemaVersion
-    expect(mockTx.update).toHaveBeenCalled();
+    expect(order).toEqual([2]);
+    expect(db.lockedVersions).toEqual([1, 2]);
+    expect(db.version).toBe(2);
+    expect(db.transactions).toHaveLength(2);
+    expect(mockMigrations.find((migration) => migration.version === 3)?.up).not.toHaveBeenCalled();
+    expect(mockMigrations.find((migration) => migration.version === 4)?.up).not.toHaveBeenCalled();
   });
 
-  it("stops on failed migration and returns error", async () => {
+  it("uses the locked version when the caller hint is ahead", async () => {
+    const order: number[] = [];
     mockMigrations.push(
       {
-        version: 2,
-        description: "succeeds",
-        up: vi.fn(() => [sql`SELECT 1`]),
+        version: 60,
+        description: "sixty",
+        up: vi.fn(() => { order.push(60); return [sql`SELECT 60`]; }),
       },
       {
-        version: 3,
-        description: "fails",
-        up: vi.fn(() => [sql`SELECT 1`]),
+        version: 59,
+        description: "fifty-nine",
+        up: vi.fn(() => { order.push(59); return [sql`SELECT 59`]; }),
       },
     );
+    const db = mockForwardTransactions(58);
 
-    let callCount = 0;
-    mockPublicDb.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<void>) => {
-      callCount++;
-      if (callCount === 2) {
-        throw new Error("DDL failed");
-      }
-      const mockTx = {
-        execute: vi.fn(),
-        update: vi.fn(() => ({
-          set: vi.fn(() => ({
-            where: vi.fn(),
-          })),
-        })),
-      };
-      await cb(mockTx);
+    const result = await migrateTenant("test", 59);
+
+    expect(result).toEqual({ slug: "test", fromVersion: 59, toVersion: 60, applied: 2 });
+    expect(order).toEqual([59, 60]);
+    expect(db.lockedVersions).toEqual([58, 59, 60]);
+  });
+
+  it("does not run DDL when the locked tenant row is missing", async () => {
+    const up = vi.fn(() => [sql`SELECT 1`]);
+    mockMigrations.push({ version: 2, description: "pending", up });
+    const tx = makeForwardTx(undefined);
+    mockPublicDb.transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => callback(tx));
+
+    const result = await migrateTenant("missing", 1);
+
+    expect(result).toMatchObject({
+      slug: "missing",
+      fromVersion: 1,
+      toVersion: 1,
+      applied: 0,
+      error: 'tenant "missing" not found in public.tenants',
     });
+    expect(tx.execute).toHaveBeenCalledTimes(1);
+    expect(tx.update).not.toHaveBeenCalled();
+    expect(up).not.toHaveBeenCalled();
+  });
+
+  it("stops on a failed migration and reports only completed work", async () => {
+    mockMigrations.push(
+      { version: 2, description: "succeeds", up: vi.fn(() => [sql`SELECT 1`]) },
+      { version: 3, description: "fails", up: vi.fn(() => [sql`SELECT 1`]) },
+    );
+
+    const db = mockForwardTransactions(1, { version: 2, message: "DDL failed" });
 
     const result = await migrateTenant("test", 1);
 
@@ -145,6 +247,7 @@ describe("migrateTenant", () => {
       applied: 1,
       error: "DDL failed",
     });
+    expect(db.transactionCount).toBe(2);
   });
 });
 
@@ -241,17 +344,10 @@ describe("applyPendingMigrations", () => {
       { slug: "beta", schemaVersion: 2 },
     ]);
 
-    const mockTx = {
-      execute: vi.fn(),
-      update: vi.fn(() => ({
-        set: vi.fn(() => ({
-          where: vi.fn(),
-        })),
-      })),
-    };
-
-    mockPublicDb.transaction.mockImplementation(async (cb: (tx: typeof mockTx) => Promise<void>) => {
-      await cb(mockTx);
+    let transactionIndex = 0;
+    mockPublicDb.transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => {
+      const lockedVersion = [1, 2, 2][transactionIndex++] ?? 2;
+      return callback(makeForwardTx(lockedVersion));
     });
 
     const results = await applyPendingMigrations();
@@ -274,21 +370,13 @@ describe("applyPendingMigrations", () => {
     ]);
 
     let txCallCount = 0;
-    mockPublicDb.transaction.mockImplementation(async (cb: (tx: unknown) => Promise<void>) => {
+    mockPublicDb.transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => {
       txCallCount++;
       // First call is for fail-tenant — throw
       if (txCallCount === 1) {
         throw new Error("connection refused");
       }
-      const mockTx = {
-        execute: vi.fn(),
-        update: vi.fn(() => ({
-          set: vi.fn(() => ({
-            where: vi.fn(),
-          })),
-        })),
-      };
-      await cb(mockTx);
+      return callback(makeForwardTx(txCallCount === 2 ? 1 : 2));
     });
 
     const results = await applyPendingMigrations();

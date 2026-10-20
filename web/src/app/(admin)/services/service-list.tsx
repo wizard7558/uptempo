@@ -115,11 +115,11 @@ interface ServiceListProps {
   initialServices: Service[];
   assistantSettingsEnabled: boolean;
   taskTypes: TaskTypeOption[];
-  /** Map of serviceId → number of active stylists currently offering it. */
+  /** Map of serviceId → number of active staff members currently offering it. */
   offeringCounts: Record<string, number>;
-  /** Curated presets the salon hasn't imported yet. */
+  /** Curated presets the business hasn't imported yet. */
   availablePresets: ServicePreset[];
-  /** Salon-defined categories (defaults + custom), ordered for display. */
+  /** Business-defined categories (defaults + custom), ordered for display. */
   categories: CategoryOption[];
   /** Map of serviceId → add-on serviceIds attached to it. */
   addonsByService: Record<string, string[]>;
@@ -127,8 +127,8 @@ interface ServiceListProps {
   resources: ResourceOption[];
   /** Map of serviceId → what that service needs from rooms and equipment. */
   needsByService: Record<string, ServiceNeedInput[]>;
-  /** Whether add-ons are available on the salon's plan. */
-  /** Whether deposits are available on the salon's plan. */
+  /** Whether add-ons are available on the business's plan. */
+  /** Whether deposits are available on the business's plan. */
   /** The classes module is on, so a service can run as a group class. */
   classesEnabled: boolean;
 }
@@ -161,6 +161,8 @@ export function ServiceList({
   const categoryLabel = (slug: string) =>
     categories.find((c) => c.slug === slug)?.name ??
     formatServiceCategory(slug);
+  const presetCategoryLabel = (slug: string) =>
+    categories.find((c) => c.slug === slug)?.name ?? "Other";
 
   async function handleDelete(svc: Service) {
     if (
@@ -230,6 +232,7 @@ export function ServiceList({
               </DialogHeader>
               <PresetPicker
                 presets={presets}
+                categoryLabel={presetCategoryLabel}
                 onImported={(created, importedKeys) => {
                   setServices((prev) => [...prev, ...created]);
                   setPresets((prev) =>
@@ -1275,9 +1278,11 @@ function ServiceForm({
 
 function PresetPicker({
   presets,
+  categoryLabel,
   onImported,
 }: {
   presets: ServicePreset[];
+  categoryLabel: (slug: string) => string;
   onImported: (created: Service[], importedKeys: string[]) => void;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1331,8 +1336,8 @@ function PresetPicker({
           onlineBookable: 1,
           bookingAudience: "all" as const,
           priceDisplay: "show" as const,
-          depositType: null,
-          depositAmount: null,
+          depositType: p.depositType ?? null,
+          depositAmount: p.depositAmount ?? null,
           bufferBeforeMin: 0,
           bufferAfterMin: 0,
           minNoticeMin: null,
@@ -1340,8 +1345,8 @@ function PresetPicker({
           slotIntervalMin: null,
           locationType: "in_studio" as const,
           variantOfServiceId: null,
-          isClass: 0,
-          classCapacity: null,
+          isClass: p.isClass ?? 0,
+          classCapacity: p.isClass === 1 ? (p.classCapacity ?? null) : null,
         };
       });
       toast.success(
@@ -1393,7 +1398,7 @@ function PresetPicker({
         {Object.entries(grouped).map(([category, items]) => (
           <div key={category} className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {formatServiceCategory(category)}
+              {categoryLabel(category)}
             </p>
             {items.map((preset) => {
               const isChecked = selected.has(preset.key);

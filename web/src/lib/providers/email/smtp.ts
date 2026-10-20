@@ -22,6 +22,7 @@ export function createSmtpEmailProvider(): EmailProvider {
         const info = await transport.sendMail({
           from: msg.from,
           to: msg.to,
+        ...(msg.bcc ? { bcc: msg.bcc } : {}),
           subject: msg.subject,
           html: msg.html,
           text: msg.text,

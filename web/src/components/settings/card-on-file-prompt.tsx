@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2 } from "lucide-react";
 
 /**
- * Prompt shown on Settings → Billing once Stripe is connected for a salon that
+ * Prompt shown on Settings → Billing once Stripe is connected for a business that
  * turned off "require card on file" when it skipped Stripe during onboarding.
  * Flipping the policy back on removes the prompt (the server condition that
  * renders it becomes false), so no explicit dismiss is needed.

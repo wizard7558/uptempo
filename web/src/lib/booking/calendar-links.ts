@@ -5,7 +5,7 @@ interface CalendarLinkInput {
   serviceSummary: string;
   start: Date;
   end: Date;
-  salonName: string;
+  businessName: string;
   location?: string | null;
 }
 
@@ -21,7 +21,7 @@ interface CalendarLinks {
 export function generateCalendarLinks(booking: CalendarLinkInput): CalendarLinks {
   const event = {
     title: `${booking.serviceSummary} with ${booking.staffName}`,
-    description: `Appointment at ${booking.salonName}`,
+    description: `Appointment at ${booking.businessName}`,
     start: booking.start,
     end: booking.end,
     location: booking.location ?? undefined,

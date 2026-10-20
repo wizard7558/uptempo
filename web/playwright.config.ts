@@ -25,6 +25,7 @@ process.env.BOOKING_SESSION_SECRET ||= "e2e-booking-session-secret";
  *   - setup: Seeds a real admin session in the database and saves storageState
  *   - admin: Admin tests that depend on setup (use storageState for auth)
  *   - booking: Public booking tests (no auth needed)
+ *   - marketing: Public marketing pages (no auth needed)
  *
  * External services (Stripe, Cronofy, Resend) are mocked via page.route()
  * so tests require no API keys.
@@ -37,11 +38,14 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
+  ...(process.env.CI ? { globalTimeout: 25 * 60 * 1000 } : {}),
   // One worker: every spec shares the single seeded test-salon tenant, and the
   // booking specs create appointments that consume the slots the others look
   // for (parallel runs made booking-flex / booking-flow fail intermittently).
   workers: 1,
-  reporter: process.env.CI ? "github" : "html",
+  reporter: process.env.CI
+    ? [["line"], ["github"], ["html", { open: "never" }]]
+    : "html",
 
   use: {
     baseURL: e2eBaseUrl,
@@ -58,7 +62,8 @@ export default defineConfig({
     // Admin tests -- require authentication
     {
       name: "admin",
-      testMatch: /admin-.*\.spec\.ts|appointment-work-mobile\.spec\.ts|custom-fields\.spec\.ts|branding-theme\.spec\.ts/,
+      testMatch:
+        /admin-.*\.spec\.ts|hosted-billing\.spec\.ts|text-line\.spec\.ts|appointment-work-mobile\.spec\.ts|custom-fields\.spec\.ts|branding-theme\.spec\.ts/,
       dependencies: ["setup"],
       use: {
         ...devices["Desktop Chrome"],
@@ -83,6 +88,15 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         storageState: "tests/e2e/.auth/admin.json",
+        trace: "retain-on-failure",
+      },
+    },
+
+    {
+      name: "marketing",
+      testMatch: /marketing\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
       },
     },
 
@@ -91,6 +105,17 @@ export default defineConfig({
       testMatch: /onboarding-timed\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
+      },
+    },
+
+    // Invitation acceptance uses a unique synthetic invitee and starts without
+    // the admin session created by the setup project.
+    {
+      name: "team-invitation",
+      testMatch: /team-invitation\.spec\.ts$/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: { cookies: [], origins: [] },
       },
     },
 
@@ -149,6 +174,7 @@ export default defineConfig({
       PAYMENTS_FAKE: "1",
       STORAGE_PROVIDER: "local",
       SMS_PROVIDER: "log",
+      TWILIO_PRIMARY_CUSTOMER_PROFILE_SID: "BU_E2E_PRIMARY_PROFILE",
       VERCEL_TEAM_ID: "team_e2e",
     },
   },

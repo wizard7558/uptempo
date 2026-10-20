@@ -22,6 +22,7 @@ import {
   uploadRequestPhoto,
 } from "@/actions/requests-public";
 import { checkPostalCodePublic } from "@/actions/on-site";
+import type { BookingVerificationChannel } from "@/lib/booking/verification-channel";
 
 const STEPS = ["service", "describe", "details", "send"] as const;
 type RequestStep = (typeof STEPS)[number];
@@ -39,9 +40,10 @@ type Photo = { id: string; name: string; previewUrl: string };
 type Client = { clientId: string; clientName: string };
 
 export interface RequestWizardProps {
-  salonId: string;
-  salonName: string;
-  hasSalonLogo: boolean;
+  businessId: string;
+  businessName: string;
+  hasBusinessLogo: boolean;
+  verificationChannel?: BookingVerificationChannel;
   clientSession: { clientId: string; clientName: string } | null;
   fields: RequestFieldDef[];
   services: { id: string; name: string }[];
@@ -72,9 +74,10 @@ function describeFields(fields: RequestFieldDef[]): RequestFieldDef[] {
 }
 
 export function RequestWizard({
-  salonId,
-  salonName,
-  hasSalonLogo,
+  businessId,
+  businessName,
+  hasBusinessLogo,
+  verificationChannel = "phone",
   clientSession,
   fields,
   services,
@@ -216,11 +219,11 @@ export function RequestWizard({
     return typeof v === "string" ? v : "";
   }
 
-  const header = hasSalonLogo ? (
-    <h1 className="sr-only">{salonName}</h1>
+  const header = hasBusinessLogo ? (
+    <h1 className="sr-only">{businessName}</h1>
   ) : (
     <div className="text-center">
-      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{salonName}</h1>
+      <h1 className="display text-3xl text-[var(--ink)] sm:text-4xl">{businessName}</h1>
     </div>
   );
 
@@ -353,7 +356,8 @@ export function RequestWizard({
 
       {step === "details" && (
         <DetailsStep
-          salonId={salonId}
+          verificationChannel={verificationChannel}
+          businessId={businessId}
           clientId={client?.clientId ?? null}
           clientName={client?.clientName ?? null}
           onComplete={(clientId, clientName) => {

@@ -4,7 +4,7 @@ import { emailButtonStyle, emailCenter, emailHeading, emailText, type EmailT } f
 
 interface RequestNewEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   heading: string;
   body: string;
   cta: string;
@@ -15,7 +15,7 @@ interface RequestNewEmailProps {
 
 export function RequestNewEmail({
   t,
-  salonName,
+  businessName,
   heading,
   body,
   cta,
@@ -24,7 +24,7 @@ export function RequestNewEmail({
   brandColor,
 }: RequestNewEmailProps) {
   return (
-    <EmailLayout businessName={salonName} previewText={heading} logoUrl={logoUrl} t={t}>
+    <EmailLayout businessName={businessName} previewText={heading} logoUrl={logoUrl} t={t}>
       <Text style={emailHeading}>{heading}</Text>
       <Text style={emailText}>{body}</Text>
       <Section style={emailCenter}>

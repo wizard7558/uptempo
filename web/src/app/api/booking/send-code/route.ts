@@ -2,11 +2,17 @@ import { getT } from "@/lib/terms/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import React from "react";
-import { createVerificationForTenant } from "@/lib/booking/otp";
+import {
+  createReviewVerificationForTenant,
+  createVerificationForTenant,
+  normalizeBookingIdentifier,
+  normalizeBookingPhone,
+  readReviewOtpConfig,
+} from "@/lib/booking/otp";
 import { sendEmail } from "@/lib/email/send";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { clientIpFrom } from "@/lib/http/client-ip";
-import { getTenantSlugForSalonId } from "@/lib/tenant/registry";
+import { getTenantSlugForBusinessId } from "@/lib/tenant/registry";
 import { getSmsProvider } from "@/lib/providers/sms";
 import { isLoopMessageConfigured } from "@/lib/sms/loopmessage";
 
@@ -19,7 +25,22 @@ const MAX_REQUESTS_PER_IP = 5;
 const sendCodeSchema = z.object({
   identifier: z.string().min(1, "Identifier is required"),
   phone: z.string().min(1).optional(),
-  salonId: z.string().uuid("Invalid ID"),
+  salonId: z.string().uuid("Invalid ID").optional(),
+  businessId: z.string().uuid("Invalid ID").optional(),
+}).superRefine(({ businessId, salonId }, context) => {
+  if (!businessId && !salonId) {
+    context.addIssue({
+      code: "custom",
+      message: "Invalid ID",
+      path: ["businessId"],
+    });
+  } else if (businessId && salonId && businessId !== salonId) {
+    context.addIssue({
+      code: "custom",
+      message: "Conflicting business IDs",
+      path: ["salonId"],
+    });
+  }
 });
 
 /** Send the verification code to a phone via iMessage (when LoopMessage is the
@@ -50,25 +71,41 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = sendCodeSchema.safeParse(body);
     if (!parsed.success) {
+      const invalidId = parsed.error.issues.some(
+        (issue) =>
+          (issue.path[0] === "businessId" || issue.path[0] === "salonId") &&
+          issue.message !== "Conflicting business IDs",
+      );
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+        {
+          error: invalidId
+            ? "Invalid ID"
+            : parsed.error.issues[0]?.message ?? "Invalid input",
+        },
         { status: 400 },
       );
     }
 
-    const { identifier, salonId, phone } = parsed.data;
-    const tenantSlug = await getTenantSlugForSalonId(salonId);
+    const normalized = normalizeBookingIdentifier(parsed.data.identifier);
+    const phone =
+      parsed.data.phone === undefined
+        ? undefined
+        : normalizeBookingPhone(parsed.data.phone);
+    if (!normalized || (parsed.data.phone !== undefined && !phone)) {
+      return NextResponse.json({ error: "Invalid identifier" }, { status: 400 });
+    }
+    const { identifier, type } = normalized;
+    const businessId = parsed.data.businessId ?? parsed.data.salonId;
+    if (!businessId) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+    const tenantSlug = await getTenantSlugForBusinessId(businessId);
     if (!tenantSlug) {
       return NextResponse.json(
         { error: (await getT("errors"))("bookingApi.placeNotFound") },
         { status: 404 },
       );
     }
-
-    // Detect type: email or phone
-    const type: "email" | "phone" = identifier.includes("@")
-      ? "email"
-      : "phone";
 
     // Rate limiting by identifier
     const identifierLimit = await consumeRateLimit({
@@ -99,6 +136,33 @@ export async function POST(req: NextRequest) {
         { error: "Too many requests. Please try again later." },
         { status: 429 },
       );
+    }
+
+    const reviewConfig = readReviewOtpConfig();
+    if (reviewConfig.email === identifier) {
+      if (
+        reviewConfig.status !== "valid" ||
+        reviewConfig.tenantSlug !== tenantSlug
+      ) {
+        return NextResponse.json(
+          { error: "Review access is unavailable" },
+          { status: 403 },
+        );
+      }
+
+      const reviewCode = await createReviewVerificationForTenant(
+        tenantSlug,
+        identifier,
+      );
+      if (!reviewCode) {
+        return NextResponse.json(
+          { error: "Review access is unavailable" },
+          { status: 403 },
+        );
+      }
+
+      // This challenge is persisted for the configured tenant and is never delivered or logged.
+      return NextResponse.json({ success: true, type: "email" });
     }
 
     // Generate and store verification code

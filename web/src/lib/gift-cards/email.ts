@@ -31,7 +31,7 @@ export async function sendGiftCardEmail(
     getEmailBranding(slug),
     getEmailT(slug, "emails"),
   ]);
-  const business = branding.salonName;
+  const business = branding.businessName;
   const purchaser = input.purchaserName?.trim() || business;
   const formatted = formatGiftCardCode(input.code);
   try {
@@ -40,7 +40,7 @@ export async function sendGiftCardEmail(
       subject: t("giftCard.subject", { purchaser, business }),
       react: GiftCardEmail({
         t,
-        salonName: business,
+        businessName: business,
         purchaser,
         amount: money(input.amountCents),
         code: formatted,
@@ -49,7 +49,7 @@ export async function sendGiftCardEmail(
         logoUrl: branding.logoUrl,
         brandColor: branding.brandColor,
       }),
-      salonName: business,
+      businessName: business,
     });
     if (!result.success) {
       console.error("[gift-cards] email was not sent", input.giftCardId);

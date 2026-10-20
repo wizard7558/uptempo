@@ -1,70 +1,89 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { SourceLink } from "@/components/layout/source-link";
+import { industrySlug, marketingIndustries } from "@/lib/marketing/industries";
 
-export function MarketingFooter() {
+const FOOTER_LINK =
+  "inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors hover:text-foreground";
+
+export async function MarketingFooter() {
+  const [t, nav] = await Promise.all([
+    getTranslations("marketing.footer"),
+    getTranslations("marketing.nav"),
+  ]);
   return (
-    <footer className="border-t border-[var(--line)] bg-[var(--ivory-raised)]">
+    <footer className="border-t border-border bg-background">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Image src="/uptempo.svg" alt="Uptempo" width={28} height={28} />
-              <span className="text-xs font-medium tracking-[0.16em] text-[var(--ink)]">
-                Uptempo
-              </span>
-            </div>
-            <p className="max-w-xs text-sm font-light leading-relaxed text-[var(--ink-soft)]">
-              The all-in-one platform to run your salon — booking, scheduling,
-              clients, payments, memberships, and revenue.
-            </p>
+            <Image src="/brand/wordmark.svg" alt="Uptempo" width={127} height={24} />
+            <p className="max-w-xs text-sm text-muted-foreground">{t("tagline")}</p>
           </div>
-          <div className="space-y-4">
-            <h3 className="eyebrow">Product</h3>
-            <nav className="flex flex-col gap-2">
-              <Link href="/#features" className="editorial-link text-xs">
-                Features
-              </Link>
-              <Link href="/pricing" className="editorial-link text-xs">
-                Pricing
-              </Link>
-              <Link href="/signup" className="editorial-link text-xs">
-                Get started
-              </Link>
-              <Link href="/waitlist" className="editorial-link text-xs">
-                Join the waitlist
-              </Link>
-            </nav>
+          <div>
+            <h2 className="text-sm font-medium text-foreground">{t("product")}</h2>
+            <ul className="mt-2">
+              <li>
+                <Link href="/pricing" className={FOOTER_LINK}>
+                  {nav("pricing")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/open-source" className={FOOTER_LINK}>
+                  {nav("openSource")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs" className={FOOTER_LINK}>
+                  {nav("docs")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/signup" className={FOOTER_LINK}>
+                  {nav("start")}
+                </Link>
+              </li>
+            </ul>
           </div>
-          <div className="space-y-4">
-            <h3 className="eyebrow">Legal</h3>
-            <nav className="flex flex-col gap-2">
-              <Link href="/privacy" className="editorial-link text-xs">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="editorial-link text-xs">
-                Terms of Service
-              </Link>
-              <Link href="/login" className="editorial-link text-xs">
-                Sign in
-              </Link>
-              <SourceLink className="editorial-link text-xs" />
-            </nav>
+          <div>
+            <h2 className="text-sm font-medium text-foreground">{t("industries")}</h2>
+            <ul className="mt-2">
+              {marketingIndustries().map((industry) => (
+                <li key={industry.id}>
+                  <Link href={`/for/${industrySlug(industry.id)}`} className={FOOTER_LINK}>
+                    {industry.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="text-sm font-medium text-foreground">{t("legal")}</h2>
+            <ul className="mt-2">
+              <li>
+                <Link href="/privacy" className={FOOTER_LINK}>
+                  {t("privacy")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className={FOOTER_LINK}>
+                  {t("terms")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/login" className={FOOTER_LINK}>
+                  {nav("signIn")}
+                </Link>
+              </li>
+              <li>
+                <SourceLink className={FOOTER_LINK} />
+              </li>
+            </ul>
           </div>
         </div>
-        <div className="mt-12 border-t border-[var(--line)] pt-6 text-center text-xs text-[var(--ink-soft)]">
-          <p>&copy; {new Date().getFullYear()} Uptempo. All rights reserved.</p>
-          <p className="mt-2">
-            Uptempo is an all-in-one salon booking and management platform.{" "}
-            <Link href="/privacy" className="editorial-link text-xs">
-              Privacy Policy
-            </Link>
-            {" · "}
-            <Link href="/terms" className="editorial-link text-xs">
-              Terms of Service
-            </Link>
-          </p>
-        </div>
+        <p className="mt-10 border-t border-border pt-6 text-sm text-muted-foreground">
+          {t("copyright", { year: new Date().getFullYear() })}
+        </p>
       </div>
     </footer>
   );

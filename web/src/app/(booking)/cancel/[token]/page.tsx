@@ -1,6 +1,6 @@
 import { getT } from "@/lib/terms/server";
 import { verifyActionToken } from "@/lib/email/tokens";
-import { getAppointment } from "@/actions/appointments";
+import { loadAppointmentForTenant } from "@/lib/appointments/load";
 import { format } from "date-fns";
 import { TZDate } from "@date-fns/tz";
 import { withTenantDb } from "@/lib/db/tenant";
@@ -38,7 +38,13 @@ export default async function CancelPage({
     );
   }
 
-  const appointment = await getAppointment(payload.appointmentId);
+  // The tenant comes from the signed link's appointment id, never from the
+  // request, and the unguarded loader is used because the client has no staff
+  // session.
+  const slug = await resolveTenantSlugForAppointment(payload.appointmentId);
+  const appointment = slug
+    ? await loadAppointmentForTenant(slug, payload.appointmentId)
+    : null;
 
   if (!appointment) {
     return (
@@ -68,7 +74,6 @@ export default async function CancelPage({
     );
   }
 
-  const slug = await resolveTenantSlugForAppointment(payload.appointmentId);
   if (!slug) {
     return (
       <div className="min-h-screen bg-[var(--ivory)] flex items-center justify-center">
@@ -82,7 +87,7 @@ export default async function CancelPage({
     );
   }
 
-  // Get salon policy from tenant schema
+  // Get business policy from tenant schema
   const policy = await withTenantDb(slug, async (db, { businessSettings }) => {
     const [p] = await db
       .select({
@@ -95,9 +100,9 @@ export default async function CancelPage({
     return p;
   });
 
-  // Get salon name from tenant registry (public schema)
+  // Get business name from tenant registry (public schema)
   const tenant = await getTenantBySlug(slug);
-  const salonName = tenant?.name ?? t("cancelPage.defaultName");
+  const businessName = tenant?.name ?? t("cancelPage.defaultName");
 
   const tz = policy?.timezone ?? "America/New_York";
 
@@ -166,7 +171,7 @@ export default async function CancelPage({
           appointmentId={appointment.id}
           isLateCancellation={isLateCancellation}
           potentialFeeCents={potentialFeeCents}
-          salonName={salonName}
+          businessName={businessName}
         />
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useT } from "@/lib/terms/client";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +19,10 @@ import { CheckCircle2, Circle, Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   checkSlugAvailability,
-  launchSalon,
+  launchBusiness,
   markOnboardingStepComplete,
   saveBusinessDetails,
-  setupSalonForOAuthUser,
+  setupBusinessForOAuthUser,
 } from "@/actions/onboarding";
 import type { LaunchPrereq } from "@/lib/onboarding/state";
 import type { DaySchedule } from "@/lib/scheduling/week";
@@ -108,7 +109,7 @@ export function OnboardingWizard({
   const [qr, setQr] = useState<string | null>(null);
 
   const [industry, setIndustry] = useState<VerticalId | null>(null);
-  const [profileSalonName, setProfileSalonName] = useState("");
+  const [profileBusinessName, setProfileBusinessName] = useState("");
   const [profileSlug, setProfileSlug] = useState("");
   const [profileTimezone, setProfileTimezone] = useState("America/New_York");
   const [profileSlugStatus, setProfileSlugStatus] = useState<
@@ -117,7 +118,7 @@ export function OnboardingWizard({
   const [profileSlugError, setProfileSlugError] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  const [salonName, setSalonName] = useState(catalog?.businessName ?? "");
+  const [businessName, setBusinessName] = useState(catalog?.businessName ?? "");
   const [phone, setPhone] = useState(catalog?.phone ?? "");
   const [address, setAddress] = useState(catalog?.address ?? "");
   const [businessError, setBusinessError] = useState<string | null>(null);
@@ -174,8 +175,8 @@ export function OnboardingWizard({
     setProfileError(null);
     startTransition(async () => {
       try {
-        const result = await setupSalonForOAuthUser({
-          salonName: profileSalonName,
+        const result = await setupBusinessForOAuthUser({
+          businessName: profileBusinessName,
           slug: profileSlug,
           timezone: profileTimezone,
           industry,
@@ -197,7 +198,7 @@ export function OnboardingWizard({
     startTransition(async () => {
       try {
         const result = await saveBusinessDetails({
-          salonName,
+          businessName,
           phone,
           address,
         });
@@ -233,7 +234,7 @@ export function OnboardingWizard({
   function handlePublish() {
     startTransition(async () => {
       try {
-        const result = await launchSalon();
+        const result = await launchBusiness();
         if (result.success) {
           setPublished(true);
           toast.success(t("wizard.live"));
@@ -313,11 +314,11 @@ export function OnboardingWizard({
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="profile-salon-name">{t("wizard.nameLabel")}</Label>
+                <Label htmlFor="profile-business-name">{t("wizard.nameLabel")}</Label>
                 <Input
-                  id="profile-salon-name"
-                  value={profileSalonName}
-                  onChange={(event) => setProfileSalonName(event.target.value)}
+                  id="profile-business-name"
+                  value={profileBusinessName}
+                  onChange={(event) => setProfileBusinessName(event.target.value)}
                   required
                 />
               </div>
@@ -352,7 +353,7 @@ export function OnboardingWizard({
                 type="button"
                 className="w-full"
                 onClick={handleProfileSubmit}
-                disabled={isPending || !profileSalonName || profileSlugStatus !== "available"}
+                disabled={isPending || !profileBusinessName || profileSlugStatus !== "available"}
               >
                 {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
                 {t("wizard.continue")}
@@ -374,8 +375,8 @@ export function OnboardingWizard({
             <Label htmlFor="business-name">{t("wizard.nameLabel")}</Label>
             <Input
               id="business-name"
-              value={salonName}
-              onChange={(event) => setSalonName(event.target.value)}
+              value={businessName}
+              onChange={(event) => setBusinessName(event.target.value)}
               required
             />
           </div>
@@ -403,7 +404,7 @@ export function OnboardingWizard({
           <Button
             type="button"
             onClick={handleBusinessSubmit}
-            disabled={isPending || !salonName.trim() || !phone.trim() || !address.trim()}
+            disabled={isPending || !businessName.trim() || !phone.trim() || !address.trim()}
           >
             {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
             {t("wizard.continue")}
@@ -464,7 +465,13 @@ export function OnboardingWizard({
                 {t("publish.copy")}
               </Button>
               {qr && (
-                <img src={qr} alt={t("publish.qr")} width={240} height={240} />
+                <Image
+                  src={qr}
+                  alt={t("publish.qr")}
+                  width={240}
+                  height={240}
+                  unoptimized
+                />
               )}
               <Button asChild className="w-full">
                 <Link href={homePath}>{t("publish.open")}</Link>

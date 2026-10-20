@@ -37,7 +37,7 @@ describe("createBookingSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects invalid UUID for stylistId", () => {
+  it("rejects invalid UUID for staffId", () => {
     const result = createBookingSchema.safeParse({
       ...validInput,
       staffId: "not-a-uuid",
@@ -92,12 +92,12 @@ describe("rescheduleBookingSchema", () => {
     newStartTime: "2026-03-15T14:00:00.000Z",
   };
 
-  it("accepts valid input without newStylistId", () => {
+  it("accepts valid input without newStaffId", () => {
     const result = rescheduleBookingSchema.safeParse(validInput);
     expect(result.success).toBe(true);
   });
 
-  it("accepts valid input with newStylistId", () => {
+  it("accepts valid input with newStaffId", () => {
     const result = rescheduleBookingSchema.safeParse({
       ...validInput,
       newStaffId: "b2c3d4e5-f6a7-4901-bcde-f12345678901",

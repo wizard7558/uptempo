@@ -48,7 +48,7 @@ export async function addCustomDomain(domain: string): Promise<{ success: true }
   try {
     validatedDomain = customDomainSchema.parse(domain);
   } catch {
-    return { success: false, error: "Invalid domain format. Enter a valid hostname (e.g., book.yoursalon.com)" };
+    return { success: false, error: "Invalid domain format. Enter a valid hostname (e.g., book.example.com)" };
   }
 
   // Check domain not already claimed

@@ -118,7 +118,7 @@ describe("runWorker", () => {
     ]);
   });
 
-  it("runs sms, push, and platform fees when those requirements are met", async () => {
+  it("runs sms and push jobs when those requirements are met", async () => {
     vi.stubEnv("UPTEMPO_MODE", "multi");
     vi.stubEnv("SMS_PROVIDER", "twilio");
     vi.stubEnv("APNS_KEY_ID", "key");
@@ -139,8 +139,42 @@ describe("runWorker", () => {
       "send-reminders",
       "send-sms-reminders",
       "send-push-reminders",
-      "charge-platform-fees",
       "waitlist-offers",
+      "sync-sms-registrations",
     ]);
+  });
+
+  it("runs the billing switch at 14:00 UTC in multi mode only", async () => {
+    vi.stubEnv("UPTEMPO_MODE", "multi");
+    vi.stubEnv("SMS_PROVIDER", "none");
+    const { sql, queries } = createSql((text, values) => {
+      if (text.includes("INSERT")) return [{ job_id: values[0] }];
+      if (text.includes("pg_try_advisory_lock")) return [{ locked: true }];
+      return [];
+    });
+    await tickAt("2026-10-11T13:59:59.000Z", sql);
+    const claimed = queries
+      .filter((query) => query.text.includes("INSERT INTO job_runs"))
+      .map((query) => query.values[0]);
+    expect(claimed).toContain("switch-billing");
+    expect(fetches.map((call) => call.url)).toContain(
+      "http://web:3000/api/cron/switch-billing",
+    );
+
+    fetches.length = 0;
+    vi.stubEnv("UPTEMPO_MODE", "single");
+    const single = createSql((text, values) => {
+      if (text.includes("INSERT")) return [{ job_id: values[0] }];
+      if (text.includes("pg_try_advisory_lock")) return [{ locked: true }];
+      return [];
+    });
+    await tickAt("2026-10-11T13:59:59.000Z", single.sql);
+    const singleClaimed = single.queries
+      .filter((query) => query.text.includes("INSERT INTO job_runs"))
+      .map((query) => query.values[0]);
+    expect(singleClaimed).not.toContain("switch-billing");
+    expect(fetches.map((call) => call.url)).not.toContain(
+      "http://web:3000/api/cron/switch-billing",
+    );
   });
 });

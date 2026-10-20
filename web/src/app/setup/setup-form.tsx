@@ -194,7 +194,7 @@ export function SetupForm() {
               Creating account...
             </>
           ) : (
-            "Create salon account"
+            "Create business account"
           )}
         </Button>
       </form>

@@ -463,7 +463,7 @@ export async function importClients(
   columnMappings: ColumnMapping[],
 ): Promise<ImportResult> {
   const { userId, tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 

@@ -2,17 +2,18 @@ import { requireRole } from "@/lib/auth/rbac";
 import { getConnectStatus } from "@/actions/connect";
 import { SettingsPageShell } from "@/components/settings/settings-page-shell";
 import { BillingStatus } from "./billing-status";
-import { getPlatformFeePreview } from "@/actions/billing-preview";
-import { getPlatformBillingSettings } from "@/actions/platform-billing";
+import { getHostedPlan } from "@/actions/hosted-billing";
 import { getBusinessSettings } from "@/actions/policies";
 import { getOnboardingState } from "@/actions/onboarding";
 import { isSingleMode } from "@/lib/config/mode";
 import { getTenantSlug } from "@/lib/tenant/context";
 import { getBaseUrl } from "@/lib/utils";
-import { PlatformFeePreviewCard } from "@/components/settings/platform-fee-preview";
-import { PlatformBillingCard } from "@/components/settings/platform-billing-card";
+import { getTenantBySlug } from "@/lib/tenant/registry";
+import { HostedPlanCard } from "@/components/settings/hosted-plan-card";
+import { getTerms } from "@/lib/terms/server";
 import { SelfHostedPaymentsCard } from "@/components/settings/self-hosted-payments-card";
 import { CardOnFilePrompt } from "@/components/settings/card-on-file-prompt";
+import { BillingSwitchNotice } from "@/components/settings/billing-switch-notice";
 
 export default async function BillingPage() {
   const { tenantSlug } = await requireRole("owner");
@@ -33,18 +34,17 @@ export default async function BillingPage() {
 
   const slug = tenantSlug ?? (await getTenantSlug());
 
-  const [status, feePreview, billingSettings, policy, onboardingState] =
+  const [status, plan, policy, onboardingState, tenant, terms] =
     await Promise.all([
       getConnectStatus(),
-      getPlatformFeePreview().catch(() => null),
-      getPlatformBillingSettings().catch(() => null),
+      getHostedPlan().catch(() => null),
       getBusinessSettings(),
       getOnboardingState(slug),
+      getTenantBySlug(slug),
+      getTerms(slug),
     ]);
 
-  const billingEnabled = billingSettings?.billingEnabled ?? false;
-
-  // Re-offer card-on-file only for salons that skipped Stripe during setup (which
+  // Re-offer card-on-file only for businesses that skipped Stripe during setup (which
   // forced the requirement off) and have since connected a charge-ready account.
   const showCardOnFilePrompt =
     status.connected &&
@@ -57,12 +57,13 @@ export default async function BillingPage() {
       title="Billing & Payouts"
       description="Connect your Stripe account to accept payments and receive payouts."
     >
-      {feePreview ? (
-        <PlatformFeePreviewCard preview={feePreview} billed={billingEnabled} />
-      ) : null}
-      {billingEnabled && billingSettings ? (
-        <PlatformBillingCard settings={billingSettings} />
-      ) : null}
+      {tenant?.comped === 1 ? null : (
+        <BillingSwitchNotice
+          noticeSentAt={tenant?.billingNoticeSentAt ?? null}
+          switchAt={tenant?.billingSwitchAt ?? null}
+        />
+      )}
+      <HostedPlanCard plan={plan} terms={terms} timezone={tenant?.timezone} />
       {showCardOnFilePrompt ? <CardOnFilePrompt /> : null}
       <BillingStatus status={status} />
     </SettingsPageShell>

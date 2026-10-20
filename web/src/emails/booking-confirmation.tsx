@@ -6,7 +6,7 @@ import { emailHeading, emailMuted, type EmailT } from "./components/score";
 
 interface BookingConfirmationProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   clientName: string;
   staffName: string;
   services: string[];
@@ -24,7 +24,7 @@ interface BookingConfirmationProps {
 
 export function BookingConfirmation({
   t,
-  salonName,
+  businessName,
   clientName,
   staffName,
   services,
@@ -46,8 +46,8 @@ export function BookingConfirmation({
 
   return (
     <EmailLayout
-      businessName={salonName}
-      previewText={t("confirmation.preview", { business: salonName })}
+      businessName={businessName}
+      previewText={t("confirmation.preview", { business: businessName })}
       logoUrl={logoUrl}
       t={t}
     >

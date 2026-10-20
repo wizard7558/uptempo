@@ -44,7 +44,7 @@ vi.mock("@/lib/terms/server", () => ({
 vi.mock("@/lib/terms/email", () => ({
   getEmailT: async (_slug: string, ns: string) => createTermsT(VERTICALS.home_services.terms, ns),
 }));
-vi.mock("@/lib/policies/salon-policy", () => ({ getBusinessSettingsForTenant: vi.fn() }));
+vi.mock("@/lib/policies/business-policy", () => ({ getBusinessSettingsForTenant: vi.fn() }));
 vi.mock("@/lib/geo/postal", () => ({
   lookupPostalCentroid: vi.fn(),
   nearestPostal: vi.fn(),

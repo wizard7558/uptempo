@@ -26,7 +26,7 @@ export interface OrderView {
   createdAt: string;
 }
 
-/** Recent storefront orders for the current salon, newest first. */
+/** Recent storefront orders for the current business, newest first. */
 export async function listOrders(limit = 50): Promise<OrderView[]> {
   const { tenantSlug: slug } = await requireStaff();
   return withTenantDb(slug, async (db, t) => {

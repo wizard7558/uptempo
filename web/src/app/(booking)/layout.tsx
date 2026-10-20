@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { UserCircle } from "lucide-react";
 import { getBookingBrandingCached } from "@/lib/booking/cached-lookups";
 import { bookingThemeFromRow, bookingThemeStyle } from "@/lib/booking/theme";
+import { AppProviders } from "@/components/app-providers";
 import { PoweredByBadge } from "@/components/booking-public/powered-by-badge";
 import { NativeTabBar } from "@/components/booking-public/native-tab-bar";
 import { getTenantSlugOrNull } from "@/lib/tenant/context";
@@ -11,7 +12,6 @@ import { isTenantProvisioned } from "@/lib/tenant/registry";
 import { getBookingSession } from "@/lib/booking/session-cookie";
 import { TermsProvider } from "@/lib/terms/client";
 import { getT, getTerms } from "@/lib/terms/server";
-import { NativeBridge } from "@/components/native/native-bridge";
 import { SourceLink } from "@/components/layout/source-link";
 
 function BookingHeader({
@@ -67,6 +67,7 @@ export default async function BookingGroupLayout({
   // No tenant context — render children without branding
   if (!slug) {
     return (
+      <AppProviders>
       <TermsProvider terms={terms}>
         <div
           className="light min-h-screen bg-background text-foreground"
@@ -78,9 +79,9 @@ export default async function BookingGroupLayout({
             <SourceLink className="text-xs text-muted-foreground" />
           </footer>
           <NativeTabBar />
-          <NativeBridge />
         </div>
       </TermsProvider>
+      </AppProviders>
     );
   }
 
@@ -93,6 +94,7 @@ export default async function BookingGroupLayout({
   const showPoweredBy = branding?.showPoweredBy !== 0;
 
   return (
+    <AppProviders>
     <TermsProvider terms={terms}>
     <div
       className={`${theme.className} min-h-screen bg-background text-foreground`}
@@ -122,8 +124,8 @@ export default async function BookingGroupLayout({
         <SourceLink className="text-xs text-muted-foreground" />
       </footer>
       <NativeTabBar />
-      <NativeBridge />
     </div>
     </TermsProvider>
+    </AppProviders>
   );
 }

@@ -36,7 +36,7 @@ beforeEach(() => {
   mocks.requireRole.mockResolvedValue({
     userId: "u",
     role: "owner",
-    tenantSlug: "salon-x",
+    tenantSlug: "business-x",
   });
   mocks.where.mockResolvedValue(undefined);
   mocks.set.mockReturnValue({ where: mocks.where });
@@ -64,7 +64,7 @@ describe("setModuleEnabled", () => {
     expect(mocks.trackEvent).toHaveBeenCalledWith(
       "module.toggled",
       { moduleId: "aftercare", enabled: true },
-      { tenantSlug: "salon-x" },
+      { tenantSlug: "business-x" },
     );
   });
 

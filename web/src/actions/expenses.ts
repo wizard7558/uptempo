@@ -30,7 +30,7 @@ import { trackEvent } from "@/lib/analytics/events";
 
 async function authorize(): Promise<string> {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   return tenantSlug;
 }
 

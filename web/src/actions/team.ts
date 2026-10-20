@@ -15,6 +15,7 @@ import { normalizeTeamRole, type TeamRole } from "@/lib/auth/permissions";
 import { auth } from "@/lib/auth/server";
 import { hasModule } from "@/lib/tenant/modules";
 import { withTenantDb } from "@/lib/db/tenant";
+import { syncBillableStaff } from "@/lib/billing/billable-staff";
 import { sendEmail } from "@/lib/email/send";
 import { TeamInviteEmail } from "@/emails/team-invite";
 import { eq, and, desc, lt, asc, inArray } from "drizzle-orm";
@@ -39,7 +40,7 @@ function userMembershipsTag(userId: string): string {
  */
 export async function listTeamMembers() {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   const members = await publicDb
@@ -62,7 +63,7 @@ const TEAM_INVITATIONS_UNAVAILABLE_MESSAGE =
   "Team invitations are unavailable until the latest database migration is applied.";
 
 /**
- * Create a tenant stylist row for a team member when one does not already exist.
+ * Create a tenant staff row for a team member when one does not already exist.
  */
 async function insertStaffForTeamMember(params: {
   tenantSlug: string;
@@ -71,6 +72,7 @@ async function insertStaffForTeamMember(params: {
   email: string;
   invitationRole: string;
 }) {
+  let inserted = false;
   await withTenantDb(
     params.tenantSlug,
     async (db, { staff }) => {
@@ -86,8 +88,10 @@ async function insertStaffForTeamMember(params: {
         email: params.email.toLowerCase(),
         ...(params.invitationRole === "assistant" ? { role: "assistant" } : {}),
       });
+      inserted = true;
     },
   );
+  if (inserted) await syncBillableStaff(params.tenantSlug);
 }
 
 function isMissingTeamInvitationsTableError(error: unknown): boolean {
@@ -104,14 +108,14 @@ function isMissingTeamInvitationsTableError(error: unknown): boolean {
 
 /**
  * Send a team invitation email.
- * Only owners can invite new team members.
+ * Owners and admins can invite new team members.
  */
 export async function sendInvitation(data: {
   email: string;
   role: TeamRole;
 }): Promise<{ success: true } | { success: false; error: string }> {
   const { userId, role: callerRole, tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -188,7 +192,7 @@ export async function sendInvitation(data: {
       expiresAt,
     });
 
-    // Get inviter name and salon name for the email
+    // Get inviter name and business name for the email
     const [inviter] = await publicDb
       .select({ name: user.name })
       .from(user)
@@ -206,27 +210,47 @@ export async function sendInvitation(data: {
       getEmailBranding(slug),
     ]);
     const inviterName = inviter?.name ?? emailT("fallbacks.yourPlaceTeam");
-    const salonName = tenant?.name ?? branding.salonName;
+    const businessName = tenant?.name ?? branding.businessName;
     const staffLabel = (await getTenantTerms(slug)).staff.one;
 
     // Build accept URL
     const acceptUrl = `${getBaseUrl()}/invite/${token}`;
 
     // Send invitation email
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: data.email.toLowerCase(),
-      subject: emailT("team.subject", { business: salonName }),
+      subject: emailT("team.subject", { business: businessName }),
       react: TeamInviteEmail({
         t: emailT,
-        salonName,
+        businessName,
         inviterName,
         roleLabel: teamRoleLabel(data.role, staffLabel),
         acceptUrl,
         logoUrl: branding.logoUrl,
         brandColor: branding.brandColor,
       }),
-      salonName,
+      businessName,
     });
+
+    if (!emailResult.success) {
+      const expiredAt = new Date();
+      await publicDb
+        .update(teamInvitations)
+        .set({ status: "expired", expiresAt: expiredAt, updatedAt: expiredAt })
+        .where(
+          and(
+            eq(teamInvitations.token, token),
+            eq(teamInvitations.tenantSlug, slug),
+            eq(teamInvitations.status, "pending"),
+          ),
+        );
+
+      revalidatePath("/settings/team");
+      return {
+        success: false,
+        error: "Could not send the invitation. Please try again.",
+      };
+    }
 
     revalidatePath("/settings/team");
     trackEvent("team.invited", { role: normalizeTeamRole(data.role) }, { tenantSlug: slug });
@@ -266,7 +290,7 @@ export async function listInvitations(): Promise<{
   unavailable: boolean;
 }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   try {
@@ -318,7 +342,7 @@ export async function resendInvitation(
   invitationId: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -370,7 +394,7 @@ export async function revokeInvitation(
   invitationId: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -419,7 +443,7 @@ export async function getInvitationByToken(token: string): Promise<{
     role: string;
     tenantSlug: string;
   };
-  salonName: string;
+  businessName: string;
 } | null> {
   const [invitation] = await publicDb
     .select({
@@ -448,7 +472,7 @@ export async function getInvitationByToken(token: string): Promise<{
   // Check if already used/revoked
   if (invitation.status !== "pending") return null;
 
-  // Get salon name
+  // Get business name
   const [tenant] = await publicDb
     .select({ name: tenants.name })
     .from(tenants)
@@ -462,7 +486,7 @@ export async function getInvitationByToken(token: string): Promise<{
       role: invitation.role,
       tenantSlug: invitation.tenantSlug,
     },
-    salonName: tenant?.name ?? invitation.tenantSlug,
+    businessName: tenant?.name ?? invitation.tenantSlug,
   };
 }
 
@@ -535,7 +559,7 @@ export async function acceptInvitation(
       // Invitations created before public migration 0026 may still carry 'stylist'.
       normalizeTeamRole(invitation.role),
     );
-    revalidateTag(userMembershipsTag(newUser.user.id));
+    revalidateTag(userMembershipsTag(newUser.user.id), { expire: 0 });
 
     await insertStaffForTeamMember({
       tenantSlug: invitation.tenantSlug,
@@ -588,9 +612,9 @@ export async function acceptInvitation(
 
 /**
  * Accept an invitation for a user who already has an account (same email as the invite).
- * Requires an active session matching the invitation email. Switches active tenant to the new salon.
+ * Requires an active session matching the invitation email. Switches active tenant to the new business.
  */
-export async function joinSalonFromInvitation(
+export async function joinBusinessFromInvitation(
   token: string,
 ): Promise<
   { success: true; tenantSlug: string } | { success: false; error: string }
@@ -644,7 +668,7 @@ export async function joinSalonFromInvitation(
       // Invitations created before public migration 0026 may still carry 'stylist'.
       normalizeTeamRole(invitation.role),
     );
-    revalidateTag(userMembershipsTag(session.user.id));
+    revalidateTag(userMembershipsTag(session.user.id), { expire: 0 });
 
     const displayName = session.user.name?.trim() || invitation.email.split("@")[0];
     await insertStaffForTeamMember({
@@ -688,11 +712,11 @@ export async function joinSalonFromInvitation(
 export type UserMembershipRow = {
   tenantSlug: string;
   role: string;
-  salonName: string;
+  businessName: string;
 };
 
 /**
- * All salons the current user belongs to (for the tenant switcher).
+ * All businesses the current user belongs to (for the business switcher).
  */
 export async function listUserMemberships(): Promise<{
   memberships: UserMembershipRow[];
@@ -715,7 +739,7 @@ export async function listUserMemberships(): Promise<{
         .select({
           tenantSlug: memberships.tenantSlug,
           role: memberships.role,
-          salonName: tenants.name,
+          businessName: tenants.name,
         })
         .from(memberships)
         .innerJoin(tenants, eq(tenants.slug, memberships.tenantSlug))
@@ -727,7 +751,7 @@ export async function listUserMemberships(): Promise<{
         activeTenantSlug: dbUser?.tenantSlug ?? null,
       };
     },
-    ["user-memberships", session.user.id],
+    ["user-memberships-v2", session.user.id],
     {
       revalidate: USER_MEMBERSHIPS_CACHE_TTL_SECONDS,
       tags: [userMembershipsTag(session.user.id)],
@@ -736,7 +760,7 @@ export async function listUserMemberships(): Promise<{
 }
 
 /**
- * Switch the active salon for the current user (updates denormalized user.role / user.tenant_slug).
+ * Switch the active business for the current user (updates denormalized user.role / user.tenant_slug).
  */
 export async function switchActiveTenant(
   tenantSlug: string,
@@ -767,7 +791,7 @@ export async function switchActiveTenant(
 
     await setActiveTenantForUser(session.user.id, tenantSlug, row.role);
     revalidatePath("/", "layout");
-    revalidateTag(userMembershipsTag(session.user.id));
+    revalidateTag(userMembershipsTag(session.user.id), { expire: 0 });
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) throw error;

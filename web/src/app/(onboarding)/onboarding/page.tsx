@@ -94,14 +94,14 @@ export default async function OnboardingPage({
   const onboardingState = await getOnboardingState(tenantSlug);
   const homePath = landingPathForRole(await getUserRole());
 
-  // A launched shop goes home. launchSalon revalidates this page, and that
+  // A launched shop goes home. launchBusiness revalidates this page, and that
   // re-render (a Next-Action request) must leave the owner on the link they
   // just published.
   if (onboardingState?.launched && !(await headers()).has("next-action")) {
     redirect(homePath);
   }
 
-  // Fetch stylists and initial hours for the hours step
+  // Fetch staff members and initial hours for the hours step
   let staff: Array<{ id: string; displayName: string }> = [];
   let initialHours: DaySchedule[] = [];
   let locations: Array<{ id: string; name: string; address: string | null }> = [];

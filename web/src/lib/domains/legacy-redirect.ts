@@ -1,9 +1,9 @@
 /**
  * Canonical host redirects onto `https://www.bookuptempo.com`.
  *
- * `byrende.com` and `www.byrende.com` stay attached to this project. Page,
- * booking, login, and auth traffic 308s to the canonical host so cookies and
- * emailed links share one origin. Apex `bookuptempo.com` does the same.
+ * Apex `bookuptempo.com` 308s to the www host so cookies and emailed links
+ * share one origin. `www.bookuptempo.com` is absent from the redirect set
+ * on purpose.
  *
  * A few server callbacks do not follow redirects, so they stay on the host
  * that received them. Stripe, Twilio, LoopMessage, and Vercel cron are
@@ -17,11 +17,7 @@ export const NEW_PRIMARY_ORIGIN = "https://www.bookuptempo.com";
  * Hosts that should not serve the app themselves.
  * `www.bookuptempo.com` is absent on purpose.
  */
-const REDIRECT_HOSTS = new Set([
-  "byrende.com",
-  "www.byrende.com",
-  "bookuptempo.com",
-]);
+const REDIRECT_HOSTS = new Set(["bookuptempo.com"]);
 
 /**
  * Path prefixes left on the incoming host. A prefix matches exactly or as

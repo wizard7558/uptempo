@@ -3,12 +3,12 @@ import { TZDate } from "@date-fns/tz";
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export function formatSalonDay(at: Date, tz: string): string {
+export function formatBusinessDay(at: Date, tz: string): string {
   const z = new TZDate(at, tz);
   return `${WEEKDAYS[z.getDay()]}, ${MONTHS[z.getMonth()]} ${z.getDate()}`;
 }
 
-export function formatSalonTime(at: Date, tz: string): string {
+export function formatBusinessTime(at: Date, tz: string): string {
   const z = new TZDate(at, tz);
   const ap = z.getHours() >= 12 ? "PM" : "AM";
   let h = z.getHours() % 12;

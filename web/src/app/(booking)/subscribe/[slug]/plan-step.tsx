@@ -24,7 +24,7 @@ const CHIP_DOLLARS = [100, 150, 200, 300];
 
 interface PlanStepProps {
   plans: SubscribePlanRow[];
-  salonName: string;
+  businessName: string;
   initialPlanId: string | null;
   /** Passes the chosen plan and, for custom-amount plans, the dollar amount in cents. */
   onContinue: (planId: string, customAmountCents: number | null) => void;
@@ -32,7 +32,7 @@ interface PlanStepProps {
 
 export function PlanStep({
   plans,
-  salonName,
+  businessName,
   initialPlanId,
   onContinue,
 }: PlanStepProps) {
@@ -77,7 +77,7 @@ export function PlanStep({
             : "Choose your plan"}
         </h2>
         <p className="text-sm text-[var(--ink-soft)] mt-1">
-          {salonName} — {t("subscribeWizard.membershipTitle")}
+          {businessName} — {t("subscribeWizard.membershipTitle")}
         </p>
       </div>
 

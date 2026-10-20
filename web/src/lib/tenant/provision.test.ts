@@ -72,8 +72,8 @@ describe("tenant provisioning (integration)", () => {
     if (!DATABASE_URL) return;
     pair = { slugA: makeTestSlug(), slugB: makeTestSlug() };
     await Promise.all([
-      provisionTenantSchema({ name: "Salon A", slug: pair.slugA }),
-      provisionTenantSchema({ name: "Salon B", slug: pair.slugB }),
+      provisionTenantSchema({ name: "Business A", slug: pair.slugA }),
+      provisionTenantSchema({ name: "Business B", slug: pair.slugB }),
     ]);
   }, 180_000);
 
@@ -82,7 +82,7 @@ describe("tenant provisioning (integration)", () => {
     async () => {
       const slug = makeTestSlug();
       const result = await provisionTenantSchema({
-        name: "Test Salon",
+        name: "Test Business",
         slug,
       });
 
@@ -104,7 +104,7 @@ describe("tenant provisioning (integration)", () => {
     "creates all expected tables in the provisioned schema",
     async () => {
       const slug = makeTestSlug();
-      await provisionTenantSchema({ name: "Table Test Salon", slug });
+      await provisionTenantSchema({ name: "Table Test Business", slug });
 
       const expectedTables = [
         "aftercare_templates",
@@ -176,7 +176,7 @@ describe("tenant provisioning (integration)", () => {
       ];
 
       const result = await publicDb.execute(
-        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = ${`tenant_${slug}`} ORDER BY table_name`,
+        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = ${`tenant_${slug}`} AND table_type = 'BASE TABLE' ORDER BY table_name`,
       );
 
       // drizzle execute returns a RowList array directly
@@ -186,6 +186,21 @@ describe("tenant provisioning (integration)", () => {
         expect(tableNames, `Missing table: ${expected}`).toContain(expected);
       }
       expect(tableNames.length).toBe(expectedTables.length);
+
+      const legacyViews = await publicDb.execute(sql`
+        SELECT table_name FROM information_schema.views
+        WHERE table_schema = ${`tenant_${slug}`}
+        ORDER BY table_name
+      `);
+      expect(
+        Array.from(legacyViews as Iterable<Record<string, unknown>>).map((row) => row.table_name),
+      ).toEqual([
+        "beauty_bank_balances",
+        "beauty_bank_transactions",
+        "salon_policies",
+        "stylist_services",
+        "stylists",
+      ]);
 
       const brandCols = await publicDb.execute(sql`
         SELECT column_name, is_nullable, column_default

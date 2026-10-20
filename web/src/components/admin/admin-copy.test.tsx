@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/actions/team", () => ({
   acceptInvitation: vi.fn(),
-  joinSalonFromInvitation: vi.fn(),
+  joinBusinessFromInvitation: vi.fn(),
 }));
 vi.mock("@/actions/membership", () => ({
   setStoredValueExpiryMonths: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("@/actions/membership", () => ({
   updateMembershipPlan: vi.fn(),
 }));
 vi.mock("@/actions/onboarding", () => ({
-  createAdditionalSalonAsOwner: vi.fn(),
+  createAdditionalBusinessAsOwner: vi.fn(),
   checkSlugAvailability: vi.fn(),
 }));
 vi.mock("@/lib/auth/client", () => ({ authClient: {} }));
@@ -65,7 +65,7 @@ describe("remaining admin copy follows industry terms", () => {
     const props = {
       token: "t",
       email: "a@b.co",
-      salonName: "Fade Co",
+      businessName: "Fade Co",
       role: "provider",
       canJoinAsSignedInUser: true,
     };

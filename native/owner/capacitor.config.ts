@@ -17,7 +17,7 @@ const config: CapacitorConfig = {
   backgroundColor: "#F8F6F1",
   zoomEnabled: false,
   server: {
-    url: "https://bookuptempo.com/login",
+    url: "https://www.bookuptempo.com/login",
     allowNavigation: ["bookuptempo.com", "*.bookuptempo.com"],
     iosScheme: "https",
   },

@@ -3,6 +3,7 @@ import { DEFAULT_ASSISTANT_TASKS } from "@/lib/services/default-assistant-tasks"
 
 const mocks = vi.hoisted(() => ({
   getTenantSlug: vi.fn(),
+  getTenantIndustry: vi.fn(),
   withTenantDb: vi.fn(),
   requireRole: vi.fn(),
   assertModule: vi.fn(),
@@ -18,6 +19,10 @@ vi.mock("@/lib/tenant/context", () => ({
 
 vi.mock("@/lib/db/tenant", () => ({
   withTenantDb: mocks.withTenantDb,
+}));
+
+vi.mock("@/lib/tenant/industry", () => ({
+  getTenantIndustry: mocks.getTenantIndustry,
 }));
 
 vi.mock("@/lib/auth/rbac", () => ({
@@ -108,8 +113,9 @@ function mockTenantDb(db: ReturnType<typeof createMockDb>["db"]) {
 describe("seedDefaultTaskTypes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireRole.mockResolvedValue({ tenantSlug: "test-salon" });
-    mocks.getTenantSlug.mockResolvedValue("fallback-salon");
+    mocks.requireRole.mockResolvedValue({ tenantSlug: "test-business" });
+    mocks.getTenantSlug.mockResolvedValue("fallback-business");
+    mocks.getTenantIndustry.mockResolvedValue("hair_salon");
     mocks.assertModule.mockResolvedValue(undefined);
   });
 
@@ -123,7 +129,8 @@ describe("seedDefaultTaskTypes", () => {
     });
 
     expect(mocks.requireRole).toHaveBeenCalledWith("owner", "admin");
-    expect(mocks.assertModule).toHaveBeenCalledWith("test-salon", "assistant_tasks");
+    expect(mocks.assertModule).toHaveBeenCalledWith("test-business", "assistant_tasks");
+    expect(mocks.getTenantIndustry).toHaveBeenCalledWith("test-business");
     expect(insertChain.values).toHaveBeenCalledWith(DEFAULT_ASSISTANT_TASKS);
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/settings/assistants");
   });
@@ -144,7 +151,7 @@ describe("seedDefaultTaskTypes", () => {
   });
 
   it("skips pre-existing task names case-insensitively", async () => {
-    const { db, insertChain } = createMockDb(["shampoo"]);
+    const { db, insertChain } = createMockDb(["  ShAmPoO  "]);
     mockTenantDb(db);
 
     await expect(seedDefaultTaskTypes()).resolves.toEqual({
@@ -156,5 +163,44 @@ describe("seedDefaultTaskTypes", () => {
       .calls[0]?.[0] as typeof DEFAULT_ASSISTANT_TASKS;
     expect(inserted.map((task) => task.name)).not.toContain("Shampoo");
     expect(inserted.map((task) => task.name)).toContain("All over gloss");
+  });
+
+  it("does not seed invented tasks for a pack with no task presets", async () => {
+    const { db } = createMockDb([]);
+    mockTenantDb(db);
+    mocks.getTenantIndustry.mockResolvedValue("tattoo");
+
+    await expect(seedDefaultTaskTypes()).resolves.toEqual({
+      success: true,
+      created: 0,
+    });
+
+    expect(mocks.getTenantIndustry).toHaveBeenCalledWith("test-business");
+    expect(db.insert).not.toHaveBeenCalled();
+    expect(mocks.trackEvent).not.toHaveBeenCalled();
+  });
+
+  it("checks module access before reading industry or opening the tenant database", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.assertModule.mockRejectedValueOnce(new Error("module off"));
+
+    await expect(seedDefaultTaskTypes()).resolves.toMatchObject({
+      success: false,
+      error: "module off",
+    });
+
+    expect(mocks.getTenantIndustry).not.toHaveBeenCalled();
+    expect(mocks.withTenantDb).not.toHaveBeenCalled();
+    errorLog.mockRestore();
+  });
+
+  it("checks authorization before module, industry, or tenant database access", async () => {
+    mocks.requireRole.mockRejectedValueOnce(new Error("not authorized"));
+
+    await expect(seedDefaultTaskTypes()).rejects.toThrow("not authorized");
+
+    expect(mocks.assertModule).not.toHaveBeenCalled();
+    expect(mocks.getTenantIndustry).not.toHaveBeenCalled();
+    expect(mocks.withTenantDb).not.toHaveBeenCalled();
   });
 });

@@ -27,11 +27,11 @@ export async function notifyOwnerOfRequest(params: {
   await sendEmail({
     to: owner.email,
     subject,
-    salonName: branding.salonName,
+    businessName: branding.businessName,
     react: (
       <RequestNewEmail
         t={t}
-        salonName={branding.salonName}
+        businessName={branding.businessName}
         heading={subject}
         body={t("request.ownerBody", { name: clientName })}
         cta={t("request.ownerCta")}

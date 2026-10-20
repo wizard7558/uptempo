@@ -14,18 +14,10 @@ import { eq, and } from "drizzle-orm";
 import { trackEvent } from "@/lib/analytics/events";
 import { creditStoredValueIdempotent } from "@/lib/services/stored-value-ledger";
 import { grantMembershipCredits } from "@/lib/credits/membership";
+import { getInvoiceSubscriptionId } from "@/lib/stripe/invoice-subscription";
+import { handleHostedPlanEvent } from "@/lib/billing/subscription-webhook";
 
 export const dynamic = 'force-dynamic';
-
-/** Stripe API still returns these fields; generated TS types omit them in newer SDK versions. */
-function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | undefined {
-  const inv = invoice as Stripe.Invoice & {
-    subscription?: string | Stripe.Subscription | null;
-  };
-  const sub = inv.subscription;
-  if (!sub) return undefined;
-  return typeof sub === "string" ? sub : sub.id;
-}
 
 function subscriptionPeriodBounds(sub: Stripe.Subscription): {
   start: Date | null;
@@ -260,6 +252,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true });
   }
 
+  // Our own hosted plan subscription: mirror status to the public tenants row.
+  if (await handleHostedPlanEvent(event)) {
+    return NextResponse.json({ received: true });
+  }
+
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -348,7 +345,7 @@ export async function POST(req: Request) {
             const pm = await getStripe().paymentMethods.retrieve(paymentMethodId);
             if (client.email) {
               const tenant = await getTenantBySlug(tenantSlug);
-              const salonName = tenant?.name ?? undefined;
+              const businessName = tenant?.name ?? undefined;
               const emailT = await getEmailT(tenantSlug, "emails");
 
               await sendEmail({
@@ -360,7 +357,7 @@ export async function POST(req: Request) {
                   React.createElement("p", null, emailT("cardSaved.policyNote")),
                   React.createElement("p", null, "You can manage your card at any time from your account page."),
                 ),
-                salonName,
+                businessName,
               });
             }
           } catch (emailErr) {

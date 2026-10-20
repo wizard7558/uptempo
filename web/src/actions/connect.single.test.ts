@@ -9,8 +9,8 @@ vi.mock("@/lib/tenant/context", () => ({ getTenantSlug: vi.fn() }));
 vi.mock("@/lib/tenant/registry", () => ({
   getTenantBySlug: vi.fn(async () => ({
     stripeConnectAccountId: "acct_123",
-    plan: "pro",
-    platformFeePercent: null,
+    comped: 0,
+    processingRateBps: null,
   })),
 }));
 vi.mock("@/lib/db", () => ({ publicDb: {} }));
@@ -34,7 +34,7 @@ describe("getConnectChargeParams", () => {
     vi.stubEnv("UPTEMPO_MODE", "multi");
     await expect(getConnectChargeParams("ada", 5_000)).resolves.toEqual({
       connectAccountId: "acct_123",
-      platformFeeCents: 50,
+      platformFeeCents: 250,
     });
   });
 });

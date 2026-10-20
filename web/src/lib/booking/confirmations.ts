@@ -19,7 +19,8 @@ import { formatLocationFromObject } from "@/lib/booking/format-location-label";
 import { sendEmail } from "@/lib/email/send";
 import { createActionToken } from "@/lib/email/tokens";
 import { getNotificationSettingsForTenant } from "@/lib/notifications/settings";
-import { getAppointment } from "@/actions/appointments";
+import { loadAppointmentForTenant } from "@/lib/appointments/load";
+import { loadFormsForServices } from "@/lib/forms/for-services";
 import { BookingConfirmation } from "@/emails/booking-confirmation";
 
 export async function sendBookingConfirmations(
@@ -27,7 +28,7 @@ export async function sendBookingConfirmations(
   appointmentId: string,
 ): Promise<void> {
   try {
-    const appointment = await getAppointment(appointmentId);
+    const appointment = await loadAppointmentForTenant(slug, appointmentId);
     if (!appointment) return;
     const staffId = appointment.staffId;
     const totalDuration = appointment.services.reduce(
@@ -55,7 +56,7 @@ export async function sendBookingConfirmations(
         return policy?.timezone ?? "America/New_York";
       });
 
-      // Native push to the salon's registered owner-app devices (own catch so
+      // Native push to the business's registered owner-app devices (own catch so
       // a push failure never blocks the client confirmations below).
       try {
         const { sendApnsNotifications, bundleIdForOwnerType } =
@@ -128,7 +129,7 @@ export async function sendBookingConfirmations(
         getEmailBranding(slug),
         getEmailT(slug, "emails"),
       ]);
-      const salonName = emailBranding.salonName;
+      const businessName = emailBranding.businessName;
 
       // Generate action tokens
       const cancelToken = createActionToken(appointment.id, "cancel");
@@ -137,7 +138,7 @@ export async function sendBookingConfirmations(
       const cancelUrl = `${baseUrl}/cancel/${cancelToken}`;
       const rescheduleUrl = `${baseUrl}/reschedule/${rescheduleToken}`;
 
-      // Format date/time in salon timezone
+      // Format date/time in business timezone
       const apptDate = new TZDate(appointment.start, tz);
       const dateStr = format(apptDate, "EEEE, MMMM d, yyyy");
       const timeStr = format(apptDate, "h:mm a");
@@ -145,10 +146,10 @@ export async function sendBookingConfirmations(
 
       await sendEmail({
         to: clientEmail,
-        subject: emailT("confirmation.subject", { business: salonName }),
+        subject: emailT("confirmation.subject", { business: businessName }),
         react: BookingConfirmation({
           t: emailT,
-          salonName,
+          businessName,
           clientName: appointment.client?.name ?? "there",
           staffName,
           services: serviceNames,
@@ -166,7 +167,7 @@ export async function sendBookingConfirmations(
           logoUrl: emailBranding.logoUrl,
           brandColor: emailBranding.brandColor,
         }),
-        salonName,
+        businessName,
       });
 
       if (settings.smsConfirmationEnabled === 1 && appointment.client?.phone) {
@@ -194,8 +195,8 @@ export async function sendBookingConfirmations(
 
       // Send form request emails for services with assigned forms
       try {
-        const { getFormsForServices } = await import("@/actions/forms");
-        const formsToSend = await getFormsForServices(
+        const formsToSend = await loadFormsForServices(
+          slug,
           appointment.services.map((s) => s.serviceId),
         );
         if (formsToSend.length > 0 && clientEmail) {
@@ -225,7 +226,7 @@ export async function sendBookingConfirmations(
               subject: emailT("form.subject", { form: form.name }),
               react: FormRequestEmail({
                 t: emailT,
-                salonName,
+                businessName,
                 clientName: appointment.client?.name ?? "there",
                 formName: form.name,
                 formDescription: form.description,
@@ -233,7 +234,7 @@ export async function sendBookingConfirmations(
                 logoUrl: emailBranding.logoUrl,
                 brandColor: emailBranding.brandColor,
               }),
-              salonName,
+              businessName,
             });
 
             if (
@@ -243,7 +244,7 @@ export async function sendBookingConfirmations(
               const { sendSms } = await import("@/lib/sms/send");
               await sendSms({
                 to: appointment.client.phone,
-                body: `${salonName}: please complete "${form.name}": ${formUrl}`,
+                body: `${businessName}: please complete "${form.name}": ${formUrl}`,
                 tenantSlug: slug,
                 clientId: appointment.client.id,
                 appointmentId: appointmentId,

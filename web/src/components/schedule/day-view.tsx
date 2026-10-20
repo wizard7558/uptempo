@@ -121,6 +121,7 @@ export function DayView({
     Record<string, AppointmentData[]>
   >({});
   const [isPending, startTransition] = useTransition();
+  const [scheduleDataReady, setScheduleDataReady] = useState(false);
   const fetchToken = useRef(0);
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -130,10 +131,10 @@ export function DayView({
     [showAssistants, assistants],
   );
 
-  /** Combined picker entries on mobile: stylists first, then assistants. */
+  /** Combined picker entries on mobile: staff first, then assistants. */
   const mobileColumns = useMemo(
     () => [
-      ...staff.map((s) => ({ kind: "stylist" as const, value: s })),
+      ...staff.map((s) => ({ kind: "staff" as const, value: s })),
       ...visibleAssistants.map((a) => ({
         kind: "assistant" as const,
         value: a,
@@ -162,7 +163,7 @@ export function DayView({
 
   const visibleStaff = useMemo(() => {
     if (!isMobile) return staff;
-    return selectedColumn?.kind === "stylist" ? [selectedColumn.value] : [];
+    return selectedColumn?.kind === "staff" ? [selectedColumn.value] : [];
   }, [isMobile, staff, selectedColumn]);
 
   const renderedAssistants = useMemo(() => {
@@ -183,6 +184,7 @@ export function DayView({
     const dayEnd = endOfDay(currentDate);
 
     const token = ++fetchToken.current;
+    setScheduleDataReady(false);
     startTransition(async () => {
       if (axis === "rooms") {
         const data = await getRoomDay(dayStart, dayEnd);
@@ -198,6 +200,7 @@ export function DayView({
           }));
         }
         setAppointmentsByRoom(results);
+        setScheduleDataReady(true);
         return;
       }
 
@@ -207,6 +210,7 @@ export function DayView({
         setAppointmentsByStaffMember({});
         setExternalBlocksByStaffMember({});
         setTimeBlocksByStaffMember({});
+        setScheduleDataReady(true);
         return;
       }
 
@@ -251,6 +255,7 @@ export function DayView({
       setAppointmentsByStaffMember(results);
       setExternalBlocksByStaffMember(externalResults);
       setTimeBlocksByStaffMember(timeBlockResults);
+      setScheduleDataReady(true);
     });
   }, [axis, currentDate, staff]);
 
@@ -348,11 +353,18 @@ export function DayView({
         </div>
       )}
       <div
-        className={`flex overflow-x-auto ${isPending ? "opacity-60" : ""}`}
+        data-calendar-view="day"
+        data-testid="day-grid-scroll"
+        role="region"
+        aria-label={t("calendarView")}
+        tabIndex={0}
+        aria-busy={!scheduleDataReady || isPending}
+        data-schedule-data-ready={scheduleDataReady && !isPending ? "true" : "false"}
+        className="flex min-w-0 overflow-x-auto"
         style={{ minHeight: TOTAL_HEIGHT_PX + 40 }}
       >
         <TimeColumn />
-        <div className="relative flex flex-1">
+        <div className="relative flex min-w-0 flex-1">
           <CurrentTimeMarker currentDate={currentDate} />
           {axis === "rooms"
             ? rooms.map((room) => (

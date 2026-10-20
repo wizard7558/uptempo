@@ -180,10 +180,10 @@ export async function DashboardOverview() {
   } = data;
 
   const now = new Date();
-  const nowInSalonTz = new TZDate(now, timezone);
+  const nowInBusinessTz = new TZDate(now, timezone);
   const greeting = greetingForHour(zonedHour(now, timezone));
   const firstName = firstNameOf(session?.user?.name);
-  const monthName = format(nowInSalonTz, "MMMM");
+  const monthName = format(nowInBusinessTz, "MMMM");
 
   const kpiTiles = [
     {
@@ -463,7 +463,7 @@ export async function DashboardOverview() {
               <Eyebrow>Today&apos;s Schedule</Eyebrow>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
-              {format(nowInSalonTz, "EEEE, MMMM d")}
+              {format(nowInBusinessTz, "EEEE, MMMM d")}
             </p>
             <div className="mt-4 space-y-4">
               {todaysAppointments.length === 0 ? (

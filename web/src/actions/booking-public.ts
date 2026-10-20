@@ -37,10 +37,10 @@ import { findRedeemablePackage, redeemForAppointment } from "@/lib/credits/ledge
 import { enforceAgeGate, getAgeGate, parseDob, type AgeGate } from "@/lib/consent/gate";
 
 /**
- * Look up a salon by its URL slug.
- * Queries the tenants table (the canonical registry of all salons).
+ * Look up a business by its URL slug.
+ * Queries the tenants table (the canonical registry of all businesses).
  */
-export async function getSalonBySlug(
+export async function getBusinessBySlug(
   slug: string,
 ): Promise<{ id: string; name: string; slug: string } | null> {
   const [tenant] = await publicDb
@@ -53,8 +53,8 @@ export async function getSalonBySlug(
 }
 
 /**
- * Get active stylists with assigned services for a salon.
- * Only includes stylists who have at least one assigned service.
+ * Get active staff members with assigned services for a business.
+ * Only includes staff members who have at least one assigned service.
  */
 export async function getBookingStaff() {
   const slug = await getTenantSlug();
@@ -76,19 +76,19 @@ export async function getBookingStaff() {
       services: servicesMap.get(staffMember.id) ?? [],
     }));
 
-    // Filter to only stylists with at least one service
+    // Filter to only staff members with at least one service
     return staffWithServices.filter((s) => s.services.length > 0);
   });
 }
 
 /**
- * Get services this stylist offers, with per-client + per-stylist resolved
+ * Get services this staff member offers, with per-client + per-staff resolved
  * durations and prices.
  *
- * Hidden offerings (`stylist_services.is_offered = 0`) are filtered out.
- * Resolution chain: client_service_overrides → stylist_services → services.
+ * Hidden offerings (`staff_services.is_offered = 0`) are filtered out.
+ * Resolution chain: client_service_overrides → staff_services → services.
  * `"any"` returns the union of services offered by active staff, resolved
- * without a stylist (so no per-stylist override applies).
+ * without a staff member (so no per-staff override applies).
  */
 export async function getStaffServices(
   staffId: string | "any",
@@ -182,9 +182,9 @@ export async function getStaffServices(
  * Service IDs from the client's most recent appointment, used to offer a
  * one-tap "book again" shortcut on the services step.
  *
- * Prefers appointments with the selected stylist, then past visits over
+ * Prefers appointments with the selected staff member, then past visits over
  * upcoming ones, then recency. Cancelled appointments are ignored. Returns
- * raw IDs; the caller intersects them with the services the stylist
+ * raw IDs; the caller intersects them with the services the staff member
  * currently offers (so audience/active/online-bookable rules still apply).
  */
 export async function getRecentClientServices(
@@ -508,7 +508,7 @@ async function loadPublicBookingReceipt(slug: string, appointmentId: string) {
  * On success, loads the receipt for the confirmation page.
  */
 export async function confirmBooking(data: {
-  salonId: string;
+  businessId: string;
   staffId: string;
   clientId: string;
   serviceIds: string[];

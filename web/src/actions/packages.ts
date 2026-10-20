@@ -1,5 +1,6 @@
 "use server";
 
+import { destinationRefundParams } from "@/lib/stripe/refund-params";
 import { and, asc, desc, eq, gt, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -62,7 +63,7 @@ export type ClientCredits = {
 /** Staff session + module gate for the owner/admin actions. */
 async function adminGuard() {
   const auth = await requireRole("owner", "admin");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "packages");
   const t = await getT("packages", slug);
@@ -151,7 +152,7 @@ const clientIdSchema = z.uuid();
 
 export async function getClientCredits(clientId: string): Promise<ClientCredits> {
   const auth = await requireRole("owner", "admin", "provider");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "packages");
   const id = clientIdSchema.parse(clientId);
@@ -208,7 +209,10 @@ export async function getClientCredits(clientId: string): Promise<ClientCredits>
 }
 
 /** Refunds a card payment. Used only to undo a charge whose pack could not be saved. */
-async function refundPayment(paymentIntentId: string): Promise<boolean> {
+async function refundPayment(
+  paymentIntentId: string,
+  connectAccountId: string | null,
+): Promise<boolean> {
   // Same test-only seam as processOffSessionCharge: fake intents have nothing to refund.
   if (
     process.env.PAYMENTS_FAKE === "1" &&
@@ -218,7 +222,10 @@ async function refundPayment(paymentIntentId: string): Promise<boolean> {
     return true;
   }
   try {
-    await getStripe().refunds.create({ payment_intent: paymentIntentId });
+    await getStripe().refunds.create({
+      payment_intent: paymentIntentId,
+      ...destinationRefundParams(connectAccountId, { undo: true }),
+    });
     return true;
   } catch (err) {
     if (err instanceof AuthError) throw err;
@@ -356,7 +363,7 @@ async function sellPack(p: {
     if (err instanceof AuthError) throw err;
     console.error("[packages] could not save the pack:", err);
     if (paymentIntentId) {
-      const refunded = await refundPayment(paymentIntentId);
+      const refunded = await refundPayment(paymentIntentId, connect?.connectAccountId ?? null);
       return fail(refunded ? t("errors.refunded") : t("errors.refundFailed"));
     }
     return fail(t("errors.generic"));

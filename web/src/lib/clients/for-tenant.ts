@@ -1,6 +1,6 @@
 import { withTenantDb } from "@/lib/db/tenant";
 import { createClientSchema } from "@/lib/validators/client";
-import { eq, and, ilike, isNull } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { trackEvent } from "@/lib/analytics/events";
 import { normalizePhone } from "@/lib/phone";
@@ -128,11 +128,18 @@ export async function findClientByEmailForTenant(
   tenantSlug: string,
   email: string,
 ) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return null;
   const result = await withTenantDb(tenantSlug, async (db, { clients }) => {
     return db
       .select()
       .from(clients)
-      .where(and(ilike(clients.email, email), isNull(clients.deletedAt)))
+      .where(
+        and(
+          eq(sql`lower(${clients.email})`, normalizedEmail),
+          isNull(clients.deletedAt),
+        ),
+      )
       .limit(1);
   });
 

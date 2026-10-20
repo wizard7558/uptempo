@@ -113,8 +113,219 @@ jobs:
       - name: Migrate
         run: node scripts/db-prepare.mjs && node scripts/migrate-platform.mjs && pnpm exec tsx scripts/migrate-tenants.ts
 
+      - name: Prepare billing switch disposable test database
+        id: billing-switch-db
+        env:
+          PGPASSWORD: postgres
+        run: |
+          RUN_ID="$(node -e "process.stdout.write(require('node:crypto').randomBytes(12).toString('hex'))")"
+          DATABASE_NAME="uptempo_billing_switch_test_${RUN_ID}"
+          createdb -h localhost -p 5432 -U postgres "${DATABASE_NAME}"
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
+            -c "COMMENT ON DATABASE \"${DATABASE_NAME}\" IS 'uptempo-billing-switch-disposable:${RUN_ID}'"
+          echo "run_id=${RUN_ID}" >> "${GITHUB_OUTPUT}"
+          echo "database_name=${DATABASE_NAME}" >> "${GITHUB_OUTPUT}"
+
+      - name: Migrate billing switch disposable test database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_RUN_ID: ${{ steps.billing-switch-db.outputs.run_id }}
+          PGPASSWORD: postgres
+        run: |
+          EXPECTED_MARKER="uptempo-billing-switch-disposable:${BILLING_SWITCH_TEST_RUN_ID}"
+          ACTUAL_MARKER="$(psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d "${BILLING_SWITCH_TEST_DATABASE_URL##*/}" -Atc \
+            "SELECT pg_catalog.shobj_description(oid, 'pg_database') FROM pg_catalog.pg_database WHERE datname = current_database()")"
+          if [ "${ACTUAL_MARKER}" != "${EXPECTED_MARKER}" ]; then
+            echo "::error::Billing switch test database ownership marker did not match; refusing migration."
+            exit 1
+          fi
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d "${BILLING_SWITCH_TEST_DATABASE_URL##*/}" \
+            -c "CREATE EXTENSION IF NOT EXISTS btree_gist"
+          node scripts/db-prepare.mjs
+          pnpm run migrate:platform
+          pnpm exec tsx scripts/migrate-tenants.ts
+
+      - name: Test billing switch integration suite against disposable database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_RUN_ID: ${{ steps.billing-switch-db.outputs.run_id }}
+          EMAIL_PROVIDER: console
+          RESEND_API_KEY: ""
+          SMTP_HOST: ""
+          VERCEL_ENV: development
+        run: pnpm exec vitest run src/lib/billing/switch.integration.test.ts
+
+      - name: Drop billing switch disposable test database
+        if: always() && steps.billing-switch-db.outputs.database_name != ''
+        env:
+          BILLING_SWITCH_TEST_DATABASE_NAME: ${{ steps.billing-switch-db.outputs.database_name }}
+          BILLING_SWITCH_TEST_RUN_ID: ${{ steps.billing-switch-db.outputs.run_id }}
+          PGPASSWORD: postgres
+        run: |
+          EXPECTED_MARKER="uptempo-billing-switch-disposable:${BILLING_SWITCH_TEST_RUN_ID}"
+          ACTUAL_MARKER="$(psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d postgres -Atc "SELECT pg_catalog.shobj_description(oid, 'pg_database') FROM pg_catalog.pg_database WHERE datname = '${BILLING_SWITCH_TEST_DATABASE_NAME}'")"
+          if [ "${ACTUAL_MARKER}" != "${EXPECTED_MARKER}" ]; then
+            echo "::error::Billing switch test database ownership marker did not match; refusing cleanup."
+            exit 1
+          fi
+          dropdb -h localhost -p 5432 -U postgres "${BILLING_SWITCH_TEST_DATABASE_NAME}"
+
+      - name: Prepare archive safety test database
+        id: archive-legacy-db
+        env:
+          PGPASSWORD: postgres
+        run: |
+          RUN_ID="$(node -e "process.stdout.write(require('node:crypto').randomBytes(12).toString('hex'))")"
+          DATABASE_NAME="uptempo_archive_test_${RUN_ID}"
+          createdb -h localhost -p 5432 -U postgres "${DATABASE_NAME}"
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
+            -c "COMMENT ON DATABASE \"${DATABASE_NAME}\" IS 'uptempo-archive-disposable:${RUN_ID}'"
+          echo "run_id=${RUN_ID}" >> "${GITHUB_OUTPUT}"
+          echo "database_name=${DATABASE_NAME}" >> "${GITHUB_OUTPUT}"
+
+      - name: Test archive safety against disposable PostgreSQL database
+        env:
+          ARCHIVE_LEGACY_TEST_RUN_ID: ${{ steps.archive-legacy-db.outputs.run_id }}
+          ARCHIVE_LEGACY_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.archive-legacy-db.outputs.database_name }}
+        run: pnpm exec vitest run src/lib/db/archive-legacy-public.test.ts
+
       - name: Test
         run: pnpm exec vitest run
+
+  review-otp-security-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      BETTER_AUTH_SECRET: e2e-test-secret-at-least-32-characters-long
+      BETTER_AUTH_URL: http://localhost:3000 # pragma: allowlist secret
+      BOOKING_SESSION_SECRET: e2e-test-booking-secret-at-least-32-chars
+      ROOT_DOMAIN: localhost
+      GOOGLE_CALENDAR_CLIENT_ID: e2e-unused
+      GOOGLE_CALENDAR_CLIENT_SECRET: e2e-unused
+      RESEND_API_KEY: e2e-unused
+      STRIPE_SECRET_KEY: sk_test_e2e_unused
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_e2e_unused
+      STRIPE_WEBHOOK_SECRET: whsec_e2e_unused
+      CRON_SECRET: e2e-cron-secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create App Review OTP disposable database
+        id: review-otp-db
+        env:
+          PGPASSWORD: postgres
+        run: |
+          if [[ ! "${GITHUB_RUN_ID}" =~ ^[0-9]+$ || ! "${GITHUB_RUN_ATTEMPT}" =~ ^[0-9]+$ ]]; then
+            echo "::error::GitHub run identity is not numeric; refusing disposable database creation."
+            exit 1
+          fi
+          DATABASE_NAME="uptempo_score_review_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          OWNER_MARKER="uptempo-review-otp-disposable:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          createdb -h localhost -p 5432 -U postgres "${DATABASE_NAME}"
+          echo "database_name=${DATABASE_NAME}" >> "${GITHUB_OUTPUT}"
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
+            -c "COMMENT ON DATABASE \"${DATABASE_NAME}\" IS '${OWNER_MARKER}'"
+          echo "owner_marker=${OWNER_MARKER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Prepare App Review OTP disposable database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.review-otp-db.outputs.database_name }}
+          REVIEW_OTP_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.review-otp-db.outputs.database_name }}
+          REVIEW_OTP_TEST_RUN_MARKER: ${{ steps.review-otp-db.outputs.owner_marker }}
+          PGPASSWORD: postgres
+        run: |
+          DATABASE_NAME="uptempo_score_review_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          EXPECTED_MARKER="uptempo-review-otp-disposable:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          if [[ "${REVIEW_OTP_TEST_DATABASE_URL##*/}" != "${DATABASE_NAME}" || "${DATABASE_URL}" != "${REVIEW_OTP_TEST_DATABASE_URL}" || "${REVIEW_OTP_TEST_RUN_MARKER}" != "${EXPECTED_MARKER}" ]]; then
+            echo "::error::App Review OTP database configuration did not match this run; refusing migration."
+            exit 1
+          fi
+          ACTUAL_MARKER="$(psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d "${DATABASE_NAME}" -Atc \
+            "SELECT pg_catalog.shobj_description(oid, 'pg_database') FROM pg_catalog.pg_database WHERE datname = current_database()")"
+          if [[ "${ACTUAL_MARKER}" != "${EXPECTED_MARKER}" ]]; then
+            echo "::error::App Review OTP database ownership marker did not match; refusing migration."
+            exit 1
+          fi
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d "${DATABASE_NAME}" -c "CREATE EXTENSION IF NOT EXISTS btree_gist"
+          node scripts/db-prepare.mjs
+          pnpm run migrate:platform
+
+      - name: Run App Review OTP security integration tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.review-otp-db.outputs.database_name }}
+          REVIEW_OTP_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.review-otp-db.outputs.database_name }}
+          REVIEW_OTP_TEST_RUN_MARKER: ${{ steps.review-otp-db.outputs.owner_marker }}
+          PGPASSWORD: postgres
+        run: >-
+          pnpm exec vitest run --no-file-parallelism --reporter=dot
+          src/lib/auth/rate-limit.test.ts
+          src/lib/booking/otp.test.ts
+          src/lib/clients/for-tenant.test.ts
+          src/app/api/booking/send-code/route.test.ts
+          src/app/api/booking/verify-code/route.test.ts
+
+      - name: Drop App Review OTP disposable database
+        if: always() && steps.review-otp-db.outputs.database_name != ''
+        env:
+          REVIEW_OTP_TEST_DATABASE_NAME: ${{ steps.review-otp-db.outputs.database_name }}
+          PGPASSWORD: postgres
+        run: |
+          if [[ ! "${GITHUB_RUN_ID}" =~ ^[0-9]+$ || ! "${GITHUB_RUN_ATTEMPT}" =~ ^[0-9]+$ ]]; then
+            echo "::error::GitHub run identity is not numeric; refusing database cleanup."
+            exit 1
+          fi
+          EXPECTED_DATABASE_NAME="uptempo_score_review_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          EXPECTED_MARKER="uptempo-review-otp-disposable:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          if [[ "${REVIEW_OTP_TEST_DATABASE_NAME}" != "${EXPECTED_DATABASE_NAME}" ]]; then
+            echo "::error::App Review OTP database name did not match this run; refusing cleanup."
+            exit 1
+          fi
+          ACTUAL_MARKER="$(psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d postgres -Atc \
+            "SELECT pg_catalog.shobj_description(oid, 'pg_database') FROM pg_catalog.pg_database WHERE datname = '${REVIEW_OTP_TEST_DATABASE_NAME}'")"
+          if [[ "${ACTUAL_MARKER}" != "${EXPECTED_MARKER}" ]]; then
+            echo "::error::App Review OTP database ownership marker did not match; refusing cleanup."
+            exit 1
+          fi
+          dropdb -h localhost -p 5432 -U postgres "${REVIEW_OTP_TEST_DATABASE_NAME}"
 
   e2e:
     runs-on: ubuntu-latest
@@ -175,6 +386,7 @@ jobs:
         run: npx drizzle-kit push
 
       - name: Seed test data
+        id: e2eSeed
         run: npx tsx scripts/seed-e2e-data.ts
 
       - name: Add test-salon.localhost to hosts
@@ -184,15 +396,82 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Build application
+        id: e2eBuild
         run: npm run build
 
-      - name: Run E2E tests
-        run: npx playwright test
+      - name: Create production smoke database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          createdb -h localhost -U postgres uptempo_production_test
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d uptempo_production_test \
+            -c "CREATE EXTENSION IF NOT EXISTS btree_gist;"
 
-      - name: Upload test results
+      - name: Migrate and seed production smoke database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/uptempo_production_test
+        run: |
+          npx drizzle-kit push
+          npx tsx scripts/seed-e2e-data.ts
+
+      - name: Run production E2E smoke tests
+        run: |
+          mkdir -p "$STORAGE_LOCAL_DIR" "$PLAYWRIGHT_HTML_OUTPUT_DIR" \
+            "$PLAYWRIGHT_OUTPUT_DIR" "$TEXT_LINE_SCREENSHOT_DIR"
+          npx playwright test \
+            tests/e2e/admin-requests-studio.spec.ts \
+            tests/e2e/appointment-work-mobile.spec.ts \
+            tests/e2e/text-line.spec.ts \
+            tests/e2e/admin-scheduling.spec.ts \
+            --project=admin \
+            --project=request \
+            --grep='request photos upload privately|checks the studio checklist and adds before and after photos|EIN registration becomes active through the fake cron without saving a full EIN|sole-proprietor registration requests YES and lets the owner resend|schedule page renders without JavaScript errors' \
+            --retries=0 \
+            --output="$PLAYWRIGHT_OUTPUT_DIR"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/uptempo_production_test
+          E2E_DEV_COMMAND: npm run start
+          E2E_PREPAID_CARRIER_FIXTURE: "1"
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/report
+          PLAYWRIGHT_OUTPUT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/results
+          STORAGE_LOCAL_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/uploads
+          TEXT_LINE_SCREENSHOT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/text-line-screenshots
+
+      - name: Upload production smoke report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: web/playwright-report/
+          name: playwright-production-smoke-report
+          path: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/production/report/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Drop production smoke database
+        if: always()
+        env:
+          PGPASSWORD: postgres
+        run: dropdb --if-exists -h localhost -U postgres uptempo_production_test
+
+      - name: Run full functional E2E suite
+        if: ${{ always() && !cancelled() && steps.e2eSeed.outcome == 'success' && steps.e2eBuild.outcome == 'success' }}
+        run: |
+          mkdir -p "$STORAGE_LOCAL_DIR" "$PLAYWRIGHT_HTML_OUTPUT_DIR" \
+            "$PLAYWRIGHT_OUTPUT_DIR" "$TEXT_LINE_SCREENSHOT_DIR"
+          npx playwright test --output="$PLAYWRIGHT_OUTPUT_DIR"
+        env:
+          E2E_DEV_COMMAND: npm run dev
+          # Prevent hosted-subscription startup from contacting Stripe.
+          STRIPE_SECRET_KEY: ""
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/report
+          PLAYWRIGHT_OUTPUT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/results
+          STORAGE_LOCAL_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/uploads
+          TEXT_LINE_SCREENSHOT_DIR: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/text-line-screenshots
+
+      - name: Upload functional E2E report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-functional-report
+          path: ${{ runner.temp }}/uptempo-e2e-${{ github.run_id }}-${{ github.run_attempt }}/functional/report/
+          if-no-files-found: warn
           retention-days: 7

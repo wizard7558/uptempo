@@ -52,7 +52,7 @@ async function createSingleBusinessOnce(data: {
   }
 
   const result = await createBusinessAccount({
-    salonName: data.businessName,
+    businessName: data.businessName,
     timezone: data.timezone,
     ownerName: data.ownerName,
     email: data.email,

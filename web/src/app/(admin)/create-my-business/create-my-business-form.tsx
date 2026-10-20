@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { CheckCircle2, Circle, Loader2, ArrowLeft } from "lucide-react";
 import {
-  createAdditionalSalonAsOwner,
+  createAdditionalBusinessAsOwner,
   checkSlugAvailability,
 } from "@/actions/onboarding";
 import { getBaseUrl } from "@/lib/utils";
@@ -47,7 +47,7 @@ export function CreateMyBusinessForm() {
   const t = useT("business");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [salonName, setSalonName] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [slug, setSlug] = useState("");
   const [timezone, setTimezone] = useState(defaultTimezone);
   const [slugStatus, setSlugStatus] = useState<
@@ -93,8 +93,8 @@ export function CreateMyBusinessForm() {
     setFormError(null);
     startTransition(async () => {
       if (!industry) return;
-      const result = await createAdditionalSalonAsOwner({
-        salonName,
+      const result = await createAdditionalBusinessAsOwner({
+        businessName,
         slug,
         timezone,
         industry,
@@ -137,21 +137,21 @@ export function CreateMyBusinessForm() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="new-salon-name">{t("createForm.nameLabel")}</Label>
+            <Label htmlFor="new-business-name">{t("createForm.nameLabel")}</Label>
             <Input
-              id="new-salon-name"
+              id="new-business-name"
               placeholder="Your studio name"
-              value={salonName}
-              onChange={(e) => setSalonName(e.target.value)}
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
               required
               autoComplete="organization"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-salon-slug">Booking URL</Label>
+            <Label htmlFor="new-business-slug">Booking URL</Label>
             <div className="flex items-center gap-2">
               <Input
-                id="new-salon-slug"
+                id="new-business-slug"
                 placeholder="your-studio"
                 value={slug}
                 onChange={(e) =>
@@ -181,9 +181,9 @@ export function CreateMyBusinessForm() {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-salon-tz">Timezone</Label>
+            <Label htmlFor="new-business-tz">Timezone</Label>
             <Select value={timezone} onValueChange={setTimezone}>
-              <SelectTrigger id="new-salon-tz">
+              <SelectTrigger id="new-business-tz">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -206,7 +206,7 @@ export function CreateMyBusinessForm() {
               type="submit"
               disabled={
                 isPending ||
-                !salonName.trim() ||
+                !businessName.trim() ||
                 slugStatus !== "available" ||
                 slug.length < 3
               }

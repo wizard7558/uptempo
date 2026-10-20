@@ -5,7 +5,7 @@ import { emailButtonStyle, emailCenter, emailFine, emailHeading, emailMuted, typ
 
 interface IntakeRequestEmailProps {
   t: EmailT;
-  salonName: string;
+  businessName: string;
   clientName: string;
   intakeUrl: string;
   logoUrl?: string | null;
@@ -14,7 +14,7 @@ interface IntakeRequestEmailProps {
 
 export function IntakeRequestEmail({
   t,
-  salonName,
+  businessName,
   clientName,
   intakeUrl,
   logoUrl,
@@ -22,13 +22,13 @@ export function IntakeRequestEmail({
 }: IntakeRequestEmailProps) {
   return (
     <EmailLayout
-      businessName={salonName}
-      previewText={t("intakeMail.preview", { business: salonName })}
+      businessName={businessName}
+      previewText={t("intakeMail.preview", { business: businessName })}
       logoUrl={logoUrl}
       t={t}
     >
       <Text style={emailHeading}>{t("intakeMail.greeting", { name: clientName })}</Text>
-      <Text style={emailMuted}>{t("intakeMail.body", { business: salonName })}</Text>
+      <Text style={emailMuted}>{t("intakeMail.body", { business: businessName })}</Text>
       <Section style={emailCenter}>
         <Button href={intakeUrl} style={emailButtonStyle(brandColor)}>
           {t("intakeMail.cta")}

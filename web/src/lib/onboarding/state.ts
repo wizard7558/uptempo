@@ -16,7 +16,7 @@ export interface OnboardingState {
   services: boolean;
   /** Derived: at least one working-hours row. */
   hours: boolean;
-  /** Explicit: owner reviewed the salon policies step. */
+  /** Explicit: owner reviewed the business policies step. */
   policies: boolean;
   /** Derived: Stripe Connect account exists. */
   stripe: boolean;
@@ -24,7 +24,7 @@ export interface OnboardingState {
   stripeSkipped: boolean;
   /** Explicit: owner saved branding during onboarding (optional; never blocks). */
   branding: boolean;
-  /** Explicit: salon has launched — unlocks the admin portal. */
+  /** Explicit: business has launched — unlocks the admin portal. */
   launched: boolean;
 }
 

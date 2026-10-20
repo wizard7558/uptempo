@@ -44,11 +44,13 @@ interface Assistant {
 
 interface AssistantsPageClientProps {
   initialTaskTypes: TaskType[];
+  hasDefaultTasks: boolean;
   assistants: Assistant[];
 }
 
 export function AssistantsPageClient({
   initialTaskTypes,
+  hasDefaultTasks,
   assistants,
 }: AssistantsPageClientProps) {
   const t = useT("settings");
@@ -174,15 +176,16 @@ export function AssistantsPageClient({
               <p className="text-sm text-muted-foreground">
                 {t("assistants.emptyHint")}
               </p>
-              <Button
-                type="button"
-                variant="outline"
-                
-                onClick={handleSeedDefaults}
-                disabled={isPending}
-              >
-                Seed default tasks
-              </Button>
+              {hasDefaultTasks && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSeedDefaults}
+                  disabled={isPending}
+                >
+                  Seed default tasks
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-2">

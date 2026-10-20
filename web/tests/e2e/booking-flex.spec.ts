@@ -4,7 +4,8 @@ import { bookingSessionCookie } from "./fixtures/auth";
 import { passLocationStep } from "./helpers/booking-location-step";
 
 const TEST_TENANT_SLUG = "test-salon";
-const TENANT_BASE_URL = `http://${TEST_TENANT_SLUG}.localhost:3000`;
+const PORT = process.env.E2E_PORT ?? "3000";
+const TENANT_BASE_URL = `http://${TEST_TENANT_SLUG}.localhost:${PORT}`;
 const TEST_CLIENT_ID = "f0e2e200-0000-4000-8000-000000000001";
 const TEST_CLIENT_NAME = "E2E Test Client";
 

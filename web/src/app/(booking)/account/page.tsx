@@ -14,7 +14,7 @@ import {
   listActiveMembershipPlansPublic,
 } from "@/actions/membership";
 import { getSmsConsentForBookingClient } from "@/actions/sms";
-import { getBusinessSettingsForTenant } from "@/lib/policies/salon-policy";
+import { getBusinessSettingsForTenant } from "@/lib/policies/business-policy";
 import { AccountHub } from "@/components/booking-public/account-hub";
 
 export default function AccountPage() {
@@ -46,7 +46,7 @@ async function AccountPageContent() {
   // backs the native app's Account tab).
   const [
     tenant,
-    salonTimezone,
+    businessTimezone,
     profileRes,
     appointments,
     storedValueRaw,
@@ -107,7 +107,7 @@ async function AccountPageContent() {
   return (
     <AccountHub
       clientId={clientId}
-      salonName={tenant?.name ?? t("accountPage.defaultName")}
+      businessName={tenant?.name ?? t("accountPage.defaultName")}
       subscribeTenantSlug={tenantSlug}
       hasSubscribeablePlans={activePlans.length > 0}
       initialProfile={profileRes.profile}
@@ -121,7 +121,7 @@ async function AccountPageContent() {
         consentedAt: smsConsent.consentedAt?.toISOString() ?? null,
         method: smsConsent.method,
       }}
-      salonTimezone={salonTimezone}
+      businessTimezone={businessTimezone}
     />
   );
 }

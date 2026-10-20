@@ -1,11 +1,38 @@
 "use client";
 
-import posthog from "posthog-js";
-import { PostHogProvider as PHProvider } from "posthog-js/react";
-import { useEffect, useState } from "react";
+import type { PostHog } from "posthog-js";
+import { useEffect } from "react";
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.posthog.com";
+
+let client: Promise<PostHog | null> | null = null;
+
+/**
+ * posthog-js is about 60 KB gzipped, so it loads in its own chunk after
+ * hydration instead of in every page's first-load bundle. Calls made before
+ * it loads wait for it.
+ */
+function loadPostHog(): Promise<PostHog | null> {
+  if (!POSTHOG_KEY || typeof window === "undefined") return Promise.resolve(null);
+  const key = POSTHOG_KEY;
+  client ??= import("posthog-js").then(({ default: posthog }) => {
+    posthog.init(key, {
+      api_host: POSTHOG_HOST,
+      person_profiles: "identified_only",
+      capture_pageview: true,
+      capture_pageleave: true,
+      autocapture: false, // we track events explicitly
+    });
+    return posthog;
+  });
+  return client;
+}
+
+/** Starts PostHog without wrapping anything. Used by `PostHogLazy`. */
+export function startPostHog(): void {
+  void loadPostHog();
+}
 
 /**
  * Initialize PostHog on the client. Generates an anonymous UUID for
@@ -13,26 +40,11 @@ const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.posthog
  * PostHog merges all prior anonymous events with the real user.
  */
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setMounted(true);
-    if (!POSTHOG_KEY) return;
-    posthog.init(POSTHOG_KEY, {
-      api_host: POSTHOG_HOST,
-      person_profiles: "identified_only",
-      capture_pageview: true,
-      capture_pageleave: true,
-      autocapture: false, // we track events explicitly
-    });
+    void loadPostHog();
   }, []);
 
-  if (!POSTHOG_KEY) return <>{children}</>;
-
-  // posthog-js/react context is not safe during static prerender (e.g. /404); hydrate first.
-  if (!mounted) return <>{children}</>;
-
-  return <PHProvider client={posthog}>{children}</PHProvider>;
+  return <>{children}</>;
 }
 
 /**
@@ -43,21 +55,21 @@ export function identifyPostHogUser(
   userId: string,
   traits?: { email?: string; name?: string; tenantSlug?: string; role?: string },
 ) {
-  if (typeof window === "undefined") return;
-  posthog.identify(userId, {
-    email: traits?.email,
-    name: traits?.name,
-    tenant_slug: traits?.tenantSlug,
-    role: traits?.role,
-  });
+  void loadPostHog().then((posthog) =>
+    posthog?.identify(userId, {
+      email: traits?.email,
+      name: traits?.name,
+      tenant_slug: traits?.tenantSlug,
+      role: traits?.role,
+    }),
+  );
 }
 
 /**
  * Reset PostHog identity (call on logout).
  */
 export function resetPostHogUser() {
-  if (typeof window === "undefined") return;
-  posthog.reset();
+  void loadPostHog().then((posthog) => posthog?.reset());
 }
 
 /**
@@ -138,6 +150,6 @@ export function trackClientEvent(
 ) {
   if (typeof window === "undefined") return;
   const merged = { ...getUtmParams(), ...properties };
-  posthog.capture(event, merged);
+  void loadPostHog().then((posthog) => posthog?.capture(event, merged));
   forwardToGA4(event, merged);
 }

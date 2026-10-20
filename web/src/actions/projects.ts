@@ -95,7 +95,7 @@ const fail = (error: string): Failure => ({ success: false, error });
 /** Staff session + module gate. Providers may only edit their own projects (`canEditProject`). */
 async function guard() {
   const auth = await requireRole("owner", "admin", "provider");
-  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!auth.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = auth.tenantSlug;
   await assertModule(slug, "projects");
   const actorStaffId = auth.role === "provider" ? await getActorStaffId(slug, auth.userId) : null;

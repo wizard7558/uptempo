@@ -25,7 +25,7 @@ export async function uploadProductPhoto(formData: FormData): Promise<
   { ok: true; url: string } | { ok: false; error: string }
 > {
   const session = await requireRole("owner");
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = session.tenantSlug;
   try {
 
@@ -97,7 +97,7 @@ function toView(row: {
   };
 }
 
-/** All products for the current salon, sorted for the admin list. */
+/** All products for the current business, sorted for the admin list. */
 export async function listProducts(): Promise<ProductView[]> {
   const { tenantSlug: slug } = await requireStaff();
   return withTenantDb(slug, async (db, { products }) => {
@@ -204,7 +204,7 @@ export interface StorefrontSettings {
   retailShipFlatCents: number | null;
 }
 
-/** Retail tax + shipping settings for the current salon's storefront. */
+/** Retail tax + shipping settings for the current business's storefront. */
 export async function getStorefrontSettings(): Promise<StorefrontSettings> {
   const { tenantSlug: slug } = await requireStaff();
   return withTenantDb(slug, async (db, { businessSettings }) => {

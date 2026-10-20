@@ -11,12 +11,12 @@ import {
 
 /**
  * Platform-level ledger of monthly platform-fee charges the platform bills to a
- * salon (tenant). One row per tenant per billing period; the unique
+ * business (tenant). One row per tenant per billing period; the unique
  * (tenant_slug, period_start) index makes the monthly billing cron idempotent.
  *
  * amountChargedCents is the floor top-up actually charged =
  * max(0, floor − feesCollectedCents) (0 when per-transaction application fees
- * already met/exceeded the floor, or the salon is exempt).
+ * already met/exceeded the floor, or the business is exempt).
  */
 export const platformCharges = pgTable(
   "platform_charges",

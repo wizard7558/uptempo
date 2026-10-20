@@ -1,7 +1,6 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { getServiceColor } from "@/lib/utils/service-colors";
 import { timeToPixelOffset, SLOT_HEIGHT_PX } from "./schedule-config";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +9,8 @@ import { visitWord } from "@/lib/schedule/visit-status";
 
 export interface AppointmentData {
   id: string;
-  /** Stylist column this appointment belongs to. Used by edit-services to
-   * resolve per-stylist pricing. */
+  /** Staff column this appointment belongs to. Used by edit-services to
+   * resolve per-staff pricing. */
   staffId: string;
   clientId: string;
   clientName: string;
@@ -75,8 +74,8 @@ const PROCESSING_HATCH_PATTERN = `repeating-linear-gradient(
   45deg,
   transparent,
   transparent 3px,
-  rgba(255,255,255,0.2) 3px,
-  rgba(255,255,255,0.2) 6px
+  color-mix(in srgb, var(--foreground) 18%, transparent) 3px,
+  color-mix(in srgb, var(--foreground) 18%, transparent) 6px
 )`;
 
 export function AppointmentBlock({
@@ -99,10 +98,6 @@ export function AppointmentBlock({
   const durationMinutes =
     (appointment.end.getTime() - appointment.start.getTime()) / 60_000;
   const height = (durationMinutes / 15) * SLOT_HEIGHT_PX;
-
-  // Use first service color, or fallback
-  const primaryServiceId = appointment.services[0]?.serviceId ?? "default";
-  const bgColor = getServiceColor(primaryServiceId);
 
   const serviceNames = appointment.services
     .map((s) => s.serviceName)
@@ -132,7 +127,6 @@ export function AppointmentBlock({
   const style: React.CSSProperties = {
     top,
     height: Math.max(height, SLOT_HEIGHT_PX),
-    backgroundColor: bgColor,
     ...(transform
       ? {
           transform: `translate(${transform.x}px, ${transform.y}px)`,
@@ -178,14 +172,14 @@ export function AppointmentBlock({
       data-target-exempt="duration"
       aria-label={`${appointment.clientName}, ${serviceNames}, ${timeLabel}, ${statusLabel}${isFlexBooking ? " (flex booking)" : ""}`}
       className={cn(
-        "absolute z-10 cursor-pointer overflow-hidden rounded-md px-2 py-1 text-xs text-white shadow-sm transition-opacity",
+        "absolute z-10 cursor-pointer overflow-hidden rounded-md border border-border bg-card px-2 py-1 text-xs text-card-foreground shadow-sm transition-opacity",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         isDragging && "opacity-50",
-        !isDragging && "hover:brightness-110",
+        !isDragging && "hover:bg-muted",
         // Flex bookings render narrower on the right side (overlay on parent).
         // Multi-lane appointments use inline left/width from `style`; otherwise full width.
         isFlexBooking
-          ? "left-[40%] right-1 border-l-2 border-white/40"
+          ? "left-[40%] right-1 border-l-2 border-l-border"
           : useLanes
             ? ""
             : "inset-x-1",
@@ -213,7 +207,7 @@ export function AppointmentBlock({
         {appointment.clientStatusAtBooking === "repeat" && (
           <Badge
             variant="outline"
-            className="h-4 shrink-0 border-white/60 bg-black/10 px-1 py-0 text-xs leading-none text-white"
+            className="h-4 shrink-0 border-border bg-muted px-1 py-0 text-xs leading-none text-muted-foreground"
           >
             Repeat
           </Badge>

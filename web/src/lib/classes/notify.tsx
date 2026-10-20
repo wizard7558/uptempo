@@ -113,11 +113,11 @@ export async function notifyPromoted(slug: string, enrollmentId: string): Promis
       const result = await sendEmail({
         to: row.email,
         subject,
-        salonName: branding.salonName,
+        businessName: branding.businessName,
         react: (
           <RequestNewEmail
             t={facts.et}
-            salonName={branding.salonName}
+            businessName={branding.businessName}
             heading={subject}
             body={facts.et("classes.promotedBody", {
               className: facts.className,

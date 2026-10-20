@@ -19,7 +19,7 @@ export async function getRevenueReport(range: {
   end: Date;
 }): Promise<RevenueReport> {
   const { tenantSlug } = await requireRole("owner", "admin");
-  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
 
   const [staff, storefrontOn, retail] = await Promise.all([

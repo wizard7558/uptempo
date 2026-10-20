@@ -8,8 +8,8 @@ export default async function CalendarSettingsPage() {
   const t = await getT("settings");
   const staff = await listStaff();
 
-  // For the pilot (single-salon), show connections for all stylists
-  // In future SaaS, this would be scoped to the logged-in stylist
+  // For the pilot (single-business), show connections for all staff members
+  // In future SaaS, this would be scoped to the logged-in staff member
   const connectionsPerStaffMember = await Promise.all(
     staff.map(async (staffMember) => ({
       staffId: staffMember.id,

@@ -12,7 +12,6 @@ import {
   format,
 } from "date-fns";
 import { getScheduleData } from "@/actions/appointments";
-import { getServiceColor } from "@/lib/utils/service-colors";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/terms/client";
 import { visitWord } from "@/lib/schedule/visit-status";
@@ -35,7 +34,6 @@ interface DayAppointment {
   status: string;
   checkedInAt?: string | Date | null;
   start: Date;
-  serviceColor: string;
 }
 
 const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -68,7 +66,7 @@ export function MonthView({
 
       const data = await getScheduleData(staffIds, gridStart, gridEnd);
 
-      // Flatten all stylists' appointments into a single array
+      // Flatten all staff appointments into a single array
       const allAppointments: DayAppointment[] = [];
       for (const appts of Object.values(data.appointments)) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,9 +78,6 @@ export function MonthView({
             status: d.status,
             checkedInAt: d.checkedInAt,
             start: new Date(d.start),
-            serviceColor: getServiceColor(
-              d.services[0]?.serviceId ?? "default",
-            ),
           });
         }
       }
@@ -107,10 +102,9 @@ export function MonthView({
 
   return (
     <div
-      className={cn(
-        "flex h-full min-h-0 flex-col transition-opacity",
-        isPending && "opacity-60",
-      )}
+      data-calendar-view="month"
+      aria-busy={isPending}
+      className={cn("flex h-full min-h-0 flex-col")}
     >
       {/* Day headers */}
       <div className="grid shrink-0 grid-cols-7 border-b bg-muted/30">
@@ -138,12 +132,15 @@ export function MonthView({
           const extraCount = dayAppts.length - MAX_DOTS;
 
           return (
-            <div
+            <button
               key={key}
+              type="button"
+              aria-label={format(day, "EEEE, MMMM d, yyyy")}
+              aria-current={isCurrentDay ? "date" : undefined}
               className={cn(
-                "flex min-h-0 flex-col overflow-hidden bg-background p-2 transition-colors hover:bg-accent/50 cursor-pointer",
-                !isCurrentMonth && "text-muted-foreground opacity-50",
-                isCurrentDay && "ring-2 ring-inset ring-primary/30",
+                "group flex h-full min-h-0 w-full flex-col overflow-hidden bg-background p-2 text-left transition-none hover:bg-muted focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                !isCurrentMonth && "text-muted-foreground",
+                isCurrentDay && "ring-2 ring-inset ring-accent/30",
               )}
               onClick={() => onDayClick(day)}
             >
@@ -152,7 +149,7 @@ export function MonthView({
                 <span
                   className={cn(
                     "inline-flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium",
-                    isCurrentDay && "bg-primary text-primary-foreground",
+                    isCurrentDay && "bg-accent text-accent-foreground",
                   )}
                 >
                   {format(day, "d")}
@@ -170,8 +167,7 @@ export function MonthView({
                   return (
                     <div
                       key={appt.id}
-                      className="truncate rounded px-1 py-0.5 text-xs leading-tight text-white"
-                      style={{ backgroundColor: appt.serviceColor }}
+                      className="truncate rounded border border-border bg-card px-1 py-0.5 text-xs leading-tight text-card-foreground"
                       title={`${appt.clientName}, ${appt.serviceName}, ${timeLabel}, ${statusLabel}`}
                     >
                       {timeLabel} {appt.clientName} {statusLabel}
@@ -184,7 +180,7 @@ export function MonthView({
                   </div>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

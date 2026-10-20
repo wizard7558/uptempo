@@ -19,7 +19,7 @@ function entry(over: Partial<QueueEntryView>): QueueEntryView {
     position: 3,
     waitMinutes: 25,
     staffName: null,
-    businessName: "Test Salon",
+    businessName: "Sample Business",
     ...over,
   };
 }
@@ -32,7 +32,7 @@ function renderStatus(view: QueueEntryView) {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>
       <TermsProvider terms={VERTICALS.hair_salon.terms}>
-        <StatusClient slug="test-salon" token={TOKEN} initial={view} />
+        <StatusClient slug="sample-business" token={TOKEN} initial={view} />
       </TermsProvider>
     </NextIntlClientProvider>,
   );

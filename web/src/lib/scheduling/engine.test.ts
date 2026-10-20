@@ -293,7 +293,7 @@ describe("notice, horizon, booking windows", () => {
     expect(explainSlot(input, at("09:15"), "a")).toEqual(["TOO_SOON"]);
   });
 
-  it("maxAdvanceDays counts calendar days in the salon timezone", () => {
+  it("maxAdvanceDays counts calendar days in the business timezone", () => {
     const input = makeInput();
     input.rules.now = new Date("2026-06-15T23:30:00-04:00"); // 2026-06-15 local
     input.rules.maxAdvanceDays = 2;

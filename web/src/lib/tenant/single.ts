@@ -4,21 +4,15 @@ import { tenants } from "@/lib/db/schema/tenants";
 
 const NULL_TTL_MS = 5_000;
 
-// Next compiles server actions and pages into separate bundles, each with its
-// own copy of this module. Keep the cache on globalThis so a slug remembered by
-// the setup action is seen by the page that redirects `/` right afterwards,
-// instead of that page serving a stale "no tenant" for up to 5 seconds.
-interface SingleSlugCache {
-  slug: string | null | undefined;
-  nullCachedAt: number;
-}
-const globalCache = globalThis as typeof globalThis & {
-  __uptempoSingleSlugCache?: SingleSlugCache;
+/**
+ * Next bundles server actions and pages as separate module graphs, so plain
+ * module variables are not shared between them. The setup action remembers the
+ * new slug and the home page reads it, so the cache lives on globalThis.
+ */
+const state = globalThis as typeof globalThis & {
+  __uptempoSingleTenant?: { slug: string | null | undefined; nullCachedAt: number };
 };
-const cache: SingleSlugCache = (globalCache.__uptempoSingleSlugCache ??= {
-  slug: undefined,
-  nullCachedAt: 0,
-});
+const cache = (state.__uptempoSingleTenant ??= { slug: undefined, nullCachedAt: 0 });
 
 export async function queryFirstTenantSlug(): Promise<string | null> {
   const [row] = await publicDb

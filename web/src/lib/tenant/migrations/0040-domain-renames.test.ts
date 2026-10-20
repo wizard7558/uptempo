@@ -35,6 +35,54 @@ async function rows(q: ReturnType<typeof import("drizzle-orm").sql>) {
   return Array.from((await publicDb.execute(q)) as Iterable<Record<string, unknown>>);
 }
 
+/** Find legacy-named base objects in one tenant without deparsing other schemas. */
+async function findLegacyBaseObjects(schema: string) {
+  const { sql } = await import("drizzle-orm");
+  const P = "(stylist|salon|beauty_bank)";
+  return rows(sql`
+    WITH target_constraints AS MATERIALIZED (
+      SELECT c.oid, c.conname, t.relname
+      FROM pg_constraint c
+      JOIN pg_class t ON t.oid = c.conrelid
+      JOIN pg_namespace n ON n.oid = t.relnamespace
+      WHERE n.nspname = ${schema}
+    ),
+    target_indexes AS MATERIALIZED (
+      SELECT i.indexrelid AS oid, index_class.relname AS indexname,
+        table_class.relname AS tablename
+      FROM pg_index i
+      JOIN pg_class index_class ON index_class.oid = i.indexrelid
+      JOIN pg_class table_class ON table_class.oid = i.indrelid
+      JOIN pg_namespace n ON n.oid = table_class.relnamespace
+      WHERE n.nspname = ${schema}
+    )
+    SELECT 'rel ' || c.relname AS name
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = ${schema} AND c.relkind = 'r' AND c.relname ~ ${P}
+    UNION ALL
+    SELECT 'col ' || c.relname || '.' || a.attname
+    FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = ${schema} AND c.relkind = 'r' AND a.attnum > 0 AND NOT a.attisdropped
+      AND (c.relname ~ ${P} OR a.attname ~ ${P})
+      AND (c.relname || '.' || a.attname) NOT IN (
+        'staff.legacy_stylist_role',
+        'appointments.stylist_id',
+        'working_hours.stylist_id',
+        'calendar_connections.stylist_id',
+        'external_events.stylist_id',
+        'time_blocks.stylist_id',
+        'charges.beauty_bank_cents'
+      )
+    UNION ALL
+    SELECT 'con ' || relname || '.' || conname FROM target_constraints
+    WHERE relname ~ ${P} OR conname ~ ${P} OR pg_get_constraintdef(oid) ~ ${P}
+    UNION ALL
+    SELECT 'idx ' || indexname FROM target_indexes
+    WHERE tablename ~ ${P} OR indexname ~ ${P} OR pg_get_indexdef(oid) ~ ${P}
+  `);
+}
+
 const ID = {
   C1: "00000000-0000-4000-8000-0000000000c1",
   C2: "00000000-0000-4000-8000-0000000000c2",
@@ -82,7 +130,7 @@ async function oldNameCounts(schema: string) {
 }
 
 describe("migration 0040 domain renames (integration)", () => {
-  itDb("fresh provision lands at LATEST with no legacy names", async () => {
+  itDb("fresh provision keeps canonical base objects and the explicit 0060 compatibility surface", async () => {
     const { provisionTenantSchema } = await import("../provision");
     const { LATEST_SCHEMA_VERSION } = await import("./index");
     const { publicDb } = await import("@/lib/db");
@@ -96,20 +144,95 @@ describe("migration 0040 domain renames (integration)", () => {
     const [t] = await publicDb.select().from(tenants).where(eq(tenants.slug, slug));
     expect(t.schemaVersion).toBe(LATEST_SCHEMA_VERSION);
 
-    const P = "(stylist|salon|beauty_bank)";
-    const legacy = await rows(sql`
-      SELECT 'col ' || table_name || '.' || column_name AS name FROM information_schema.columns
-        WHERE table_schema = ${schema} AND (table_name ~ ${P} OR column_name ~ ${P} OR column_default ~ ${P})
-      UNION ALL
-      SELECT 'con ' || t.relname || '.' || c.conname FROM pg_constraint c
-        JOIN pg_class t ON t.oid = c.conrelid JOIN pg_namespace n ON n.oid = t.relnamespace
-        WHERE n.nspname = ${schema} AND (t.relname ~ ${P} OR c.conname ~ ${P} OR pg_get_constraintdef(c.oid) ~ ${P})
-      UNION ALL
-      SELECT 'idx ' || indexname FROM pg_indexes
-        WHERE schemaname = ${schema} AND (tablename ~ ${P} OR indexname ~ ${P} OR indexdef ~ ${P})
+    const legacyBaseObjects = await findLegacyBaseObjects(schema);
+    expect(legacyBaseObjects).toEqual([]);
+
+    const compatibilityViews = await rows(sql`
+      SELECT c.relname AS name, c.relkind
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = ${schema} AND c.relkind = 'v'
+      ORDER BY c.relname
     `);
-    expect(legacy).toEqual([]);
+    expect(compatibilityViews).toEqual([
+      { name: "beauty_bank_balances", relkind: "v" },
+      { name: "beauty_bank_transactions", relkind: "v" },
+      { name: "salon_policies", relkind: "v" },
+      { name: "stylist_services", relkind: "v" },
+      { name: "stylists", relkind: "v" },
+    ]);
   }, 60000);
+
+  itDb("catalog scan stays scoped during unrelated schema DDL churn", async () => {
+    const { provisionTenantSchema } = await import("../provision");
+    const { publicDb } = await import("@/lib/db");
+    const { sql } = await import("drizzle-orm");
+
+    const targetSlug = makeSlug("scope");
+    const churnSlug = makeSlug("churn");
+    const targetSchema = `tenant_${targetSlug}`;
+    const churnSchema = `tenant_${churnSlug}`;
+    await provisionTenantSchema({ name: "M40 Scope", slug: targetSlug });
+    await provisionTenantSchema({ name: "M40 Churn", slug: churnSlug });
+
+    const run = (text: string) => publicDb.execute(sql.raw(text));
+    // The column name intentionally contains a legacy term; only the
+    // constraint and index names are neutral, so their matches come from defs.
+    await run(`ALTER TABLE "${targetSchema}"."clients" ADD COLUMN "legacy_stylist_marker" text`);
+    await run(`ALTER TABLE "${targetSchema}"."clients" ADD CONSTRAINT "catalog_domain_marker_check" CHECK (name <> 'stylist')`);
+    await run(`CREATE INDEX "catalog_domain_expression_idx" ON "${targetSchema}"."clients" USING btree ((lower(name) || 'stylist'))`);
+
+    // The unrelated schema has the same definition-only matches. The exact
+    // result assertion proves only target findings are returned; the
+    // materialized CTE boundary keeps deparser inputs scoped to this tenant.
+    await run(`CREATE TABLE "${churnSchema}"."catalog_churn_seed" (
+      marker text,
+      CONSTRAINT "catalog_churn_seed_check" CHECK (marker <> 'stylist')
+    )`);
+    await run(`CREATE INDEX "catalog_churn_seed_idx" ON "${churnSchema}"."catalog_churn_seed" USING btree ((lower(marker) || 'stylist'))`);
+
+    const expected = [
+      "col clients.legacy_stylist_marker",
+      "con clients.catalog_domain_marker_check",
+      "idx catalog_domain_expression_idx",
+    ].sort();
+    const assertTargetFindings = (findings: Array<Record<string, unknown>>) => {
+      expect(findings.map((finding) => finding.name).sort()).toEqual(expected);
+    };
+    assertTargetFindings(await findLegacyBaseObjects(targetSchema));
+
+    // Start bounded scans and unrelated create/drop DDL together. The test
+    // checks every scan succeeds and retains the full target assertion; it
+    // does not depend on timing the historical catalog race.
+    const scanCount = 16;
+    const churnCount = 12;
+    let begin!: () => void;
+    const start = new Promise<void>((resolve) => {
+      begin = resolve;
+    });
+    const scanTask = (async () => {
+      await start;
+      for (let i = 0; i < scanCount; i += 1) {
+        assertTargetFindings(await findLegacyBaseObjects(targetSchema));
+      }
+    })();
+    const churnTask = (async () => {
+      await start;
+      for (let i = 0; i < churnCount; i += 1) {
+        const table = `catalog_churn_${i}`;
+        const index = `${table}_idx`;
+        await run(`CREATE TABLE "${churnSchema}"."${table}" (
+          marker text,
+          CONSTRAINT "${table}_check" CHECK (marker <> 'stylist')
+        )`);
+        await run(`CREATE INDEX "${index}" ON "${churnSchema}"."${table}" USING btree ((lower(marker) || 'stylist'))`);
+        await run(`DROP TABLE "${churnSchema}"."${table}"`);
+      }
+    })();
+    begin();
+    const taskResults = await Promise.allSettled([scanTask, churnTask]);
+    const failedTask = taskResults.find((result) => result.status === "rejected");
+    if (failedTask?.status === "rejected") throw failedTask.reason;
+  }, 90000);
 
   itDb("fresh@LATEST and fresh@39 + migrateTenant have identical fingerprints", async () => {
     const { provisionTenantSchema } = await import("../provision");

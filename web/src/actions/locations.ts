@@ -173,13 +173,13 @@ export async function updateLocation(data: {
 }
 
 /**
- * For each active stylist, list any active locations the stylist has NO
+ * For each active staff member, list any active locations the staff member has NO
  * enabled working hours at. Used to surface "missing coverage" warnings on
  * Settings → Locations and Settings → Hours so owners notice when adding a
- * new location doesn't make it bookable until per-stylist hours exist.
+ * new location doesn't make it bookable until per-staff hours exist.
  *
- * Returns an empty list when the salon has only one active location (no
- * coverage problem possible) or when every active stylist covers everything.
+ * Returns an empty list when the business has only one active location (no
+ * coverage problem possible) or when every active staff member covers everything.
  */
 export async function getLocationCoverageGaps(): Promise<
   Array<{

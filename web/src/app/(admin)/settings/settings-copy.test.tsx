@@ -44,16 +44,17 @@ import { StaffPageClient } from "./staff/client";
 describe("settings copy follows industry terms", () => {
   it("settings index shows barber words and keeps Stylists for hair_salon", async () => {
     currentTerms = VERTICALS.hair_salon.terms;
-    const salon = renderToStaticMarkup(await SettingsPage());
-    expect(salon).toContain(">Stylists<");
-    expect(salon).toContain("Beauty Bank / Memberships");
-    expect(salon).toContain("Manage your salon configuration.");
+    const hairHtml = renderToStaticMarkup(await SettingsPage());
+    expect(hairHtml).toContain(">Stylists<");
+    expect(hairHtml).toContain("Beauty Bank / Memberships");
+    expect(hairHtml).toContain("Manage your salon configuration.");
 
     currentTerms = VERTICALS.barber.terms;
     const barber = renderToStaticMarkup(await SettingsPage());
     const t = VERTICALS.barber.terms;
     expect(barber).toContain(`>${t.staff.other}<`);
     expect(barber).toContain(`${t.prepaidBalance} / Memberships`);
+    expect(barber).toContain("Manage your shop configuration.");
     expect(barber).not.toContain("Stylist");
     expect(barber).not.toContain("Beauty Bank");
   });

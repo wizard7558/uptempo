@@ -250,7 +250,7 @@ export function DomainSettingsClient({
           <CardTitle>Custom Domain</CardTitle>
           <CardDescription>
             Connect your own domain for a professional booking URL (e.g.,
-            book.yoursalon.com).
+            book.example.com).
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -259,7 +259,7 @@ export function DomainSettingsClient({
             <div className="flex gap-2">
               <Input
                 id="custom-domain"
-                placeholder="book.yoursalon.com"
+                placeholder="book.example.com"
                 value={newDomain}
                 onChange={(e) => setNewDomain(e.target.value)}
                 onKeyDown={(e) => {

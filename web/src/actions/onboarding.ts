@@ -7,6 +7,7 @@ import { user } from "@/lib/db/schema/auth";
 import { tenants } from "@/lib/db/schema/tenants";
 import { VERTICALS, VERTICAL_IDS, type Vertical } from "@/lib/verticals";
 import { isSingleMode } from "@/lib/config/mode";
+import { syncBillableStaff } from "@/lib/billing/billable-staff";
 import { getT } from "@/lib/terms/server";
 import { createTermsT } from "@/lib/terms/translator";
 import { eq, inArray, notInArray, sql } from "drizzle-orm";
@@ -17,8 +18,14 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { getTenantBySlug, updateTenantOnboardingSteps } from "@/lib/tenant/registry";
 import { slugSchema } from "@/lib/tenant/slug-validation";
 import { withTenantDb } from "@/lib/db/tenant";
-import { SERVICE_TEMPLATES, templateToServiceRow } from "@/lib/onboarding/service-templates";
+import {
+  getServiceTemplatesForIndustry,
+  templateToServiceRow,
+} from "@/lib/onboarding/service-templates";
+import { getTenantIndustry } from "@/lib/tenant/industry";
 import { trackEvent, identifyUser } from "@/lib/analytics/events";
+import { ensureHostedSubscription } from "@/lib/billing/subscriptions";
+import { HOSTED_TRIAL_DAYS } from "@/lib/billing/hosted-pricing";
 import {
   addMembershipAndActivate,
   insertMembership,
@@ -94,8 +101,8 @@ async function getOnboardingSlug(): Promise<string> {
 /**
  * Slug + role for the current user's active tenant, requiring owner/admin.
  * Onboarding mutations run on the root domain and are called from a public
- * server-action surface, so they must enforce their own role check (a stylist
- * or assistant must not be able to flip flags or launch the salon).
+ * server-action surface, so they must enforce their own role check (a provider
+ * or assistant must not be able to flip flags or launch the business).
  */
 async function getOnboardingSlugAsManager(): Promise<
   { ok: true; slug: string } | { ok: false; error: string }
@@ -140,16 +147,16 @@ export async function checkSlugAvailability(slug: string): Promise<{ available: 
 }
 
 /**
- * Generate a URL-safe slug from a salon name, appending a suffix if taken.
+ * Generate a URL-safe slug from a business name, appending a suffix if taken.
  */
-async function generateUniqueSlug(salonName: string): Promise<string> {
-  const base = salonName
+async function generateUniqueSlug(businessName: string): Promise<string> {
+  const base = businessName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^[^a-z]+/, "")
     .replace(/-+$/, "")
     .slice(0, 40)
-    .replace(/-+$/, "") || "salon";
+    .replace(/-+$/, "") || "business";
 
   if (base.length >= 3) {
     const existing = await getTenantBySlug(base);
@@ -168,8 +175,8 @@ async function generateUniqueSlug(salonName: string): Promise<string> {
 
 const SIGNUP_OFF = "Sign-up is turned off on this install.";
 
-export async function createSalonAccount(data: {
-  salonName: string;
+export async function createBusinessAccount(data: {
+  businessName: string;
   timezone: string;
   ownerName: string;
   email: string;
@@ -181,8 +188,8 @@ export async function createSalonAccount(data: {
   if (!packResult.ok) return { success: false, error: packResult.error };
   const pack = packResult.pack;
   try {
-    // Auto-generate a unique slug from salon name
-    const slug = await generateUniqueSlug(data.salonName);
+    // Auto-generate a unique slug from the business name
+    const slug = await generateUniqueSlug(data.businessName);
 
     // Create the user via Better Auth
     const newUser = await auth.api.signUpEmail({
@@ -202,7 +209,7 @@ export async function createSalonAccount(data: {
     try {
       await publicDb.insert(tenants).values(
         newTenantValues({
-          name: data.salonName,
+          name: data.businessName,
           slug,
           timezone: data.timezone,
           pack,
@@ -244,8 +251,8 @@ export async function createSalonAccount(data: {
   }
 }
 
-export async function setupSalonForOAuthUser(data: {
-  salonName: string;
+export async function setupBusinessForOAuthUser(data: {
+  businessName: string;
   slug: string;
   timezone: string;
   industry: string;
@@ -276,7 +283,7 @@ export async function setupSalonForOAuthUser(data: {
     // Create tenant registry row (fast — no schema provisioning yet)
     await publicDb.insert(tenants).values(
       newTenantValues({
-        name: data.salonName,
+        name: data.businessName,
         slug: data.slug,
         timezone: data.timezone,
         pack,
@@ -304,12 +311,12 @@ export async function setupSalonForOAuthUser(data: {
 }
 
 /**
- * For a user who already belongs to at least one salon (e.g. assistant on another account):
- * create a **new** tenant, add an owner membership, and switch their active salon to it.
- * Existing memberships are unchanged — they can switch salons from the sidebar.
+ * For a user who already belongs to at least one business (e.g. assistant on another account):
+ * create a **new** tenant, add an owner membership, and switch their active business to it.
+ * Existing memberships are unchanged — they can switch businesses from the sidebar.
  */
-export async function createAdditionalSalonAsOwner(data: {
-  salonName: string;
+export async function createAdditionalBusinessAsOwner(data: {
+  businessName: string;
   slug: string;
   timezone: string;
   industry: string;
@@ -336,7 +343,7 @@ export async function createAdditionalSalonAsOwner(data: {
 
     await publicDb.insert(tenants).values(
       newTenantValues({
-        name: data.salonName,
+        name: data.businessName,
         slug: data.slug,
         timezone: data.timezone,
         pack,
@@ -374,15 +381,15 @@ export async function createAdditionalSalonAsOwner(data: {
 }
 
 export async function saveBusinessDetails(input: {
-  salonName: string;
+  businessName: string;
   phone: string;
   address: string;
 }): Promise<{ success: true } | { success: false; error: string }> {
   const { tenantSlug, userId } = await requireStaff("owner", "admin");
-  const salonName = input.salonName.trim();
+  const businessName = input.businessName.trim();
   const phone = input.phone.trim();
   const address = input.address.trim();
-  if (!salonName || !phone || !address) {
+  if (!businessName || !phone || !address) {
     return {
       success: false,
       error: (await getT("errors", tenantSlug))("onboarding.missingBusiness"),
@@ -394,7 +401,7 @@ export async function saveBusinessDetails(input: {
 
   await publicDb
     .update(tenants)
-    .set({ name: salonName, updatedAt: new Date() })
+    .set({ name: businessName, updatedAt: new Date() })
     .where(eq(tenants.slug, tenantSlug));
 
   await withTenantDb(tenantSlug, async (db, { staff, locations, businessSettings }) => {
@@ -410,10 +417,10 @@ export async function saveBusinessDetails(input: {
     if (location) {
       await db
         .update(locations)
-        .set({ name: salonName, address, updatedAt: new Date() })
+        .set({ name: businessName, address, updatedAt: new Date() })
         .where(eq(locations.id, location.id));
     } else {
-      await db.insert(locations).values({ name: salonName, address });
+      await db.insert(locations).values({ name: businessName, address });
     }
 
     const [policy] = await db
@@ -432,6 +439,7 @@ export async function saveBusinessDetails(input: {
       });
     }
   });
+  await syncBillableStaff(tenantSlug);
 
   revalidatePath("/onboarding");
   return { success: true };
@@ -483,7 +491,10 @@ export async function seedServicesFromTemplates(
   await requireStaff();
   try {
     const slug = await getOnboardingSlug();
-    const selectedTemplates = SERVICE_TEMPLATES.filter((t) => templateIds.includes(t.id));
+    const industry = await getTenantIndustry(slug);
+    const selectedTemplates = getServiceTemplatesForIndustry(industry).filter(
+      (template) => templateIds.includes(template.id),
+    );
 
     if (selectedTemplates.length === 0) {
       return { success: false, error: "No valid templates selected" };
@@ -591,7 +602,7 @@ export async function markOnboardingStepComplete(
 
   await updateTenantOnboardingSteps(slug, updatedSteps);
   revalidatePath("/", "layout");
-  revalidateTag(onboardingTag(slug));
+  revalidateTag(onboardingTag(slug), { expire: 0 });
   return { success: true };
 }
 
@@ -619,7 +630,7 @@ export async function completeHoursStep(): Promise<{
 
 /**
  * Explicitly skip Stripe during onboarding. Closes the card-on-file trap: a
- * salon without Stripe cannot process cards, so if `require_card_on_file` is
+ * business without Stripe cannot process cards, so if `require_card_on_file` is
  * still on we turn it off (and say so) — otherwise the public booking flow
  * would demand cards it can't charge. A prompt on Settings → Billing offers to
  * re-enable it once Stripe is connected.
@@ -675,7 +686,7 @@ export async function skipStripeForNow(): Promise<
     stripeSkipped: true,
   });
   revalidatePath("/", "layout");
-  revalidateTag(onboardingTag(slug));
+  revalidateTag(onboardingTag(slug), { expire: 0 });
 
   trackEvent(
     "onboarding.stripe_skipped",
@@ -685,7 +696,7 @@ export async function skipStripeForNow(): Promise<
   return { success: true, cardRequirementDisabled };
 }
 
-export async function launchSalon(): Promise<
+export async function launchBusiness(): Promise<
   | { success: true }
   | { success: false; error: string; missing?: LaunchPrereq[] }
 > {
@@ -733,9 +744,19 @@ export async function launchSalon(): Promise<
 
     await updateTenantOnboardingSteps(slug, updatedSteps);
     revalidatePath("/", "layout");
-    revalidateTag(onboardingTag(slug));
+    revalidateTag(onboardingTag(slug), { expire: 0 });
 
     trackEvent("salon.launched", {}, { tenantSlug: slug });
+
+    // Start the hosted plan trial. A billing problem must never undo a launch.
+    try {
+      await ensureHostedSubscription(slug, { trialDays: HOSTED_TRIAL_DAYS });
+    } catch (billingError) {
+      console.error(
+        `launchBusiness: hosted subscription setup failed for ${slug}:`,
+        billingError,
+      );
+    }
     return { success: true };
   } catch (error: unknown) {
     if (error instanceof AuthError) throw error;

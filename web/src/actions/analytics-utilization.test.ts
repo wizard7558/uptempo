@@ -29,7 +29,7 @@ vi.mock("@/lib/auth/rbac", () => ({
   requireStaff: async () => ({
     userId: "u",
     role: "owner",
-    tenantSlug: "test-salon",
+    tenantSlug: "test-business",
   }),
   AuthError: class AuthError extends Error {
     code = "FORBIDDEN";
@@ -53,10 +53,10 @@ vi.mock("drizzle-orm", async (importOriginal) => {
   };
 });
 
-describe("getStylistUtilization SQL compatibility", () => {
+describe("getStaffUtilization SQL compatibility", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    getTenantSlugMock.mockResolvedValue("test-salon");
+    getTenantSlugMock.mockResolvedValue("test-business");
   });
 
   it("uses range bounds instead of width(tstzrange)", async () => {

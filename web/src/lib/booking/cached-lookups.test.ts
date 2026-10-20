@@ -10,7 +10,7 @@ vi.mock("@/lib/tenant/registry", () => ({
   isTenantProvisioned: isTenantProvisionedMock,
 }));
 vi.mock("@/lib/db/tenant", () => ({ withTenantDb: withTenantDbMock }));
-vi.mock("@/actions/booking-public", () => ({ getSalonBySlug: vi.fn() }));
+vi.mock("@/actions/booking-public", () => ({ getBusinessBySlug: vi.fn() }));
 
 describe("getBookingBrandingCached", () => {
   beforeEach(() => {

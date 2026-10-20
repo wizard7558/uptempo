@@ -10,7 +10,6 @@ import { addMinutes, format } from "date-fns";
 import { TZDate } from "@date-fns/tz";
 import { withTenantDb } from "@/lib/db/tenant";
 import { enforceAgeGate } from "@/lib/consent/gate";
-import { resolveTenantSlugForAppointment } from "@/lib/tenant/registry";
 import {
   createBookingSchema,
   rescheduleBookingSchema,
@@ -39,7 +38,6 @@ import { failureCodeFor, type BookingFailureCode } from "@/lib/scheduling/reason
 import { eq, and, ne, sql, asc, inArray, gt, lt, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import {
-  getServicesForAppointment,
   getServicesForAppointments,
 } from "@/lib/queries/appointment-services";
 import { trackEvent } from "@/lib/analytics/events";
@@ -47,6 +45,7 @@ import { syncAutoAssistantTasksForAppointment } from "@/lib/services/sync-auto-a
 import { getNotificationSettingsForTenant } from "@/lib/notifications/settings";
 import { AuthError, getUserRole, requireAdminRole, requireStaff } from "@/lib/auth/rbac";
 import { failureMessage } from "@/lib/booking/failure-message";
+import { loadAppointmentForTenant } from "@/lib/appointments/load";
 import { refundCreditIfOnTime } from "@/lib/credits/cancel";
 import { runAfterResponse } from "@/lib/utils/after";
 
@@ -84,7 +83,7 @@ export async function createBookingGroup(data: {
   notes?: string | null;
 }) {
   const session = await requireAdminRole();
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = createBookingGroupSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.flatten().formErrors.join(", ") || "Invalid group booking" };
@@ -152,7 +151,7 @@ export async function createRecurringBooking(data: {
   count: number | null;
 }) {
   const session = await requireAdminRole();
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = createRecurringBookingSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.flatten().formErrors.join(", ") || "Invalid repeating booking" };
@@ -267,7 +266,7 @@ export async function createRecurringBooking(data: {
  */
 export async function stopRecurrence(data: { appointmentId: string }) {
   const session = await requireAdminRole();
-  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active salon");
+  if (!session.tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const parsed = z.object({ appointmentId: z.string().uuid() }).safeParse(data);
   if (!parsed.success) return { success: false as const, error: "Invalid request" };
   const slug = session.tenantSlug;
@@ -899,7 +898,7 @@ export async function cancelBooking(data: {
 
   try {
 
-    // Fetch stylistId for calendar sync before cancellation
+    // Fetch staff ID for calendar sync before cancellation
     const [appt] = await withTenantDb(slug, async (db, { appointments }) => {
       return db
         .select({ staffId: appointments.staffId })
@@ -1236,8 +1235,8 @@ export async function getAppointmentsForDateRange(
 
 /**
  * Consolidated schedule data fetch for schedule views.
- * Fetches all appointments + services + external events for multiple stylists
- * in a single server action call (replaces N per-stylist calls).
+ * Fetches all appointments + services + external events for multiple staff members
+ * in a single server action call (replaces N per-staff calls).
  */
 export async function getScheduleData(
   staffIds: string[],
@@ -1256,7 +1255,7 @@ export async function getScheduleData(
   const rangeStr = `[${startDate.toISOString()},${endDate.toISOString()})`;
 
   return withTenantDb(slug, async (db, { appointments, appointmentServices, clients, clientServiceOverrides, services, externalEvents, locations, timeBlocks, recurrenceRules, clientAddresses, projects }) => {
-    // Initialize empty arrays for all stylistIds
+    // Initialize empty arrays for all staff IDs
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appointmentsByStylelist: Record<string, any[]> = {};
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1269,7 +1268,7 @@ export async function getScheduleData(
       timeBlocksByStaffMember[id] = [];
     }
 
-    // 1. Fetch ALL stylists' appointments in one query
+    // 1. Fetch ALL staff members' appointments in one query
     const rows = await db
       .select({
         id: appointments.id,
@@ -1326,7 +1325,7 @@ export async function getScheduleData(
     // 2a. Apply per-client overrides on top of the snapshot pricing/duration
     // returned above. The schedule view shows current per-client overrides
     // (rather than purely historical snapshots) so revenue + hours-booked
-    // totals match what the stylist sees in the client profile.
+    // totals match what the staff member sees in the client profile.
     //
     // Resolution: client_service_override > appointment snapshot > catalog.
     const apptIdToClientId = new Map<string, string>();
@@ -1437,7 +1436,7 @@ export async function getScheduleData(
       }
     }
 
-    // 3. Group appointments by stylistId
+    // 3. Group appointments by staff member ID
     for (const row of rows) {
       const processingInfo = processingInfoMap.get(row.id);
       appointmentsByStylelist[row.staffId].push({
@@ -1490,7 +1489,7 @@ export async function getScheduleData(
       });
     }
 
-    // 4. Fetch ALL stylists' external events in one query
+    // 4. Fetch ALL staff members' external events in one query
     const externalRows = await db
       .select({
         id: externalEvents.id,
@@ -1509,7 +1508,7 @@ export async function getScheduleData(
         ),
       );
 
-    // 5. Group external events by stylistId
+    // 5. Group external events by staff member ID
     for (const row of externalRows) {
       externalEventsByStaffMember[row.staffId].push({
         id: row.id,
@@ -1729,87 +1728,6 @@ export async function sendClientText(appointmentId: string, body: string) {
 }
 
 export async function getAppointment(id: string) {
-  await requireStaff();
-  const slug = await resolveTenantSlugForAppointment(id);
-  if (!slug) return null;
-
-  return withTenantDb(slug, async (db, { appointments, appointmentServices, clients, services, locations, recurrenceRules, clientAddresses }) => {
-    const [row] = await db
-      .select({
-        id: appointments.id,
-        staffId: appointments.staffId,
-        during: appointments.during,
-        status: appointments.status,
-        notes: appointments.notes,
-        attributes: appointments.attributes,
-        clientId: clients.id,
-        clientName: clients.name,
-        clientEmail: clients.email,
-        clientPhone: clients.phone,
-        locationId: locations.id,
-        locationName: locations.name,
-        locationAddress: locations.address,
-        clientStatusAtBooking: appointments.clientStatusAtBooking,
-        recurrenceRuleId: appointments.recurrenceRuleId,
-        bookingGroupId: appointments.bookingGroupId,
-        rrule: recurrenceRules.rrule,
-        arrivalWindowMin: appointments.arrivalWindowMin,
-        onMyWaySentAt: appointments.onMyWaySentAt,
-        addressLine1: clientAddresses.line1,
-        addressLine2: clientAddresses.line2,
-        addressCity: clientAddresses.city,
-        addressRegion: clientAddresses.region,
-        addressPostalCode: clientAddresses.postalCode,
-      })
-      .from(appointments)
-      .innerJoin(clients, eq(appointments.clientId, clients.id))
-      .leftJoin(locations, eq(appointments.locationId, locations.id))
-      .leftJoin(recurrenceRules, eq(appointments.recurrenceRuleId, recurrenceRules.id))
-      .leftJoin(clientAddresses, eq(appointments.serviceAddressId, clientAddresses.id))
-      .where(eq(appointments.id, id))
-      .limit(1);
-
-    if (!row) return null;
-
-    const apptServices = await getServicesForAppointment(db, { appointmentServices, services }, row.id);
-
-    return {
-      id: row.id,
-      staffId: row.staffId,
-      clientStatusAtBooking: row.clientStatusAtBooking ?? null,
-      recurrenceRuleId: row.recurrenceRuleId,
-      bookingGroupId: row.bookingGroupId,
-      rrule: row.rrule ?? null,
-      client: {
-        id: row.clientId,
-        name: row.clientName,
-        email: row.clientEmail,
-        phone: row.clientPhone,
-      },
-      location: row.locationId
-        ? {
-            id: row.locationId,
-            name: row.locationName,
-            address: row.locationAddress,
-          }
-        : null,
-      serviceAddress: row.addressLine1
-        ? {
-            line1: row.addressLine1,
-            line2: row.addressLine2,
-            city: row.addressCity,
-            region: row.addressRegion,
-            postalCode: row.addressPostalCode ?? "",
-          }
-        : null,
-      arrivalWindowMin: row.arrivalWindowMin,
-      onMyWaySentAt: row.onMyWaySentAt,
-      services: apptServices,
-      start: row.during.start,
-      end: row.during.end,
-      status: row.status,
-      notes: row.notes,
-      attributes: row.attributes ?? {},
-    };
-  });
+  const { tenantSlug: slug } = await requireStaff();
+  return loadAppointmentForTenant(slug, id);
 }

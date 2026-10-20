@@ -108,7 +108,7 @@ describe("isMarkableStep", () => {
     expect(isMarkableStep("hours")).toBe(true);
     expect(isMarkableStep("policies")).toBe(true);
     expect(isMarkableStep("branding")).toBe(true);
-    expect(isMarkableStep("launched")).toBe(false); // must go through launchSalon
+    expect(isMarkableStep("launched")).toBe(false); // must go through launchBusiness
     expect(isMarkableStep("stripe")).toBe(false); // derived
     expect(isMarkableStep("stripeSkipped")).toBe(false); // must go through skipStripeForNow
   });

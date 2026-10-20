@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Server translator without a request scope: hair_salon words, same as the old copy.
+// Server translator without a request scope: default hair-industry terms, matching legacy copy.
 vi.mock("@/lib/terms/server", async () => {
   const { createTermsT } = await import("@/lib/terms/translator");
   const { VERTICALS } = await import("@/lib/verticals");
@@ -14,14 +14,14 @@ vi.mock("@/lib/terms/server", async () => {
 
 // Mock tenant context
 vi.mock("@/lib/tenant/context", () => ({
-  getTenantSlug: vi.fn().mockResolvedValue("test-salon"),
+  getTenantSlug: vi.fn().mockResolvedValue("test-business"),
 }));
 
 vi.mock("@/lib/auth/rbac", () => ({
   getUserRole: async () => "owner",
-  requireRole: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-salon" }),
-  requireAdminRole: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-salon" }),
-  requireStaff: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-salon" }),
+  requireRole: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-business" }),
+  requireAdminRole: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-business" }),
+  requireStaff: async () => ({ userId: "u1", role: "owner", tenantSlug: "test-business" }),
   AuthError: class AuthError extends Error {
     code: string;
     constructor(code: string, message?: string) {
@@ -39,7 +39,7 @@ vi.mock("next/cache", () => ({
 
 // Mock next/headers (required by getTenantSlug indirectly at module level)
 vi.mock("next/headers", () => ({
-  headers: vi.fn().mockResolvedValue(new Map([["x-tenant-slug", "test-salon"]])),
+  headers: vi.fn().mockResolvedValue(new Map([["x-tenant-slug", "test-business"]])),
 }));
 
 // Mock calendar-sync (dynamic import in reschedule/cancel)
@@ -214,7 +214,7 @@ describe("createBooking integration", () => {
     if (result.success) {
       expect(result.id).toBe("new-appt-id");
     }
-    expect(withTenantDb).toHaveBeenCalledWith("test-salon", expect.any(Function));
+    expect(withTenantDb).toHaveBeenCalledWith("test-business", expect.any(Function));
     expect(revalidatePath).toHaveBeenCalledWith("/schedule");
     expect(
       (mockDb.values as ReturnType<typeof vi.fn>).mock.calls[0]?.[0],
@@ -536,7 +536,7 @@ describe("createBooking integration", () => {
     expect(result.success).toBe(true);
   });
 
-  it("returns location error when the stylist is unavailable at the selected location", async () => {
+  it("returns location error when the provider is unavailable at the selected location", async () => {
     mockGetMultiServiceDuration.mockResolvedValue({
       services: [
         {
@@ -628,7 +628,7 @@ describe("rescheduleBooking integration", () => {
     expect(result.success).toBe(true);
     expect(revalidatePath).toHaveBeenCalledWith("/schedule");
     expect(mockResolveLocationForBooking).toHaveBeenCalledWith(
-      "test-salon",
+      "test-business",
       VALID_UUID,
       new Date("2026-03-15T14:00:00.000Z"),
       null,
@@ -706,7 +706,7 @@ describe("rescheduleBooking integration", () => {
     }
   });
 
-  it("returns location error when the new time has no valid stylist location", async () => {
+  it("returns location error when the new time has no valid staff member location", async () => {
     const now = new Date("2026-03-15T10:00:00.000Z");
     const end = new Date("2026-03-15T11:00:00.000Z");
 
@@ -781,7 +781,7 @@ describe("cancelBooking integration", () => {
   });
 
   it("cancels existing appointment", async () => {
-    // First call: fetch stylistId
+    // First call: fetch staff member ID
     vi.mocked(withTenantDb)
       .mockImplementationOnce(async (_slug, callback) => {
         const fetchDb = createMockDb();
@@ -809,7 +809,7 @@ describe("cancelBooking integration", () => {
   });
 
   it("returns error when appointment not found on update", async () => {
-    // First call: fetch stylistId (found)
+    // First call: fetch staff member ID (found)
     vi.mocked(withTenantDb)
       .mockImplementationOnce(async (_slug, callback) => {
         const fetchDb = createMockDb();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useDroppable } from "@dnd-kit/core";
 import {
   AppointmentBlock,
@@ -75,9 +76,13 @@ export function StaffColumn({
       <div className="sticky top-0 z-30 flex h-16 items-center justify-center gap-2 border-b bg-background px-2 text-center text-sm font-medium">
         {portrait &&
           (photoUrl ? (
-            <img
+            <Image
               src={photoUrl}
               alt=""
+              width={44}
+              height={44}
+              sizes="44px"
+              unoptimized
               className="size-11 shrink-0 rounded-full object-cover"
             />
           ) : (

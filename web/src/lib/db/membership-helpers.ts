@@ -20,7 +20,7 @@ export async function insertMembership(
 }
 
 /**
- * Keep `user.tenant_slug` and `user.role` in sync with the active salon (denormalized cache).
+ * Keep `user.tenant_slug` and `user.role` in sync with the active business (denormalized cache).
  */
 export async function setActiveTenantForUser(
   userId: string,

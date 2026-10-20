@@ -15,7 +15,7 @@ export function TimeColumn() {
 
   return (
     <div className="relative w-16 shrink-0 border-r text-xs text-muted-foreground">
-      {/* Spacer matching StylistColumn's sticky header so labels align with grid lines */}
+      {/* Spacer matching StaffColumn's sticky header so labels align with grid lines */}
       <div
         aria-hidden
         className="sticky top-0 z-30 h-16 border-b bg-background"

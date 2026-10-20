@@ -64,13 +64,19 @@ describe("0059 appointment check-in migration", () => {
       const before = await appointmentColumns(schema);
       expect(before).not.toContain("checked_in_at");
 
-      const up = await migrateTenant(migrated, 58);
+      const up59 = await migrateTenant(migrated, 58, 59);
+      expect(up59.error).toBeUndefined();
+      expect(up59.toVersion).toBe(59);
+      const after59 = await appointmentColumns(schema);
+      expect(after59.filter((name) => name !== "checked_in_at")).toEqual(before);
+      expect(after59).toContain("checked_in_at");
+
+      const up = await migrateTenant(migrated, 59);
       expect(up.error).toBeUndefined();
       expect(up.toVersion).toBe(LATEST_SCHEMA_VERSION);
       expect(await schemaFingerprint(schema)).toEqual(fpFresh);
 
       const after = await appointmentColumns(schema);
-      expect(after.filter((name) => name !== "checked_in_at")).toEqual(before);
       expect(after).toContain("checked_in_at");
 
       for (const stmt of migration.up(schema)) {

@@ -193,7 +193,7 @@ export async function seedIndustryPack(slug: string, ownerUserId: string): Promi
             slug: category.slug,
             name: category.name,
             sortOrder: index,
-            isDefault: 0,
+            isDefault: 1,
             isActive: 1,
           })),
         )

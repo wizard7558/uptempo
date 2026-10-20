@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="mt-4 text-sm text-[var(--ink-soft)]">
-          Last updated: April 2, 2026
+          Last updated: October 19, 2026
         </p>
         <div
           className="mt-10 max-w-none space-y-6 border-t border-[var(--line)] pt-8 text-[var(--ink-soft)] leading-relaxed
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
       <h2>1. Introduction</h2>
       <p>
         Uptempo Bookings (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates the
-        bookuptempo.com platform, an all-in-one salon booking and management
+        bookuptempo.com platform, an all-in-one booking and management
         service. This Privacy Policy describes how we collect, use, and protect
         your personal information.
       </p>
@@ -48,24 +48,54 @@ export default function PrivacyPage() {
           appointment details when you book an appointment.
         </li>
         <li>
-          <strong>Phone number:</strong> When you provide your phone number
-          during booking, we use it solely to send appointment reminders,
-          confirmations, and cancellation notifications via SMS.
+          <strong>Profile and service information:</strong> Depending on the
+          business and service, a client profile, booking request, or intake
+          form may include date of birth, gender, physical address, photos, or
+          identity documents you provide for a consent form or age check. It
+          may also include service-specific details such as allergies,
+          injuries, or fitness goals. Business staff may also record these
+          details in client records.
+        </li>
+        <li>
+          <strong>Phone number:</strong> We may use your phone number to verify
+          a booking request with a one-time code. When appointment messaging is
+          enabled and you have provided the required consent, we may also use
+          it for appointment communications such as reminders, confirmations,
+          and cancellation notifications by SMS.
+        </li>
+        <li>
+          <strong>Device and technical information:</strong> Account sessions
+          store the IP address and browser and device information sent with the
+          session for account security. When push notifications are enabled, a
+          device token is linked to the associated account or client profile
+          to deliver notifications.
         </li>
         <li>
           <strong>Payment information:</strong> Payment details are processed
           securely by Stripe. We do not store your credit card number.
         </li>
         <li>
-          <strong>Usage data:</strong> We collect anonymized usage data to
-          improve our service.
+          <strong>Usage data:</strong> When PostHog is configured, it captures
+          page views, page leaves, and product events. After client booking
+          verification, activity can be associated with a client ID and name,
+          and with an email address when email verification is used. After
+          business sign-in or sign-up, activity can be associated with the
+          business-user ID or signup email and may include email, name,
+          business slug, and role. Server-side identify and event records are
+          also written to application logs and may include user IDs, email,
+          name, business slug, role, and event properties. On
+          Vercel deployments, Vercel Web Analytics provides page-view metrics
+          and Speed Insights measures real-user performance. If a Google
+          Analytics measurement ID is configured, explicitly tracked events
+          may also be sent to Google Analytics.
         </li>
       </ul>
 
       <h2>3. How We Use Your Information</h2>
       <p>We use your information to:</p>
       <ul>
-        <li>Process and manage your salon appointments</li>
+        <li>Process and manage your appointments</li>
+        <li>Verify booking requests by email or phone using a one-time code</li>
         <li>
           Send appointment reminders, confirmations, and cancellation notices
           via email and SMS
@@ -108,7 +138,7 @@ export default function PrivacyPage() {
 
       <h2>5. Google Calendar Integration</h2>
       <p>
-        When salon owners connect their Google Calendar to Uptempo, we request
+        When business owners connect their Google Calendar to Uptempo, we request
         access to read and write calendar events. Specifically:
       </p>
       <ul>
@@ -165,23 +195,37 @@ export default function PrivacyPage() {
       </p>
       <ul>
         <li>
-          <strong>Salon owners:</strong> Your booking and contact information is
-          shared with the salon you book with so they can provide their
-          services.
+          <strong>Service businesses:</strong> Your booking and contact
+          information, service-specific details, and images you provide in a
+          booking request or intake form are shared with the business you book
+          with so its staff can respond to your request and provide the booked
+          service.
         </li>
         <li>
-          <strong>Service providers:</strong> We use Stripe for payments, Twilio
-          for SMS, Resend for email, and Google Calendar API for scheduling
-          integration. These providers process data on our behalf under strict
-          data processing agreements.
+          <strong>Service providers:</strong> Depending on the features used and
+          provider configuration, we use Stripe for payments; Twilio or
+          LoopMessage for appointment or booking-verification messages; Resend
+          or SMTP for email; and Google Calendar API when a business connects a
+          calendar.
+        </li>
+        <li>
+          <strong>Push notifications:</strong> When push notifications are
+          enabled, Apple Push Notification service uses the device token linked
+          to your account or client profile to deliver notifications.
+        </li>
+        <li>
+          <strong>Analytics and hosting providers:</strong> PostHog processes
+          product analytics when configured. Vercel provides web hosting and
+          logging; on Vercel deployments, Web Analytics provides page-view
+          metrics and Speed Insights measures real-user performance. Google
+          Analytics may receive explicitly tracked events when a measurement ID
+          is configured.
         </li>
       </ul>
 
       <h2>7. Data Security</h2>
       <p>
-        We implement industry-standard security measures including encryption in
-        transit (TLS) and at rest, secure database access controls, and regular
-        security reviews to protect your personal information.
+        We use measures designed to help protect your personal information.
       </p>
 
       <h2>8. Data Retention</h2>
