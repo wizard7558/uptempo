@@ -97,7 +97,7 @@ export async function setupConnectAccount(
 
       // The onboarding checklist derives its `stripe` flag from this column —
       // invalidate so the wizard/gate see the new account immediately.
-      revalidateTag(onboardingTag(slug));
+      revalidateTag(onboardingTag(slug), { expire: 0 });
     }
 
     // Create onboarding link (works for both new and existing accounts)

@@ -559,7 +559,7 @@ export async function acceptInvitation(
       // Invitations created before public migration 0026 may still carry 'stylist'.
       normalizeTeamRole(invitation.role),
     );
-    revalidateTag(userMembershipsTag(newUser.user.id));
+    revalidateTag(userMembershipsTag(newUser.user.id), { expire: 0 });
 
     await insertStaffForTeamMember({
       tenantSlug: invitation.tenantSlug,
@@ -668,7 +668,7 @@ export async function joinBusinessFromInvitation(
       // Invitations created before public migration 0026 may still carry 'stylist'.
       normalizeTeamRole(invitation.role),
     );
-    revalidateTag(userMembershipsTag(session.user.id));
+    revalidateTag(userMembershipsTag(session.user.id), { expire: 0 });
 
     const displayName = session.user.name?.trim() || invitation.email.split("@")[0];
     await insertStaffForTeamMember({
@@ -791,7 +791,7 @@ export async function switchActiveTenant(
 
     await setActiveTenantForUser(session.user.id, tenantSlug, row.role);
     revalidatePath("/", "layout");
-    revalidateTag(userMembershipsTag(session.user.id));
+    revalidateTag(userMembershipsTag(session.user.id), { expire: 0 });
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) throw error;

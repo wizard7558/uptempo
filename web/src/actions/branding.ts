@@ -77,7 +77,7 @@ export async function updateBrandingSettings(data: {
     revalidatePath("/settings/branding");
     // Invalidate the cross-request branding cache used by the public booking
     // layout/metadata (src/lib/booking/cached-lookups.ts).
-    revalidateTag(`branding:${slug}`);
+    revalidateTag(`branding:${slug}`, { expire: 0 });
     trackEvent("branding.updated", {}, { tenantSlug: slug });
     return { success: true as const, data: result[0] };
   } catch (error) {

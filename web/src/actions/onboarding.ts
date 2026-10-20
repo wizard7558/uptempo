@@ -602,7 +602,7 @@ export async function markOnboardingStepComplete(
 
   await updateTenantOnboardingSteps(slug, updatedSteps);
   revalidatePath("/", "layout");
-  revalidateTag(onboardingTag(slug));
+  revalidateTag(onboardingTag(slug), { expire: 0 });
   return { success: true };
 }
 
@@ -686,7 +686,7 @@ export async function skipStripeForNow(): Promise<
     stripeSkipped: true,
   });
   revalidatePath("/", "layout");
-  revalidateTag(onboardingTag(slug));
+  revalidateTag(onboardingTag(slug), { expire: 0 });
 
   trackEvent(
     "onboarding.stripe_skipped",
@@ -744,7 +744,7 @@ export async function launchBusiness(): Promise<
 
     await updateTenantOnboardingSteps(slug, updatedSteps);
     revalidatePath("/", "layout");
-    revalidateTag(onboardingTag(slug));
+    revalidateTag(onboardingTag(slug), { expire: 0 });
 
     trackEvent("salon.launched", {}, { tenantSlug: slug });
 

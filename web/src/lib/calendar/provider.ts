@@ -105,7 +105,7 @@ export async function getValidAccessToken(
         })
         .where(eq(calendarConnections.id, connection.id));
     });
-    revalidateTag(calendarConnectionsTag(tenantSlug));
+    revalidateTag(calendarConnectionsTag(tenantSlug), { expire: 0 });
 
     return newTokens.access_token;
   } catch (error) {
@@ -144,7 +144,7 @@ export async function getValidAccessToken(
       }
     });
     if (escalate) {
-      revalidateTag(calendarConnectionsTag(tenantSlug));
+      revalidateTag(calendarConnectionsTag(tenantSlug), { expire: 0 });
     }
 
     if (escalate && connection.status === "active") {

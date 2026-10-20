@@ -82,7 +82,7 @@ export async function saveCalendarConnection(data: {
     { platform: data.platform },
     { tenantSlug: slug },
   );
-  revalidateTag(calendarConnectionsTag(slug));
+  revalidateTag(calendarConnectionsTag(slug), { expire: 0 });
   return connection;
 }
 
@@ -102,7 +102,7 @@ export async function disconnectCalendar(connectionId: string) {
   });
 
   revalidatePath("/settings/calendars");
-  revalidateTag(calendarConnectionsTag(slug));
+  revalidateTag(calendarConnectionsTag(slug), { expire: 0 });
   trackEvent("calendar.disconnected", {}, { tenantSlug: slug });
   return { success: true as const };
 }
@@ -166,7 +166,7 @@ export async function setCalendarId(
   });
 
   revalidatePath("/settings/calendars");
-  revalidateTag(calendarConnectionsTag(slug));
+  revalidateTag(calendarConnectionsTag(slug), { expire: 0 });
   return { success: true as const };
 }
 
