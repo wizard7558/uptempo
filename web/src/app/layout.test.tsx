@@ -31,6 +31,10 @@ vi.mock("@vercel/speed-insights/next", () => ({
   SpeedInsights: () => <div id="vercel-speed" />,
 }));
 
+vi.mock("@/components/native/native-bridge", () => ({
+  NativeBridge: () => <div id="native-bridge" />,
+}));
+
 import RootLayout from "./layout";
 
 afterEach(() => {
@@ -64,6 +68,16 @@ describe("RootLayout analytics", () => {
     expect(html).toContain("G-TEST123");
     expect(html).toContain("vercel-analytics");
     expect(html).toContain("vercel-speed");
+  });
+
+  it("mounts one native bridge at the root", () => {
+    const html = renderToStaticMarkup(
+      <RootLayout>
+        <p>Hello</p>
+      </RootLayout>,
+    );
+
+    expect(html.match(/id="native-bridge"/g)).toHaveLength(1);
   });
 });
 

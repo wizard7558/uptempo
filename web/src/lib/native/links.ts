@@ -29,6 +29,11 @@ function hasExplicitPort(value: string): boolean {
   return !authority || authority.includes(":");
 }
 
+function hasCredentials(value: string): boolean {
+  const authority = /^[a-z][a-z0-9+.-]*:\/\/([^/?#]*)/i.exec(value)?.[1];
+  return authority?.includes("@") ?? false;
+}
+
 function hasUnsafeCharacters(value: string): boolean {
   if (
     UNSAFE_RAW_CHARACTERS.test(value) ||
@@ -44,6 +49,33 @@ function hasUnsafeCharacters(value: string): boolean {
   }
 }
 
+function rawPathname(value: string): string {
+  const absoluteUrl = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]*(\/[^?#]*)?/i.exec(value);
+  if (absoluteUrl) return absoluteUrl[1] ?? "/";
+  return value.split(/[?#]/, 1)[0] ?? "";
+}
+
+function hasTraversalSegments(value: string): boolean {
+  let path = rawPathname(value);
+  for (let pass = 0; pass < 8; pass += 1) {
+    if (path.split("/").some((segment) => segment === "." || segment === "..")) {
+      return true;
+    }
+
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(path);
+    } catch {
+      return true;
+    }
+
+    if (decoded === path) return false;
+    path = decoded;
+  }
+
+  return true;
+}
+
 /**
  * Validate a same-origin path before using it in window.location.assign.
  * Encoded separators and controls are rejected too, since servers and routers
@@ -55,7 +87,8 @@ export function safeNativeLocalPath(value: string): string | null {
     value.length > 4096 ||
     !value.startsWith("/") ||
     value.startsWith("//") ||
-    hasUnsafeCharacters(value)
+    hasUnsafeCharacters(value) ||
+    hasTraversalSegments(value)
   ) {
     return null;
   }
@@ -142,7 +175,15 @@ export function resolveNativeLink(
   value: string,
   appKind: NativeAppKind | undefined = currentNativeAppKind(),
 ): ResolvedNativeLink | null {
-  if (!value || value.length > 8192 || hasUnsafeCharacters(value)) return null;
+  if (
+    !value ||
+    value.length > 8192 ||
+    hasUnsafeCharacters(value) ||
+    hasTraversalSegments(value) ||
+    hasCredentials(value)
+  ) {
+    return null;
+  }
 
   let parsed: URL;
   try {

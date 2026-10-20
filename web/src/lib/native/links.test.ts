@@ -128,6 +128,36 @@ describe("native Universal Links and callback URLs", () => {
     }
   });
 
+  it.each([
+    "/book/../admin",
+    "/book/%2e%2e/admin",
+    "/book/%252e%252e/admin",
+    "/book/%2e%2e%2fadmin",
+    "/book/%252e%252e%252fadmin",
+  ])("rejects path traversal before URL normalization: %s", (path) => {
+    expect(safeNativeLocalPath(path)).toBeNull();
+    expect(resolveNativeLink(`https://www.bookuptempo.com${path}`)).toBeNull();
+  });
+
+  it.each([
+    "https://user@www.bookuptempo.com/book/demo",
+    "https://user:secret@www.bookuptempo.com/book/demo",
+    "https://@www.bookuptempo.com/book/demo",
+    "uptempo-owner://@calendar-callback",
+  ])("rejects URL credentials, including empty user-info: %s", (url) => {
+    expect(resolveNativeLink(url)).toBeNull();
+  });
+
+  it("preserves safe encoded query values while rejecting traversal paths", () => {
+    const path = "/book/demo?next=%2e%2e%2fadmin#details";
+
+    expect(safeNativeLocalPath(path)).toBe(path);
+    expect(resolveNativeLink(`https://bookuptempo.com${path}`)).toEqual({
+      path,
+      closeBrowser: false,
+    });
+  });
+
   it("handles a launch URL and a later appUrlOpen callback, closing Browser for callbacks", async () => {
     const navigate = vi.fn();
     const closeBrowser = vi.fn(async () => {});

@@ -36,7 +36,9 @@ export function ManageBillingButton({
     });
   }
 
-  if (host !== "web") {
+  if (host === "unknown") return null;
+
+  if (host === "native") {
     return <p className="text-sm text-muted-foreground">{nativeNotice}</p>;
   }
 

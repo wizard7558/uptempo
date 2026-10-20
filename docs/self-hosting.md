@@ -37,7 +37,7 @@ Remove `db` from `COMPOSE_PROFILES` and set `DATABASE_URL` to your server. The d
 
 ## Files
 
-Uploads stay on the `uploads` volume when `STORAGE_PROVIDER=local`. For S3, R2, or MinIO, set `COMPOSE_PROFILES=db,s3` and the `S3_*` variables. `S3_ENDPOINT` is where the server writes. `S3_PUBLIC_URL` is the browser-facing base for those objects.
+Uploads stay on the persistent `uploads` volume when `STORAGE_PROVIDER=local`. For external S3-compatible storage, including R2 and external MinIO, set `STORAGE_PROVIDER=s3` and `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION`, `S3_ENDPOINT`, and `S3_PUBLIC_URL`. Keep the existing `COMPOSE_PROFILES` choice: use `db` for the bundled Postgres or omit `db` when using external Postgres. The `s3` profile is only for optionally starting bundled MinIO and its bucket initializer; external S3-compatible storage does not need it. `S3_ENDPOINT` is where the server writes. `S3_PUBLIC_URL` is the browser-facing base for those objects.
 
 ## Email
 

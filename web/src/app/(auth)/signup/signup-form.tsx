@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { authClient } from "@/lib/auth/client";
 import { createBusinessAccount } from "@/actions/onboarding";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   identifyPostHogUser,
   trackClientEvent,
 } from "@/lib/analytics/posthog-provider";
+import { notifyNativeAuthSuccess } from "@/lib/native/push-register";
 import { TermsProvider, useT } from "@/lib/terms/client";
 import { IndustryPicker } from "@/components/onboarding/industry-picker";
 import { VERTICALS, type VerticalId } from "@/lib/verticals";
@@ -56,8 +58,10 @@ function AccountFields({
   const [timezone, setTimezone] = useState(getDefaultTimezone());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requiresSignInRecovery, setRequiresSignInRecovery] = useState(false);
   const chosen =
     industry === "general" ? t("industry.somethingElse") : VERTICALS[industry].label;
+  const loginHref = `/login?callbackUrl=${encodeURIComponent("/onboarding")}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,7 +79,18 @@ function AccountFields({
       });
 
       if (result.success) {
-        await authClient.signIn.email({ email, password });
+        let signInResult;
+        try {
+          signInResult = await authClient.signIn.email({ email, password });
+        } catch {
+          setRequiresSignInRecovery(true);
+          return;
+        }
+        if (signInResult.error) {
+          setRequiresSignInRecovery(true);
+          return;
+        }
+        notifyNativeAuthSuccess();
         identifyPostHogUser(email, {
           email,
           name: ownerName,
@@ -93,6 +108,20 @@ function AccountFields({
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (requiresSignInRecovery) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          Your business account was created, but automatic sign-in failed. Sign
+          in with your new account to continue.
+        </p>
+        <Button className="w-full" variant="default" asChild>
+          <Link href={loginHref}>Sign in</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (

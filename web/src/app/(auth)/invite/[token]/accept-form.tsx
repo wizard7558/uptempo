@@ -10,6 +10,7 @@ import {
 } from "@/actions/team";
 import { authClient } from "@/lib/auth/client";
 import { landingPathForRole } from "@/lib/auth/landing";
+import { notifyNativeAuthSuccess } from "@/lib/native/push-register";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useT } from "@/lib/terms/client";
@@ -33,15 +34,17 @@ export function AcceptInviteForm({
 }: AcceptInviteFormProps) {
   const t = useT("auth");
   const router = useRouter();
-  // Revenue-viewing invitees (admins) land on the dashboard; others on the schedule.
+  // Use the shared destination for this invitee's role after accepting the invitation.
   const landingPath = landingPathForRole(role);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requiresSignInRecovery, setRequiresSignInRecovery] = useState(false);
 
   const loginHref = `/login?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`;
+  const recoveryLoginHref = `/login?callbackUrl=${encodeURIComponent(landingPath)}`;
 
   async function handleJoinExisting() {
     setError(null);
@@ -84,11 +87,22 @@ export function AcceptInviteForm({
       });
 
       if (result.success) {
-        await authClient.signIn.email({
-          email,
-          password,
-          callbackURL: landingPath,
-        });
+        let signInResult;
+        try {
+          signInResult = await authClient.signIn.email({
+            email,
+            password,
+            callbackURL: landingPath,
+          });
+        } catch {
+          setRequiresSignInRecovery(true);
+          return;
+        }
+        if (signInResult.error) {
+          setRequiresSignInRecovery(true);
+          return;
+        }
+        notifyNativeAuthSuccess();
         router.push(landingPath);
       } else {
         setError(result.error);
@@ -148,6 +162,20 @@ export function AcceptInviteForm({
           ) : (
             t("acceptForm.joinButton")
           )}
+        </Button>
+      </div>
+    );
+  }
+
+  if (requiresSignInRecovery) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          Your invitation was accepted, but automatic sign-in failed. Sign in
+          with the invited email and password to continue.
+        </p>
+        <Button className="w-full" variant="default" asChild>
+          <Link href={recoveryLoginHref}>Sign in</Link>
         </Button>
       </div>
     );
