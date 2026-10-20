@@ -42,11 +42,11 @@ describe("HostedPlanCard", () => {
     expect(container.textContent).toBe("");
   });
 
-  it("renders the read-only notice during SSR and does not expose a billing CTA", () => {
+  it("keeps the runtime-specific notice out of SSR and does not expose a billing CTA", () => {
     const markup = renderToStaticMarkup(
       <HostedPlanCard plan={base} terms={terms} />,
     );
-    expect(markup).toContain(
+    expect(markup).not.toContain(
       "Plan changes and platform payment method management are handled on the Uptempo website.",
     );
     expect(markup).not.toMatch(/Manage billing/);
