@@ -770,6 +770,7 @@ test("queue join and status stay accessible on mobile", async ({ page, browser }
     await customer.setViewportSize({ width: 390, height: 844 });
     await customer.goto("/q/test-salon");
     await expect(customer.getByLabel("Your name")).toBeVisible();
+    await expect(customer).toHaveTitle("Join the line");
     await expectAccessibleState(customer);
     await attachScreenshot(customer, testInfo, "queue-join");
     await customer.getByLabel("Your name").fill(QUEUE_CUSTOMER);
