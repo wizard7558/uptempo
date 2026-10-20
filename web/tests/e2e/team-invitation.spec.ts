@@ -139,7 +139,26 @@ async function acceptNewAccount(page: Page, token: string, name: string) {
   await page.locator("#accept-name").fill(name);
   await page.locator("#accept-password").fill("local-invite-password-123");
   await page.locator("#accept-confirm-password").fill("local-invite-password-123");
-  await page.getByRole("button", { name: "Accept & Create Account" }).click();
+  const origin = new URL(page.url()).origin;
+  const signInResponsePromise = page.waitForResponse(
+    (response) => {
+      const responseUrl = new URL(response.url());
+      return (
+        responseUrl.origin === origin &&
+        responseUrl.pathname === "/api/auth/sign-in/email" &&
+        response.request().method() === "POST"
+      );
+    },
+    { timeout: 15_000 },
+  );
+  const submitClickPromise = page
+    .getByRole("button", { name: "Accept & Create Account" })
+    .click();
+  const [signInResponse] = await Promise.all([
+    signInResponsePromise,
+    submitClickPromise,
+  ]);
+  expect(signInResponse.status()).toBe(200);
   await expect(page).toHaveURL(/\/schedule\/?$/);
   await expect(page.locator("main")).toBeVisible({ timeout: 15_000 });
   await expectScheduleDataReady(page);
