@@ -74,7 +74,7 @@ export default function TermsPage() {
         </li>
         <li>
           For help, reply <strong>HELP</strong> to any message, or contact us at{" "}
-          <a href="mailto:support@bookuptempo.com">support@bookuptempo.com</a>.
+          <a href="mailto:riley@bellaso.ai">riley@bellaso.ai</a>.
         </li>
         <li>
           To stop receiving messages, reply <strong>STOP</strong> to any
@@ -177,7 +177,7 @@ export default function TermsPage() {
       <h2>13. Contact</h2>
       <p>
         For questions about these Terms, contact us at{" "}
-        <a href="mailto:support@bookuptempo.com">support@bookuptempo.com</a>.
+        <a href="mailto:riley@bellaso.ai">riley@bellaso.ai</a>.
       </p>
         </div>
       </article>

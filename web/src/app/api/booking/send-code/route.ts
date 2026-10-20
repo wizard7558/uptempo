@@ -2,7 +2,13 @@ import { getT } from "@/lib/terms/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import React from "react";
-import { createVerificationForTenant } from "@/lib/booking/otp";
+import {
+  createReviewVerificationForTenant,
+  createVerificationForTenant,
+  normalizeBookingIdentifier,
+  normalizeBookingPhone,
+  readReviewOtpConfig,
+} from "@/lib/booking/otp";
 import { sendEmail } from "@/lib/email/send";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { clientIpFrom } from "@/lib/http/client-ip";
@@ -80,7 +86,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { identifier, phone } = parsed.data;
+    const normalized = normalizeBookingIdentifier(parsed.data.identifier);
+    const phone =
+      parsed.data.phone === undefined
+        ? undefined
+        : normalizeBookingPhone(parsed.data.phone);
+    if (!normalized || (parsed.data.phone !== undefined && !phone)) {
+      return NextResponse.json({ error: "Invalid identifier" }, { status: 400 });
+    }
+    const { identifier, type } = normalized;
     const businessId = parsed.data.businessId ?? parsed.data.salonId;
     if (!businessId) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
@@ -92,11 +106,6 @@ export async function POST(req: NextRequest) {
         { status: 404 },
       );
     }
-
-    // Detect type: email or phone
-    const type: "email" | "phone" = identifier.includes("@")
-      ? "email"
-      : "phone";
 
     // Rate limiting by identifier
     const identifierLimit = await consumeRateLimit({
@@ -127,6 +136,33 @@ export async function POST(req: NextRequest) {
         { error: "Too many requests. Please try again later." },
         { status: 429 },
       );
+    }
+
+    const reviewConfig = readReviewOtpConfig();
+    if (reviewConfig.email === identifier) {
+      if (
+        reviewConfig.status !== "valid" ||
+        reviewConfig.tenantSlug !== tenantSlug
+      ) {
+        return NextResponse.json(
+          { error: "Review access is unavailable" },
+          { status: 403 },
+        );
+      }
+
+      const reviewCode = await createReviewVerificationForTenant(
+        tenantSlug,
+        identifier,
+      );
+      if (!reviewCode) {
+        return NextResponse.json(
+          { error: "Review access is unavailable" },
+          { status: 403 },
+        );
+      }
+
+      // This challenge is persisted for the configured tenant and is never delivered or logged.
+      return NextResponse.json({ success: true, type: "email" });
     }
 
     // Generate and store verification code

@@ -15,20 +15,18 @@ export function CurrentTimeMarker({
   currentDate,
   headerOffsetPx = COLUMN_HEADER_HEIGHT_PX,
 }: CurrentTimeMarkerProps) {
-  const [now, setNow] = useState(new Date());
-  const isToday = isSameDay(currentDate, now);
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (!isToday) return;
+    const updateNow = () => setNow(new Date());
+    updateNow();
 
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 60_000); // Update every minute
+    const interval = setInterval(updateNow, 60_000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [isToday]);
+  }, []);
 
-  if (!isToday) return null;
+  if (!now || !isSameDay(currentDate, now)) return null;
 
   // The marker is mounted as a sibling of the staff columns, so its
   // coordinate space starts at the top of the column headers. Offset by the

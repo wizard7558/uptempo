@@ -59,7 +59,7 @@ import { switchActiveTenant } from "@/actions/team";
 import type { OnboardingState } from "@/lib/onboarding/state";
 import { ThemeToggle } from "./theme-toggle";
 
-const HELP_MAILTO = "mailto:support@bookuptempo.com";
+const HELP_MAILTO = "mailto:riley@bellaso.ai";
 
 export interface NavItem {
   /** Key within the `nav` message namespace. */

@@ -5,6 +5,11 @@ import { POST } from "./route";
 const mocks = vi.hoisted(() => ({
   getT: vi.fn(),
   verifyCodeForTenant: vi.fn(),
+  readReviewOtpConfig: vi.fn(),
+  normalizeBookingIdentifier: vi.fn(),
+  normalizeBookingPhone: vi.fn(),
+  consumeRateLimit: vi.fn(),
+  clientIpFrom: vi.fn(),
   setBookingSession: vi.fn(),
   findClientByEmailForTenant: vi.fn(),
   findClientByPhoneForTenant: vi.fn(),
@@ -23,7 +28,12 @@ vi.mock("@/lib/terms/server", () => ({ getT: mocks.getT }));
 vi.mock("next/headers", () => ({ cookies: mocks.cookies }));
 vi.mock("@/lib/booking/otp", () => ({
   verifyCodeForTenant: mocks.verifyCodeForTenant,
+  readReviewOtpConfig: mocks.readReviewOtpConfig,
+  normalizeBookingIdentifier: mocks.normalizeBookingIdentifier,
+  normalizeBookingPhone: mocks.normalizeBookingPhone,
 }));
+vi.mock("@/lib/auth/rate-limit", () => ({ consumeRateLimit: mocks.consumeRateLimit }));
+vi.mock("@/lib/http/client-ip", () => ({ clientIpFrom: mocks.clientIpFrom }));
 vi.mock("@/lib/booking/session-cookie", () => ({
   setBookingSession: mocks.setBookingSession,
 }));
@@ -42,6 +52,7 @@ vi.mock("drizzle-orm", () => ({ eq: mocks.eq }));
 const TENANT = "synthetic-business-tenant";
 const BUSINESS_ID = "00000000-0000-4000-8000-000000000011";
 const EMAIL = "new-client@example.test";
+const REVIEW_EMAIL = "reviewer@example.test";
 const PHONE = "+15550101010";
 const CREATED_ID = "client-created-0001";
 const EMAIL_CLIENT_ID = "client-email-0002";
@@ -79,6 +90,30 @@ beforeEach(() => {
   mocks.audience = "both";
   mocks.getT.mockReset().mockImplementation(async () => (key: string) => key);
   mocks.verifyCodeForTenant.mockReset().mockResolvedValue({ valid: true });
+  mocks.readReviewOtpConfig.mockReset().mockReturnValue({ status: "absent" });
+  mocks.normalizeBookingIdentifier.mockReset().mockImplementation((input: string) => {
+    const value = input.trim();
+    if (value.includes("@")) {
+      const identifier = value.toLowerCase();
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)
+        ? { identifier, type: "email" }
+        : null;
+    }
+    const digits = value.replace(/\D/g, "");
+    if (digits.length === 10) return { identifier: `+1${digits}`, type: "phone" };
+    if (digits.length === 11 && digits.startsWith("1")) {
+      return { identifier: `+${digits}`, type: "phone" };
+    }
+    return null;
+  });
+  mocks.normalizeBookingPhone.mockReset().mockImplementation((input: string) => {
+    const digits = input.trim().replace(/\D/g, "");
+    if (digits.length === 10) return `+1${digits}`;
+    if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+    return null;
+  });
+  mocks.consumeRateLimit.mockReset().mockResolvedValue({ allowed: true });
+  mocks.clientIpFrom.mockReset().mockReturnValue("203.0.113.14");
   mocks.setBookingSession.mockReset();
   mocks.findClientByEmailForTenant.mockReset().mockResolvedValue(null);
   mocks.findClientByPhoneForTenant.mockReset().mockResolvedValue(null);
@@ -129,7 +164,7 @@ describe("POST /api/booking/verify-code business ID compatibility", () => {
   it.each([
     { label: "canonical businessId", ids: { businessId: BUSINESS_ID, salonId: undefined } },
     { label: "legacy salonId", ids: { salonId: BUSINESS_ID } },
-    { label: "matching IDs", ids: { businessId: BUSINESS_ID } },
+    { label: "matching IDs", ids: { businessId: BUSINESS_ID, salonId: BUSINESS_ID } },
   ])("accepts $label and uses its business ID for tenant lookup", async ({ ids }) => {
     mocks.createClientForTenant.mockResolvedValue({ success: true, id: CREATED_ID });
 
@@ -422,5 +457,184 @@ describe("POST /api/booking/verify-code identity selection", () => {
     expect(mocks.updateSet).not.toHaveBeenCalled();
     expect(mocks.setBookingSession).not.toHaveBeenCalled();
     expect(mocks.cookieStoreSet).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/booking/verify-code App Review and verification budgets", () => {
+  function liveReviewConfig(overrides: Record<string, unknown> = {}) {
+    return {
+      status: "valid",
+      email: REVIEW_EMAIL,
+      tenantSlug: TENANT,
+      code: "654321",
+      expiresAt: new Date(Date.now() + 60_000),
+      ...overrides,
+    };
+  }
+
+  it("validates numeric codes and normalized identifiers before lookup or budgets", async () => {
+    const invalidCode = await POST(request({ code: "12x456" }));
+    const invalidEmail = await POST(request({ identifier: "bad@example" }));
+
+    expect(invalidCode.status).toBe(400);
+    expect(invalidEmail.status).toBe(400);
+    expect(mocks.getTenantSlugForBusinessId).not.toHaveBeenCalled();
+    expect(mocks.consumeRateLimit).not.toHaveBeenCalled();
+    expect(mocks.verifyCodeForTenant).not.toHaveBeenCalled();
+  });
+
+  it("applies verify-only identifier and IP budgets before challenge or client effects", async () => {
+    mocks.consumeRateLimit.mockResolvedValueOnce({ allowed: false });
+    const identifierLimited = await POST(
+      request({ identifier: " Client@Example.TEST " }),
+    );
+    expect(identifierLimited.status).toBe(429);
+    expect(mocks.consumeRateLimit).toHaveBeenCalledTimes(1);
+    expect(mocks.consumeRateLimit.mock.calls[0][0]).toMatchObject({
+      tenantSlug: TENANT,
+      scope: "identifier",
+      key: "verify:client@example.test",
+      limit: 3,
+      windowMs: 600_000,
+    });
+    expect(mocks.verifyCodeForTenant).not.toHaveBeenCalled();
+    expect(mocks.findClientByEmailForTenant).not.toHaveBeenCalled();
+    expect(mocks.createClientForTenant).not.toHaveBeenCalled();
+    expect(mocks.setBookingSession).not.toHaveBeenCalled();
+    expect(mocks.cookieStoreSet).not.toHaveBeenCalled();
+
+    mocks.consumeRateLimit
+      .mockResolvedValueOnce({ allowed: true })
+      .mockResolvedValueOnce({ allowed: false });
+    const ipLimited = await POST(request());
+    expect(ipLimited.status).toBe(429);
+    expect(mocks.consumeRateLimit).toHaveBeenCalledTimes(3);
+    expect(mocks.consumeRateLimit.mock.calls[2][0]).toMatchObject({
+      tenantSlug: TENANT,
+      scope: "ip",
+      key: "verify:203.0.113.14",
+      limit: 5,
+      windowMs: 600_000,
+    });
+    expect(mocks.verifyCodeForTenant).not.toHaveBeenCalled();
+    expect(mocks.findClientByEmailForTenant).not.toHaveBeenCalled();
+    expect(mocks.createClientForTenant).not.toHaveBeenCalled();
+    expect(mocks.setBookingSession).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "partial configuration", config: { status: "invalid", email: REVIEW_EMAIL } },
+    { label: "wrong tenant", config: liveReviewConfig({ tenantSlug: "other-tenant" }) },
+    { label: "expired configuration", config: { ...liveReviewConfig(), status: "invalid" } },
+  ])("fails closed for $label before verification or identity side effects", async ({ config }) => {
+    mocks.readReviewOtpConfig.mockReturnValue(config);
+
+    const response = await POST(request({ identifier: REVIEW_EMAIL, code: "654321", phone: "1 (555) 987-6543" }));
+
+    expect(response.status).toBe(400);
+    expect(mocks.verifyCodeForTenant).not.toHaveBeenCalled();
+    expect(mocks.findClientByEmailForTenant).not.toHaveBeenCalled();
+    expect(mocks.createClientForTenant).not.toHaveBeenCalled();
+    expect(mocks.updateSet).not.toHaveBeenCalled();
+    expect(mocks.setBookingSession).not.toHaveBeenCalled();
+    expect(mocks.cookieStoreSet).not.toHaveBeenCalled();
+  });
+
+  it("uses only the seeded reviewer account and ignores a submitted phone", async () => {
+    mocks.readReviewOtpConfig.mockReturnValue(liveReviewConfig());
+    mocks.findClientByEmailForTenant.mockResolvedValue(
+      client(EMAIL_CLIENT_ID, "Review Client", REVIEW_EMAIL),
+    );
+
+    const response = await POST(
+      request({ identifier: ` ${REVIEW_EMAIL.toUpperCase()} `, code: "654321", phone: "1 (555) 987-6543" }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      clientId: EMAIL_CLIENT_ID,
+      name: "Review Client",
+      isReturning: true,
+    });
+    expect(mocks.verifyCodeForTenant).toHaveBeenCalledWith(TENANT, REVIEW_EMAIL, "654321");
+    expect(mocks.findClientByEmailForTenant).toHaveBeenCalledTimes(1);
+    expect(mocks.findClientByEmailForTenant).toHaveBeenCalledWith(TENANT, REVIEW_EMAIL);
+    expect(mocks.findClientByPhoneForTenant).not.toHaveBeenCalled();
+    expect(mocks.createClientForTenant).not.toHaveBeenCalled();
+    expect(mocks.updateSet).not.toHaveBeenCalled();
+    expect(mocks.setBookingSession).toHaveBeenCalledWith(EMAIL_CLIENT_ID);
+    expect(mocks.cookieStoreSet).toHaveBeenCalledTimes(2);
+    expect(mocks.cookieStoreSet).toHaveBeenNthCalledWith(
+      1,
+      "uptempo_last_business",
+      TENANT,
+      expect.objectContaining({ maxAge: 365 * 24 * 60 * 60 }),
+    );
+    expect(mocks.cookieStoreSet).toHaveBeenNthCalledWith(
+      2,
+      "uptempo_last_salon",
+      TENANT,
+      expect.objectContaining({ maxAge: 365 * 24 * 60 * 60 }),
+    );
+  });
+
+  it("does not create a reviewer, mutate a phone, or create a session when the seeded client is missing", async () => {
+    mocks.readReviewOtpConfig.mockReturnValue(liveReviewConfig());
+
+    const response = await POST(
+      request({ identifier: REVIEW_EMAIL, code: "654321", phone: "1 (555) 987-6543" }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.findClientByEmailForTenant).toHaveBeenCalledWith(TENANT, REVIEW_EMAIL);
+    expect(mocks.createClientForTenant).not.toHaveBeenCalled();
+    expect(mocks.updateSet).not.toHaveBeenCalled();
+    expect(mocks.setBookingSession).not.toHaveBeenCalled();
+    expect(mocks.cookieStoreSet).not.toHaveBeenCalled();
+  });
+
+  it("normalizes ordinary email and phone identifiers before budgets and verification", async () => {
+    mocks.findClientByEmailForTenant.mockResolvedValue(
+      client(EMAIL_CLIENT_ID, "Email Client", EMAIL),
+    );
+    const emailResponse = await POST(
+      request({ identifier: " Client@Example.TEST ", phone: "1 (555) 987-6543" }),
+    );
+    expect(emailResponse.status).toBe(200);
+    expect(mocks.consumeRateLimit).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        scope: "identifier",
+        key: "verify:client@example.test",
+      }),
+    );
+    expect(mocks.verifyCodeForTenant).toHaveBeenCalledWith(
+      TENANT,
+      "client@example.test",
+      "123456",
+    );
+
+    vi.clearAllMocks();
+    mocks.getTenantSlugForBusinessId.mockResolvedValue(TENANT);
+    mocks.consumeRateLimit.mockResolvedValue({ allowed: true });
+    mocks.verifyCodeForTenant.mockResolvedValue({ valid: true, type: "phone" });
+    mocks.findClientByPhoneForTenant.mockResolvedValue(
+      client(PHONE_CLIENT_ID, "Phone Client", null, PHONE),
+    );
+    mocks.withTenantDb.mockImplementation(async (_tenantSlug, callback) => {
+      const audienceQuery = {
+        from: vi.fn(),
+        limit: vi.fn(async () => [{ value: "both" }]),
+      };
+      audienceQuery.from.mockReturnValue(audienceQuery);
+      return callback({ select: vi.fn(() => audienceQuery) }, { businessSettings: { onlineBookingAudience: "onlineBookingAudience" } });
+    });
+
+    const phoneResponse = await POST(
+      request({ identifier: "1 (555) 010-1010", phone: undefined }),
+    );
+    expect(phoneResponse.status).toBe(200);
+    expect(mocks.verifyCodeForTenant).toHaveBeenCalledWith(TENANT, PHONE, "123456");
+    expect(mocks.findClientByPhoneForTenant).toHaveBeenCalledWith(TENANT, PHONE);
   });
 });

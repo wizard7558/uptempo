@@ -102,7 +102,7 @@ describe("AdminSidebar", () => {
     expect(html).not.toContain('href="/revenue"');
     expect(html).not.toContain('href="/dashboard"');
     expect(html).toContain(">Get help<");
-    expect(html).toContain('href="mailto:support@bookuptempo.com"');
+    expect(html).toContain('href="mailto:riley@bellaso.ai"');
   });
 
   it("uses home-services words for customers and services", () => {

@@ -197,6 +197,136 @@ jobs:
       - name: Test
         run: pnpm exec vitest run
 
+  review-otp-security-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      BETTER_AUTH_SECRET: e2e-test-secret-at-least-32-characters-long
+      BETTER_AUTH_URL: http://localhost:3000 # pragma: allowlist secret
+      BOOKING_SESSION_SECRET: e2e-test-booking-secret-at-least-32-chars
+      ROOT_DOMAIN: localhost
+      GOOGLE_CALENDAR_CLIENT_ID: e2e-unused
+      GOOGLE_CALENDAR_CLIENT_SECRET: e2e-unused
+      RESEND_API_KEY: e2e-unused
+      STRIPE_SECRET_KEY: sk_test_e2e_unused
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_e2e_unused
+      STRIPE_WEBHOOK_SECRET: whsec_e2e_unused
+      CRON_SECRET: e2e-cron-secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create App Review OTP disposable database
+        id: review-otp-db
+        env:
+          PGPASSWORD: postgres
+        run: |
+          if [[ ! "${GITHUB_RUN_ID}" =~ ^[0-9]+$ || ! "${GITHUB_RUN_ATTEMPT}" =~ ^[0-9]+$ ]]; then
+            echo "::error::GitHub run identity is not numeric; refusing disposable database creation."
+            exit 1
+          fi
+          DATABASE_NAME="uptempo_score_review_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          OWNER_MARKER="uptempo-review-otp-disposable:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          createdb -h localhost -p 5432 -U postgres "${DATABASE_NAME}"
+          echo "database_name=${DATABASE_NAME}" >> "${GITHUB_OUTPUT}"
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d postgres \
+            -c "COMMENT ON DATABASE \"${DATABASE_NAME}\" IS '${OWNER_MARKER}'"
+          echo "owner_marker=${OWNER_MARKER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Prepare App Review OTP disposable database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.review-otp-db.outputs.database_name }}
+          REVIEW_OTP_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.review-otp-db.outputs.database_name }}
+          REVIEW_OTP_TEST_RUN_MARKER: ${{ steps.review-otp-db.outputs.owner_marker }}
+          PGPASSWORD: postgres
+        run: |
+          DATABASE_NAME="uptempo_score_review_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          EXPECTED_MARKER="uptempo-review-otp-disposable:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          if [[ "${REVIEW_OTP_TEST_DATABASE_URL##*/}" != "${DATABASE_NAME}" || "${DATABASE_URL}" != "${REVIEW_OTP_TEST_DATABASE_URL}" || "${REVIEW_OTP_TEST_RUN_MARKER}" != "${EXPECTED_MARKER}" ]]; then
+            echo "::error::App Review OTP database configuration did not match this run; refusing migration."
+            exit 1
+          fi
+          ACTUAL_MARKER="$(psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d "${DATABASE_NAME}" -Atc \
+            "SELECT pg_catalog.shobj_description(oid, 'pg_database') FROM pg_catalog.pg_database WHERE datname = current_database()")"
+          if [[ "${ACTUAL_MARKER}" != "${EXPECTED_MARKER}" ]]; then
+            echo "::error::App Review OTP database ownership marker did not match; refusing migration."
+            exit 1
+          fi
+          psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d "${DATABASE_NAME}" -c "CREATE EXTENSION IF NOT EXISTS btree_gist"
+          node scripts/db-prepare.mjs
+          pnpm run migrate:platform
+
+      - name: Run App Review OTP security integration tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.review-otp-db.outputs.database_name }}
+          REVIEW_OTP_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ steps.review-otp-db.outputs.database_name }}
+          REVIEW_OTP_TEST_RUN_MARKER: ${{ steps.review-otp-db.outputs.owner_marker }}
+          PGPASSWORD: postgres
+        run: >-
+          pnpm exec vitest run --no-file-parallelism --reporter=dot
+          src/lib/auth/rate-limit.test.ts
+          src/lib/booking/otp.test.ts
+          src/lib/clients/for-tenant.test.ts
+          src/app/api/booking/send-code/route.test.ts
+          src/app/api/booking/verify-code/route.test.ts
+
+      - name: Drop App Review OTP disposable database
+        if: always() && steps.review-otp-db.outputs.database_name != ''
+        env:
+          REVIEW_OTP_TEST_DATABASE_NAME: ${{ steps.review-otp-db.outputs.database_name }}
+          PGPASSWORD: postgres
+        run: |
+          if [[ ! "${GITHUB_RUN_ID}" =~ ^[0-9]+$ || ! "${GITHUB_RUN_ATTEMPT}" =~ ^[0-9]+$ ]]; then
+            echo "::error::GitHub run identity is not numeric; refusing database cleanup."
+            exit 1
+          fi
+          EXPECTED_DATABASE_NAME="uptempo_score_review_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          EXPECTED_MARKER="uptempo-review-otp-disposable:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          if [[ "${REVIEW_OTP_TEST_DATABASE_NAME}" != "${EXPECTED_DATABASE_NAME}" ]]; then
+            echo "::error::App Review OTP database name did not match this run; refusing cleanup."
+            exit 1
+          fi
+          ACTUAL_MARKER="$(psql -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres \
+            -d postgres -Atc \
+            "SELECT pg_catalog.shobj_description(oid, 'pg_database') FROM pg_catalog.pg_database WHERE datname = '${REVIEW_OTP_TEST_DATABASE_NAME}'")"
+          if [[ "${ACTUAL_MARKER}" != "${EXPECTED_MARKER}" ]]; then
+            echo "::error::App Review OTP database ownership marker did not match; refusing cleanup."
+            exit 1
+          fi
+          dropdb -h localhost -p 5432 -U postgres "${REVIEW_OTP_TEST_DATABASE_NAME}"
+
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 30

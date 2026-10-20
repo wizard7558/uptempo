@@ -121,6 +121,7 @@ export function DayView({
     Record<string, AppointmentData[]>
   >({});
   const [isPending, startTransition] = useTransition();
+  const [scheduleDataReady, setScheduleDataReady] = useState(false);
   const fetchToken = useRef(0);
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -183,6 +184,7 @@ export function DayView({
     const dayEnd = endOfDay(currentDate);
 
     const token = ++fetchToken.current;
+    setScheduleDataReady(false);
     startTransition(async () => {
       if (axis === "rooms") {
         const data = await getRoomDay(dayStart, dayEnd);
@@ -198,6 +200,7 @@ export function DayView({
           }));
         }
         setAppointmentsByRoom(results);
+        setScheduleDataReady(true);
         return;
       }
 
@@ -207,6 +210,7 @@ export function DayView({
         setAppointmentsByStaffMember({});
         setExternalBlocksByStaffMember({});
         setTimeBlocksByStaffMember({});
+        setScheduleDataReady(true);
         return;
       }
 
@@ -251,6 +255,7 @@ export function DayView({
       setAppointmentsByStaffMember(results);
       setExternalBlocksByStaffMember(externalResults);
       setTimeBlocksByStaffMember(timeBlockResults);
+      setScheduleDataReady(true);
     });
   }, [axis, currentDate, staff]);
 
@@ -353,7 +358,8 @@ export function DayView({
         role="region"
         aria-label={t("calendarView")}
         tabIndex={0}
-        aria-busy={isPending}
+        aria-busy={!scheduleDataReady || isPending}
+        data-schedule-data-ready={scheduleDataReady && !isPending ? "true" : "false"}
         className="flex min-w-0 overflow-x-auto"
         style={{ minHeight: TOTAL_HEIGHT_PX + 40 }}
       >

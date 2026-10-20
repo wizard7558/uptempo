@@ -123,6 +123,17 @@ function createInviteeEmail(label: string) {
   return `${label}-${randomUUID()}@example.test`;
 }
 
+async function expectScheduleDataReady(page: Page) {
+  await expect(page.getByTestId("person-column").first()).toBeVisible({
+    timeout: 15_000,
+  });
+  const scheduleGrid = page.getByTestId("day-grid-scroll");
+  await expect(scheduleGrid).toHaveAttribute("data-schedule-data-ready", "true", {
+    timeout: 15_000,
+  });
+  await expect(scheduleGrid).toHaveAttribute("aria-busy", "false");
+}
+
 async function acceptNewAccount(page: Page, token: string, name: string) {
   await page.goto(`/invite/${token}`);
   await page.locator("#accept-name").fill(name);
@@ -131,6 +142,7 @@ async function acceptNewAccount(page: Page, token: string, name: string) {
   await page.getByRole("button", { name: "Accept & Create Account" }).click();
   await expect(page).toHaveURL(/\/schedule\/?$/);
   await expect(page.locator("main")).toBeVisible({ timeout: 15_000 });
+  await expectScheduleDataReady(page);
 }
 
 async function expectAcceptedMembership(
@@ -210,7 +222,6 @@ async function expectAcceptedMembership(
       otherTenantStaffRows: sourceStaff.length,
     })}`,
   );
-
   return invitee.id;
 }
 
@@ -221,7 +232,13 @@ test.describe("provider team invitation acceptance", () => {
     const email = createInviteeEmail("provider");
     await withInvitationFixture(email, "provider", async ({ sql, token }) => {
       await acceptNewAccount(page, token, "Provider Invitee");
-      await expectAcceptedMembership(sql, token, email, [TARGET_TENANT], "provider");
+      await expectAcceptedMembership(
+        sql,
+        token,
+        email,
+        [TARGET_TENANT],
+        "provider",
+      );
 
       const differentTenantMemberships = await sql`
         SELECT tenant_slug FROM memberships
@@ -229,6 +246,7 @@ test.describe("provider team invitation acceptance", () => {
           AND tenant_slug <> ${TARGET_TENANT}
       `;
       expect(differentTenantMemberships).toHaveLength(0);
+      await page.close();
     });
   });
 
@@ -236,7 +254,14 @@ test.describe("provider team invitation acceptance", () => {
     const email = createInviteeEmail("legacy-stylist");
     await withInvitationFixture(email, "stylist", async ({ sql, token }) => {
       await acceptNewAccount(page, token, "Legacy Stylist Invitee");
-      await expectAcceptedMembership(sql, token, email, [TARGET_TENANT], "stylist");
+      await expectAcceptedMembership(
+        sql,
+        token,
+        email,
+        [TARGET_TENANT],
+        "stylist",
+      );
+      await page.close();
     });
   });
 
@@ -275,9 +300,10 @@ test.describe("provider team invitation acceptance", () => {
 
       await page.goto(`/invite/${token}`);
       await expect(page.getByText("You're signed in as")).toBeVisible();
-      await page.getByRole("button").click();
+      await page.getByRole("button", { name: /^Join this .+$/ }).click();
       await expect(page).toHaveURL(/\/schedule\/?$/);
       await expect(page.locator("main")).toBeVisible({ timeout: 15_000 });
+      await expectScheduleDataReady(page);
 
       await expectAcceptedMembership(
         sql,
@@ -293,6 +319,7 @@ test.describe("provider team invitation acceptance", () => {
       expect(preservedMembership).toEqual([
         { user_id: invitee.id, role: "provider" },
       ]);
+      await page.close();
     });
   });
 
