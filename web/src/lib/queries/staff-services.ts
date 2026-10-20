@@ -6,7 +6,7 @@ import type { TenantDb } from "@/lib/db/tenant";
  * Returns Map<staffId, { serviceId, serviceName }[]>. Service name uses the
  * staff member's `custom_name` override when present.
  *
- * Excludes services where `stylist_services.is_offered = 0` (staff member hid the
+ * Excludes services where `staff_services.is_offered = 0` (staff member hid the
  * service) or `services.is_active = 0` (catalog soft-delete).
  */
 export async function getServicesForStaff(

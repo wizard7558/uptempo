@@ -118,11 +118,12 @@ describe("POST /api/appointments/[id]/photos", () => {
     expect(h.createAttachment).toHaveBeenCalledTimes(1);
   });
 
-  it("returns 401 when the session has no salon and does not store the file", async () => {
+  it("returns 401 when the session has no business and does not store the file", async () => {
     h.requireRole.mockResolvedValue({ userId: "u1", role: "provider", tenantSlug: null });
     const file = new File([Uint8Array.from([0xff, 0xd8, 0xff])], "before.jpg", { type: "image/jpeg" });
     const res = await upload(file);
     expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: "Sign in to a business first." });
     expect(h.appointmentClientId).not.toHaveBeenCalled();
     expect(h.createAttachment).not.toHaveBeenCalled();
   });

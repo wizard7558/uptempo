@@ -1,14 +1,21 @@
 import { requireRole } from "@/lib/auth/rbac";
+import { getTenantSlug } from "@/lib/tenant/context";
 import { requireModule } from "@/lib/tenant/modules";
+import { getTenantIndustry } from "@/lib/tenant/industry";
+import { getDefaultAssistantTasksForIndustry } from "@/lib/services/default-assistant-tasks";
 import { listTaskTypes } from "@/actions/task-catalog";
 import { listStaff } from "@/actions/staff";
 import { AssistantsPageClient } from "./client";
 
 export default async function AssistantsSettingsPage() {
-  await requireRole("owner", "admin");
+  const { tenantSlug } = await requireRole("owner", "admin");
   await requireModule("assistant_tasks");
 
-  const [taskTypes, allStaff] = await Promise.all([listTaskTypes(), listStaff()]);
+  const [taskTypes, allStaff, industry] = await Promise.all([
+    listTaskTypes(),
+    listStaff(),
+    getTenantIndustry(tenantSlug ?? (await getTenantSlug())),
+  ]);
 
   const assistants = allStaff.filter((s) => s.role === "assistant");
 
@@ -23,6 +30,9 @@ export default async function AssistantsSettingsPage() {
 
       <AssistantsPageClient
         initialTaskTypes={taskTypes}
+        hasDefaultTasks={
+          getDefaultAssistantTasksForIndustry(industry).length > 0
+        }
         assistants={assistants.map((a) => ({
           id: a.id,
           displayName: a.displayName,

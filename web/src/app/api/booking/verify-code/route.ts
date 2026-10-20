@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       ? "email"
       : "phone";
 
-    // Enforce the salon's online-booking audience (new vs existing clients).
+    // Enforce the business's online-booking audience (new vs existing clients).
     const audience = await withTenantDb(
       tenantSlug,
       async (db, { businessSettings }) => {

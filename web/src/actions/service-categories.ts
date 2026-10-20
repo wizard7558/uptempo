@@ -4,7 +4,13 @@ import { requireStaff } from "@/lib/auth/rbac";
 
 import { withTenantDb } from "@/lib/db/tenant";
 import { getTenantSlug } from "@/lib/tenant/context";
-import { eq, asc } from "drizzle-orm";
+import { getTenantIndustry } from "@/lib/tenant/industry";
+import { getVertical } from "@/lib/verticals";
+import {
+  filterServiceCategoriesForIndustry,
+  getSuppressibleLegacyCategorySlugs,
+} from "@/lib/services/categories";
+import { eq, asc, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -30,20 +36,52 @@ function slugify(name: string): string {
 /** List a business's active categories (defaults + custom), ordered for display. */
 export async function listServiceCategories(): Promise<ServiceCategory[]> {
   const slug = await getTenantSlug();
-  return withTenantDb(slug, async (db, { serviceCategories }) => {
+  const industry = await getTenantIndustry(slug);
+  const currentPackSlugs = new Set(
+    getVertical(industry).categories.map((category) => category.slug),
+  );
+  return withTenantDb(slug, async (db, { serviceCategories, services }) => {
     const rows = await db
       .select()
       .from(serviceCategories)
       .where(eq(serviceCategories.isActive, 1))
       .orderBy(asc(serviceCategories.sortOrder), asc(serviceCategories.name));
-    return rows.map((r) => ({
-      id: r.id,
-      slug: r.slug,
-      name: r.name,
-      sortOrder: r.sortOrder,
-      isDefault: r.isDefault === 1,
-      isActive: r.isActive === 1,
+
+    const categories = rows.map((row) => ({
+      slug: row.slug,
+      name: row.name,
+      isDefault: row.isDefault === 1,
+      isActive: row.isActive === 1,
     }));
+    const candidates = getSuppressibleLegacyCategorySlugs(categories, industry);
+    const referencedSlugs =
+      candidates.length > 0
+        ? new Set(
+            (
+              await db
+                .selectDistinct({ slug: services.category })
+                .from(services)
+                .where(inArray(services.category, candidates))
+            ).map((row) => row.slug),
+          )
+        : new Set<string>();
+
+    const rowBySlug = new Map(rows.map((row) => [row.slug, row] as const));
+    return filterServiceCategoriesForIndustry(
+      categories,
+      industry,
+      referencedSlugs,
+    ).map((category) => {
+      const row = rowBySlug.get(category.slug)!;
+      return {
+        id: row.id,
+        slug: row.slug,
+        name: row.name,
+        sortOrder: row.sortOrder,
+        isDefault: row.isDefault === 1 || currentPackSlugs.has(row.slug),
+        isActive: category.isActive,
+      };
+    });
   });
 }
 
@@ -142,6 +180,11 @@ export async function renameServiceCategory(data: { id: string; name: string }) 
 export async function deleteServiceCategory(id: string) {
   const { tenantSlug: slug } = await requireStaff();
   try {
+    const packCategorySlugs = new Set(
+      getVertical(await getTenantIndustry(slug)).categories.map(
+        (category) => category.slug,
+      ),
+    );
     const result = await withTenantDb(slug, async (db, { serviceCategories, services }) => {
       const [cat] = await db
         .select()
@@ -149,7 +192,7 @@ export async function deleteServiceCategory(id: string) {
         .where(eq(serviceCategories.id, id))
         .limit(1);
       if (!cat) return { ok: false as const, reason: "Category not found" };
-      if (cat.isDefault === 1) {
+      if (cat.isDefault === 1 || packCategorySlugs.has(cat.slug)) {
         return { ok: false as const, reason: "Default categories can't be deleted" };
       }
       // Reassign services on this category back to "other".

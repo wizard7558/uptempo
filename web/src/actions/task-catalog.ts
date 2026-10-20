@@ -7,7 +7,8 @@ import { taskCatalogSchema } from "@/lib/validators/assistant-task";
 import { eq, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { trackEvent } from "@/lib/analytics/events";
-import { DEFAULT_ASSISTANT_TASKS } from "@/lib/services/default-assistant-tasks";
+import { getDefaultAssistantTasksForIndustry } from "@/lib/services/default-assistant-tasks";
+import { getTenantIndustry } from "@/lib/tenant/industry";
 
 /**
  * Create a new task type in the catalog.
@@ -70,6 +71,9 @@ export async function seedDefaultTaskTypes(): Promise<
   const slug = tenantSlug;
   try {
     await assertModule(slug, "assistant_tasks");
+    const defaults = getDefaultAssistantTasksForIndustry(
+      await getTenantIndustry(slug),
+    );
 
     const created = await withTenantDb(slug, async (db, { taskCatalog }) => {
       const existingRows = await db
@@ -78,10 +82,10 @@ export async function seedDefaultTaskTypes(): Promise<
         .where(eq(taskCatalog.isActive, 1));
 
       const existingNames = new Set(
-        existingRows.map((row) => row.name.trim().toLocaleLowerCase()),
+        existingRows.map((row) => row.name.trim().toLowerCase()),
       );
-      const missingTasks = DEFAULT_ASSISTANT_TASKS.filter(
-        (task) => !existingNames.has(task.name.toLocaleLowerCase()),
+      const missingTasks = defaults.filter(
+        (task) => !existingNames.has(task.name.trim().toLowerCase()),
       );
 
       if (missingTasks.length === 0) {

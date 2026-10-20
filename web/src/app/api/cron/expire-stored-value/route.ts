@@ -9,8 +9,8 @@ import { computeExpirableCents } from "@/lib/services/stored-value-expiry";
 export const dynamic = "force-dynamic";
 
 /**
- * Daily cron: expire Beauty Bank credits older than each salon's configured
- * window (`salon_policies.beauty_bank_expiry_months`). Inert for salons that
+ * Daily cron: expire stored value credits older than each business's configured
+ * window (`business_settings.stored_value_expiry_months`). Inert for businesses that
  * haven't set a window (the default), so it's safe to run everywhere.
  */
 export async function GET(request: Request) {
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       if (r.cents > 0) results.push({ slug: tenant.slug, ...r });
     } catch (error) {
       console.error(
-        `[Cron] Beauty Bank expiry failed for ${tenant.slug}:`,
+        `[Cron] Stored value expiry failed for ${tenant.slug}:`,
         error,
       );
       results.push({

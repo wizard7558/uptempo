@@ -33,21 +33,22 @@ import {
   type StaffServiceMatrixRow,
 } from "@/actions/staff-services";
 import {
-  formatServiceCategory,
-  SERVICE_CATEGORY_OPTIONS,
-  type ServiceCategory,
+  formatTenantServiceCategory,
 } from "@/lib/services/categories";
+import type { ServiceCategory } from "@/actions/service-categories";
 import { formatCurrency } from "@/components/ui/chart-utils";
 import { cn } from "@/lib/utils";
 
 interface StaffServicesEditorProps {
   staffId: string;
   initialMatrix: StaffServiceMatrixRow[];
+  categories: ServiceCategory[];
 }
 
 export function StaffServicesEditor({
   staffId,
   initialMatrix,
+  categories,
 }: StaffServicesEditorProps) {
   const t = useT("settings");
   const [matrix, setMatrix] = useState(initialMatrix);
@@ -107,6 +108,7 @@ export function StaffServicesEditor({
             </DialogHeader>
             <CustomServiceForm
               staffId={staffId}
+              categories={categories}
               onSuccess={(row) => {
                 setMatrix((prev) => [...prev, row].sort((a, b) =>
                   a.serviceName.localeCompare(b.serviceName),
@@ -131,6 +133,7 @@ export function StaffServicesEditor({
               key={row.serviceId}
               row={row}
               staffId={staffId}
+              categories={categories}
               onUpdate={(updates) => applyRowUpdate(row.serviceId, updates)}
               onRemove={() => removeRow(row.serviceId)}
             />
@@ -144,11 +147,13 @@ export function StaffServicesEditor({
 function ServiceRow({
   row,
   staffId,
+  categories,
   onUpdate,
   onRemove,
 }: {
   row: StaffServiceMatrixRow;
   staffId: string;
+  categories: ServiceCategory[];
   onUpdate: (updates: Partial<StaffServiceMatrixRow>) => void;
   onRemove: () => void;
 }) {
@@ -254,7 +259,7 @@ function ServiceRow({
             </span>
             <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
               <Badge variant="outline" className="font-normal">
-                {formatServiceCategory(row.category)}
+                {formatTenantServiceCategory(row.category, categories)}
               </Badge>
               <span>{effectiveDuration} min</span>
               <span>·</span>
@@ -531,16 +536,18 @@ function OverrideEditor({
 
 function CustomServiceForm({
   staffId,
+  categories,
   onSuccess,
 }: {
   staffId: string;
+  categories: ServiceCategory[];
   onSuccess: (row: StaffServiceMatrixRow) => void;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("60");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState<ServiceCategory>("other");
+  const [category, setCategory] = useState<string>("other");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -652,15 +659,15 @@ function CustomServiceForm({
           <Label htmlFor="cs-category">Category</Label>
           <Select
             value={category}
-            onValueChange={(v) => setCategory(v as ServiceCategory)}
+            onValueChange={setCategory}
           >
             <SelectTrigger id="cs-category">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {SERVICE_CATEGORY_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              {categories.map((option) => (
+                <SelectItem key={option.id} value={option.slug}>
+                  {option.name}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -5,7 +5,7 @@ const domainRegex = /^(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.[a-zA-Z0-9-]{1,63})*\.[a-z
 export const customDomainSchema = z
   .string()
   .min(1, "Domain is required")
-  .regex(domainRegex, "Must be a valid domain name (e.g., book.yoursalon.com)")
+  .regex(domainRegex, "Must be a valid domain name (e.g., book.yourbusiness.com)")
   .refine(
     (domain) => {
       const lower = domain.toLowerCase();

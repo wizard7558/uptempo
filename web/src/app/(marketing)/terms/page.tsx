@@ -38,15 +38,15 @@ export default function TermsPage() {
 
       <h2>2. Service Description</h2>
       <p>
-        Uptempo is an all-in-one salon booking and management platform that
-        enables salon owners to manage appointments, scheduling, clients,
+        Uptempo is an all-in-one booking and management platform that
+        enables business owners to manage appointments, scheduling, clients,
         payments, memberships, and revenue, and enables clients to book and
         manage appointments online.
       </p>
 
       <h2>3. Accounts</h2>
       <p>
-        Salon owners create accounts to manage their business. Clients provide
+        Business owners create accounts to manage their business. Clients provide
         contact information when booking appointments. You are responsible for
         maintaining the confidentiality of your account credentials.
       </p>
@@ -59,7 +59,8 @@ export default function TermsPage() {
         <strong>Description:</strong> When you provide your phone number and
         consent during the booking process, you will receive automated
         appointment-related text messages including reminders, confirmations,
-        rescheduling updates, and cancellation notices from your salon.
+        rescheduling updates, and cancellation notices from the business
+        you book with.
       </p>
       <ul>
         <li>
@@ -103,7 +104,7 @@ export default function TermsPage() {
 
       <h2>5. Google Calendar Integration</h2>
       <p>
-        Salon owners may connect their Google Calendar to Uptempo to enable
+        Business owners may connect their Google Calendar to Uptempo to enable
         availability sync and automatic event creation for bookings. By
         connecting your Google Calendar, you authorize Uptempo to:
       </p>
@@ -126,17 +127,17 @@ export default function TermsPage() {
 
       <h2>6. Payments</h2>
       <p>
-        Payments are processed securely through Stripe. Salon owners set their
+        Payments are processed securely through Stripe. Business owners set their
         own service prices. Uptempo collects a platform fee on each
         transaction. Refund and cancellation policies are set by each individual
-        salon.
+        business.
       </p>
 
       <h2>7. Cancellation and No-Show Policies</h2>
       <p>
-        Each salon sets its own cancellation window and fee policies. These are
+        Each business sets its own cancellation window and fee policies. These are
         displayed during the booking process. If a card is on file, fees may be
-        charged automatically according to the salon&apos;s stated policy.
+        charged automatically according to the business&apos;s stated policy.
       </p>
 
       <h2>8. User Responsibilities</h2>
@@ -146,7 +147,7 @@ export default function TermsPage() {
         <li>Do not misuse the platform or attempt unauthorized access</li>
       </ul>
 
-      <h2>9. Salon Owner Responsibilities</h2>
+      <h2>9. Business Owner Responsibilities</h2>
       <ul>
         <li>Provide accurate service descriptions and pricing</li>
         <li>Honor confirmed appointments</li>
@@ -156,7 +157,7 @@ export default function TermsPage() {
       <h2>10. Limitation of Liability</h2>
       <p>
         Uptempo provides the platform as-is. We are not liable for disputes
-        between salons and clients, service quality, or losses arising from
+        between businesses and clients, service quality, or losses arising from
         platform use beyond the fees paid to us.
       </p>
 

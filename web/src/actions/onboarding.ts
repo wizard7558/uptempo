@@ -18,7 +18,11 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { getTenantBySlug, updateTenantOnboardingSteps } from "@/lib/tenant/registry";
 import { slugSchema } from "@/lib/tenant/slug-validation";
 import { withTenantDb } from "@/lib/db/tenant";
-import { SERVICE_TEMPLATES, templateToServiceRow } from "@/lib/onboarding/service-templates";
+import {
+  getServiceTemplatesForIndustry,
+  templateToServiceRow,
+} from "@/lib/onboarding/service-templates";
+import { getTenantIndustry } from "@/lib/tenant/industry";
 import { trackEvent, identifyUser } from "@/lib/analytics/events";
 import { ensureHostedSubscription } from "@/lib/billing/subscriptions";
 import { HOSTED_TRIAL_DAYS } from "@/lib/billing/hosted-pricing";
@@ -487,7 +491,10 @@ export async function seedServicesFromTemplates(
   await requireStaff();
   try {
     const slug = await getOnboardingSlug();
-    const selectedTemplates = SERVICE_TEMPLATES.filter((t) => templateIds.includes(t.id));
+    const industry = await getTenantIndustry(slug);
+    const selectedTemplates = getServiceTemplatesForIndustry(industry).filter(
+      (template) => templateIds.includes(template.id),
+    );
 
     if (selectedTemplates.length === 0) {
       return { success: false, error: "No valid templates selected" };

@@ -31,7 +31,7 @@ export default function PrivacyPage() {
       <h2>1. Introduction</h2>
       <p>
         Uptempo Bookings (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates the
-        bookuptempo.com platform, an all-in-one salon booking and management
+        bookuptempo.com platform, an all-in-one booking and management
         service. This Privacy Policy describes how we collect, use, and protect
         your personal information.
       </p>
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
       <h2>3. How We Use Your Information</h2>
       <p>We use your information to:</p>
       <ul>
-        <li>Process and manage your salon appointments</li>
+        <li>Process and manage your appointments</li>
         <li>
           Send appointment reminders, confirmations, and cancellation notices
           via email and SMS
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
 
       <h2>5. Google Calendar Integration</h2>
       <p>
-        When salon owners connect their Google Calendar to Uptempo, we request
+        When business owners connect their Google Calendar to Uptempo, we request
         access to read and write calendar events. Specifically:
       </p>
       <ul>
@@ -165,8 +165,8 @@ export default function PrivacyPage() {
       </p>
       <ul>
         <li>
-          <strong>Salon owners:</strong> Your booking and contact information is
-          shared with the salon you book with so they can provide their
+          <strong>Business owners:</strong> Your booking and contact information
+          is shared with the business you book with so they can provide their
           services.
         </li>
         <li>

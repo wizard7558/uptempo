@@ -106,6 +106,17 @@ export default defineConfig({
       },
     },
 
+    // Invitation acceptance uses a unique synthetic invitee and starts without
+    // the admin session created by the setup project.
+    {
+      name: "team-invitation",
+      testMatch: /team-invitation\.spec\.ts$/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: { cookies: [], origins: [] },
+      },
+    },
+
     // One project per industry flow. These select the specs that already book,
     // request, enroll, and join the queue, so CI lists each flow on its own.
     {

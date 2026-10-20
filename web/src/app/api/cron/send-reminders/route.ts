@@ -154,7 +154,7 @@ async function sendRemindersForTenant(
       const cancelUrl = `${baseUrl}/cancel/${cancelToken}`;
       const rescheduleUrl = `${baseUrl}/reschedule/${rescheduleToken}`;
 
-      // Format date/time in salon timezone
+      // Format date/time in business timezone
       const apptDate = new TZDate(appt.during.start, tz);
       const dateStr = format(apptDate, "EEEE, MMMM d, yyyy");
       const timeStr = format(apptDate, "h:mm a");

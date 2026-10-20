@@ -31,7 +31,7 @@ export default async function LoginPage({
             <Image src="/brand/wordmark.svg" alt="Uptempo" width={190} height={36} priority className="dark:invert" />
           </h1>
           <p className="text-sm text-[var(--ink-soft)]">
-            Sign in to manage your salon
+            Sign in to manage your business
           </p>
         </div>
 

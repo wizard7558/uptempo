@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { getT } from "@/lib/terms/server";
 import { getStaffMember } from "@/actions/staff";
 import { getStaffServiceMatrix } from "@/actions/staff-services";
+import { listServiceCategories } from "@/actions/service-categories";
 import { StaffServicesEditor } from "@/components/settings/staff-services-editor";
 
 export default async function StaffServicesPage({
@@ -14,9 +15,10 @@ export default async function StaffServicesPage({
 }) {
   const { staffId } = await params;
   const t = await getT("settings");
-  const [staffMember, matrix] = await Promise.all([
+  const [staffMember, matrix, categories] = await Promise.all([
     getStaffMember(staffId),
     getStaffServiceMatrix(staffId),
+    listServiceCategories(),
   ]);
 
   if (!staffMember) notFound();
@@ -40,7 +42,11 @@ export default async function StaffServicesPage({
         </div>
       </div>
 
-      <StaffServicesEditor staffId={staffId} initialMatrix={matrix} />
+      <StaffServicesEditor
+        staffId={staffId}
+        initialMatrix={matrix}
+        categories={categories}
+      />
     </div>
   );
 }

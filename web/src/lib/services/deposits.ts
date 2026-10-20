@@ -3,7 +3,7 @@
  *
  *   per-service override (services.deposit_type/amount)
  *        beats
- *   business global rule (salon_policies.deposit_*)
+ *   business global rule (business_settings.deposit_*)
  *
  * A service's `depositType`:
  *   - 'none'            → never a deposit (even if the global rule would apply)

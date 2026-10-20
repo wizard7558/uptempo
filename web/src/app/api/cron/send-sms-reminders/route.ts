@@ -251,7 +251,7 @@ async function sendReminderWindow(
 async function sendSmsRemindersForTenant(
   tenantSlug: string,
 ): Promise<{ sent: number; failed: number; skipped: number }> {
-  // Get SMS settings from salon_policies
+  // Get SMS settings from business_settings
   const settings = await withTenantDb(
     tenantSlug,
     async (db, { businessSettings }) => {

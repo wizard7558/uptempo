@@ -7,7 +7,7 @@ import { domainMappings } from "@/lib/db/schema/domain-mappings";
 import { eq } from "drizzle-orm";
 
 /**
- * GET /api/domains/verify?domain=book.salon.com
+ * GET /api/domains/verify?domain=book.yourbusiness.com
  * Lightweight polling endpoint for domain verification status.
  * Auth-protected: requires valid session.
  */

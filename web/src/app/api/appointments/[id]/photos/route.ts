@@ -30,7 +30,7 @@ function isAllowedImageType(mime: string): boolean {
 export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const auth = await requireRole(...TEAM);
   if (!auth.tenantSlug) {
-    return NextResponse.json({ error: "Sign in to a salon first." }, { status: 401 });
+    return NextResponse.json({ error: "Sign in to a business first." }, { status: 401 });
   }
   const slug = auth.tenantSlug;
   try {

@@ -32,6 +32,63 @@ test.describe("tattoo studio tenant", () => {
     ).toBeChecked();
   });
 
+  test("staff service creation uses tattoo and tenant-defined categories", async ({
+    page,
+  }, testInfo) => {
+    const categoryName = `Studio custom ${Date.now()}`;
+    const serviceName = `Studio service ${Date.now()}`;
+
+    await page.goto("/services");
+    await page.getByRole("button", { name: "Add Service" }).click();
+    await page.getByLabel("Category").click();
+    await page.getByRole("option", { name: "+ New category…" }).click();
+    await page.getByPlaceholder("e.g., Maintenance").fill(categoryName);
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(page.locator("#service-category")).toContainText(categoryName);
+
+    await page.goto(
+      "/settings/staff/f0e2e200-0000-4000-8000-0000000000a1/services",
+    );
+    await expect(page.getByText("Small tattoo", { exact: true })).toBeVisible();
+    await expect(page.getByText("Cut", { exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Add custom service" }).click();
+    await page.getByLabel("Service name").fill(serviceName);
+    await page.getByRole("combobox").click();
+    await page.getByRole("option", { name: categoryName }).click();
+    await page.getByRole("button", { name: "Create service" }).click();
+
+    const serviceRow = page.getByRole("button", { name: new RegExp(serviceName) });
+    await expect(serviceRow).toContainText(categoryName);
+    await serviceRow.click();
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(serviceRow).toContainText(categoryName);
+    if (process.env.INDUSTRY_CATALOG_CAPTURE === "1") {
+      await page.screenshot({
+        path: testInfo.outputPath("staff-service-category.png"),
+        fullPage: true,
+      });
+    }
+  });
+
+  test("hair service categories still expose the legacy defaults", async ({
+    context,
+    page,
+  }) => {
+    const { signedCookieValue } = await seedTestSession();
+    await context.addCookies([sessionCookie(signedCookieValue)]);
+    await page.goto("/services");
+    await page.getByRole("button", { name: "Add Service" }).click();
+    await page.getByLabel("Category").click();
+
+    await expect(page.getByRole("option", { name: "Cut", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: "Color", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: "Extensions", exact: true }),
+    ).toBeVisible();
+  });
+
   test("expenses page lists the tattoo categories", async ({ page }) => {
     await page.goto("/expenses");
 

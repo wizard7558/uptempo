@@ -1,4 +1,4 @@
-/** Beauty Bank + optional member discount when paying fully from BB (exported for tests). */
+/** Stored value + optional member discount when paying fully from stored value (exported for tests). */
 export type StoredValueCheckoutPreview = {
   balanceCents: number;
   hasActiveMembership: boolean;
@@ -6,9 +6,9 @@ export type StoredValueCheckoutPreview = {
   totalCents: number;
   /** Services total after member discount (same as totalCents when not eligible for discount). */
   discountedTotalCents: number;
-  /** Member with enough balance to pay discounted services total from BB (tip must be 0 to use). */
+  /** Member with enough balance to pay discounted services total from stored value (tip must be 0 to use). */
   eligibleForFullBb: boolean;
-  /** BB applied when not using full-BB path (min(balance, undiscounted total)). */
+  /** Stored value applied when not using the full-balance path (min(balance, undiscounted total)). */
   partialBbAppliedCents: number;
   cardChargeCentsPartial: number;
 };

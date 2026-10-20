@@ -1,7 +1,6 @@
 import { publicDb } from "@/lib/db";
 import { user } from "@/lib/db/schema/auth";
 import { tenants } from "@/lib/db/schema/tenants";
-import { hairSalon } from "@/lib/verticals/hair-salon";
 import { createTermsT } from "@/lib/terms/translator";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth/server";
@@ -10,8 +9,6 @@ import { trackEvent, identifyUser } from "@/lib/analytics/events";
 import { insertMembership } from "@/lib/db/membership-helpers";
 import { newTenantShard } from "@/lib/db/shards";
 import { getVertical, type VerticalId } from "@/lib/verticals";
-
-const signupT = () => createTermsT(hairSalon.terms, "errors");
 
 async function generateUniqueSlug(businessName: string): Promise<string> {
   const base =
@@ -46,9 +43,10 @@ export async function createBusinessAccount(data: {
   password: string;
   industry: VerticalId;
 }): Promise<{ success: true; slug: string } | { success: false; error: string }> {
+  const vertical = getVertical(data.industry);
+
   try {
     const slug = await generateUniqueSlug(data.businessName);
-    const vertical = getVertical(data.industry);
 
     const newUser = await auth.api.signUpEmail({
       body: {
@@ -118,7 +116,7 @@ export async function createBusinessAccount(data: {
       error:
         error instanceof Error
           ? error.message
-          : signupT()("onboarding.createAccountFailed"),
+          : createTermsT(vertical.terms, "errors")("onboarding.createAccountFailed"),
     };
   }
 }

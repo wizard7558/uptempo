@@ -11,8 +11,10 @@ const h = vi.hoisted(() => {
     servicesCount: number;
     hoursCount: number;
     requireCardOnFile: number;
-    industry: "hair_salon" | "barber" | "tattoo";
+    industry: "hair_salon" | "barber" | "tattoo" | "personal_training";
     inserted: unknown[];
+    seededServiceRows: unknown[];
+    tenantDbSlugs: string[];
     existingSlugs: Set<string>;
   } = {
     role: "owner",
@@ -22,9 +24,15 @@ const h = vi.hoisted(() => {
     requireCardOnFile: 1,
     industry: "hair_salon",
     inserted: [],
+    seededServiceRows: [],
+    tenantDbSlugs: [],
     existingSlugs: new Set<string>(),
   };
 
+  const getTenantBySlug = vi.fn(async (slug: string) => {
+    if (slug === "business-x") return state.tenant;
+    return state.existingSlugs.has(slug) ? { slug } : null;
+  });
   const updateTenantOnboardingSteps = vi.fn(async () => {});
   const policyUpdateSet = vi.fn(() => ({ where: vi.fn(async () => {}) }));
   const revalidateTag = vi.fn();
@@ -33,6 +41,8 @@ const h = vi.hoisted(() => {
 
   return {
     state,
+    getTenantBySlug,
+    withTenantDb: vi.fn(),
     updateTenantOnboardingSteps,
     policyUpdateSet,
     revalidateTag,
@@ -79,6 +89,17 @@ vi.mock("@/lib/auth/server", () => ({
     },
   },
 }));
+vi.mock("@/lib/auth/rbac", () => ({
+  requireStaff: vi.fn(async () => ({ tenantSlug: "business-x" })),
+  AuthError: class AuthError extends Error {
+    code: string;
+    constructor(code: string, message?: string) {
+      super(message ?? code);
+      this.name = "AuthError";
+      this.code = code;
+    }
+  },
+}));
 vi.mock("next/headers", () => ({ headers: vi.fn(async () => new Headers()) }));
 vi.mock("next/cache", () => ({
   revalidateTag: h.revalidateTag,
@@ -89,14 +110,10 @@ const ensureHostedSubscription = vi.hoisted(() => vi.fn(async () => ({})));
 vi.mock("@/lib/billing/subscriptions", () => ({ ensureHostedSubscription }));
 vi.mock("@/lib/tenant/provision", () => ({ provisionTenantSchema: vi.fn() }));
 vi.mock("@/lib/tenant/registry", () => ({
-  getTenantBySlug: vi.fn(async (slug: string) => {
-    if (slug === "business-x") return h.state.tenant;
-    return h.state.existingSlugs.has(slug) ? { slug } : null;
-  }),
+  getTenantBySlug: h.getTenantBySlug,
   updateTenantOnboardingSteps: h.updateTenantOnboardingSteps,
 }));
 vi.mock("@/lib/tenant/slug-validation", () => ({ slugSchema: { safeParse: vi.fn() } }));
-vi.mock("@/lib/onboarding/service-templates", () => ({ SERVICE_TEMPLATES: [] }));
 vi.mock("@/lib/analytics/events", () => ({
   trackEvent: h.trackEvent,
   identifyUser: vi.fn(),
@@ -107,11 +124,22 @@ vi.mock("@/lib/db/membership-helpers", () => ({
   getMembershipRoleForActiveTenant: vi.fn(async () => h.state.role),
 }));
 vi.mock("@/lib/db/tenant", () => ({
-  withTenantDb: vi.fn(
+  withTenantDb: h.withTenantDb,
+}));
+
+const TBL = {
+  services: { __t: "services" },
+  workingHours: { __t: "working_hours" },
+  businessSettings: { __t: "business_settings" },
+};
+
+beforeEach(() => {
+  h.withTenantDb.mockImplementation(
     async (
-      _slug: string,
+      slug: string,
       cb: (db: unknown, tables: Record<string, unknown>) => Promise<unknown>,
     ) => {
+      h.state.tenantDbSlugs.push(slug);
       // Emulate the two query shapes used by the actions under test.
       const db = {
         select: () => ({
@@ -128,22 +156,24 @@ vi.mock("@/lib/db/tenant", () => ({
           },
         }),
         update: () => ({ set: h.policyUpdateSet }),
+        insert: () => ({
+          values: async (rows: unknown[] | unknown) => {
+            h.state.seededServiceRows.push(
+              ...(Array.isArray(rows) ? rows : [rows]),
+            );
+          },
+        }),
       };
       return cb(db, TBL);
     },
-  ),
-}));
-
-const TBL = {
-  services: { __t: "services" },
-  workingHours: { __t: "working_hours" },
-  businessSettings: { __t: "business_settings" },
-};
+  );
+});
 
 import {
   createBusinessAccount,
   launchBusiness,
   markOnboardingStepComplete,
+  seedServicesFromTemplates,
   skipStripeForNow,
 } from "./onboarding";
 
@@ -151,6 +181,7 @@ function tenant(overrides: Record<string, unknown> = {}) {
   return {
     slug: "business-x",
     name: "Business X",
+    industry: h.state.industry,
     stripeConnectAccountId: null,
     onboardingSteps: { profile: true },
     ...overrides,
@@ -252,6 +283,104 @@ describe("launchBusiness", () => {
     await launchBusiness();
     const written = h.updateTenantOnboardingSteps.mock.calls[0] as unknown[];
     expect(written[1]).toMatchObject({ futureKey: true, launched: true });
+  });
+});
+
+describe("seedServicesFromTemplates", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    h.state.role = "owner";
+    h.state.industry = "hair_salon";
+    h.state.tenant = tenant();
+    h.state.seededServiceRows.length = 0;
+    h.state.tenantDbSlugs.length = 0;
+  });
+
+  it("keeps the legacy hair template output", async () => {
+    await expect(seedServicesFromTemplates(["womens-haircut"])).resolves.toEqual({
+      success: true,
+      count: 1,
+    });
+    expect(h.state.seededServiceRows).toEqual([
+      {
+        name: "Women's Haircut",
+        defaultDurationMinutes: 60,
+        priceCents: 8500,
+        category: "cut",
+        isClass: 0,
+        classCapacity: null,
+      },
+    ]);
+    expect(h.getTenantBySlug).toHaveBeenCalledWith("business-x");
+    expect(h.state.tenantDbSlugs).toEqual(["business-x"]);
+    expect(h.revalidatePath).toHaveBeenCalledWith("/services");
+    expect(h.trackEvent).toHaveBeenCalledWith(
+      "onboarding.services_seeded",
+      { count: 1 },
+      { tenantSlug: "business-x" },
+    );
+  });
+
+  it("seeds a non-hair class from the tenant pack", async () => {
+    h.state.industry = "personal_training";
+    h.state.tenant = tenant();
+
+    await expect(
+      seedServicesFromTemplates(["personal_training:Bootcamp"]),
+    ).resolves.toEqual({ success: true, count: 1 });
+
+    expect(h.state.seededServiceRows).toEqual([
+      {
+        name: "Bootcamp",
+        defaultDurationMinutes: 45,
+        priceCents: 2000,
+        category: "classes",
+        isClass: 1,
+        classCapacity: 12,
+      },
+    ]);
+    expect(h.getTenantBySlug).toHaveBeenCalledWith("business-x");
+    expect(h.state.tenantDbSlugs).toEqual(["business-x"]);
+  });
+
+  it("seeds non-hair deposits from the tenant pack", async () => {
+    h.state.industry = "tattoo";
+    h.state.tenant = tenant();
+
+    await expect(
+      seedServicesFromTemplates(["tattoo:Full-day%20session"]),
+    ).resolves.toEqual({ success: true, count: 1 });
+
+    expect(h.state.seededServiceRows).toEqual([
+      {
+        name: "Full-day session",
+        defaultDurationMinutes: 480,
+        priceCents: 110000,
+        category: "custom",
+        isClass: 0,
+        classCapacity: null,
+        depositType: "fixed",
+        depositAmount: 20000,
+      },
+    ]);
+    expect(h.getTenantBySlug).toHaveBeenCalledWith("business-x");
+    expect(h.state.tenantDbSlugs).toEqual(["business-x"]);
+  });
+
+  it("rejects foreign hair template ids for a non-hair tenant", async () => {
+    h.state.industry = "tattoo";
+    h.state.tenant = tenant();
+
+    await expect(seedServicesFromTemplates(["womens-haircut"])).resolves.toEqual({
+      success: false,
+      error: "No valid templates selected",
+    });
+
+    expect(h.state.seededServiceRows).toEqual([]);
+    expect(h.getTenantBySlug).toHaveBeenCalledWith("business-x");
+    expect(h.state.tenantDbSlugs).toEqual([]);
+    expect(h.revalidatePath).not.toHaveBeenCalledWith("/services");
+    expect(h.trackEvent).not.toHaveBeenCalled();
   });
 });
 

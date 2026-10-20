@@ -108,14 +108,14 @@ function isMissingTeamInvitationsTableError(error: unknown): boolean {
 
 /**
  * Send a team invitation email.
- * Only owners can invite new team members.
+ * Owners and admins can invite new team members.
  */
 export async function sendInvitation(data: {
   email: string;
   role: TeamRole;
 }): Promise<{ success: true } | { success: false; error: string }> {
   const { userId, role: callerRole, tenantSlug } = await requireRole("owner", "admin");
-    if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
+  if (!tenantSlug) throw new AuthError("NO_TENANT", "No active business");
   const slug = tenantSlug;
   try {
 
@@ -217,7 +217,7 @@ export async function sendInvitation(data: {
     const acceptUrl = `${getBaseUrl()}/invite/${token}`;
 
     // Send invitation email
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: data.email.toLowerCase(),
       subject: emailT("team.subject", { business: businessName }),
       react: TeamInviteEmail({
@@ -231,6 +231,26 @@ export async function sendInvitation(data: {
       }),
       businessName,
     });
+
+    if (!emailResult.success) {
+      const expiredAt = new Date();
+      await publicDb
+        .update(teamInvitations)
+        .set({ status: "expired", expiresAt: expiredAt, updatedAt: expiredAt })
+        .where(
+          and(
+            eq(teamInvitations.token, token),
+            eq(teamInvitations.tenantSlug, slug),
+            eq(teamInvitations.status, "pending"),
+          ),
+        );
+
+      revalidatePath("/settings/team");
+      return {
+        success: false,
+        error: "Could not send the invitation. Please try again.",
+      };
+    }
 
     revalidatePath("/settings/team");
     trackEvent("team.invited", { role: normalizeTeamRole(data.role) }, { tenantSlug: slug });
