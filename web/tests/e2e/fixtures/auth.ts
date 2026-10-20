@@ -84,7 +84,6 @@ export async function seedTestSession(
   sessionToken: string;
   userId: string;
 }> {
-  const sql = postgres(process.env.DATABASE_URL!);
   const secret = process.env.BETTER_AUTH_SECRET!;
 
   if (!secret) {
@@ -93,42 +92,49 @@ export async function seedTestSession(
     );
   }
 
-  // Create or update test user (better-auth schema uses snake_case columns)
-  await sql`
-    INSERT INTO "user" (id, email, name, email_verified, created_at, updated_at)
-    VALUES (
-      ${testUser.id},
-      ${testUser.email},
-      ${testUser.name},
-      true,
-      NOW(),
-      NOW()
-    )
-    ON CONFLICT (id) DO UPDATE SET updated_at = NOW()
-  `;
-
-  // Generate a unique session token
+  const sql = postgres(process.env.DATABASE_URL!);
   const sessionToken = `e2e-session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const sessionId = `e2e-sid-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  // Clean up any existing test sessions
-  await sql`DELETE FROM "session" WHERE user_id = ${testUser.id}`;
+  try {
+    // Create or update test user (better-auth schema uses snake_case columns).
+    await sql`
+      INSERT INTO "user" (id, email, name, email_verified, created_at, updated_at)
+      VALUES (
+        ${testUser.id},
+        ${testUser.email},
+        ${testUser.name},
+        true,
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (id) DO UPDATE SET updated_at = NOW()
+    `;
 
-  // Insert session (better-auth schema)
-  await sql`
-    INSERT INTO "session" (id, user_id, token, expires_at, created_at, updated_at)
-    VALUES (
-      ${sessionId},
-      ${testUser.id},
-      ${sessionToken},
-      ${expiresAt.toISOString()},
-      NOW(),
-      NOW()
-    )
-  `;
+    // Expired sessions for this synthetic user are safe to prune; valid
+    // sessions must remain available to other Playwright projects using the
+    // storageState cookie created by the setup project.
+    await sql`
+      DELETE FROM "session"
+      WHERE user_id = ${testUser.id} AND expires_at <= NOW()
+    `;
 
-  await sql.end();
+    // Insert session (better-auth schema).
+    await sql`
+      INSERT INTO "session" (id, user_id, token, expires_at, created_at, updated_at)
+      VALUES (
+        ${sessionId},
+        ${testUser.id},
+        ${sessionToken},
+        ${expiresAt.toISOString()},
+        NOW(),
+        NOW()
+      )
+    `;
+  } finally {
+    await sql.end();
+  }
 
   // Sign the token the same way hono/better-auth does
   const signedCookieValue = signCookieValue(sessionToken, secret);

@@ -38,12 +38,13 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
+  ...(process.env.CI ? { globalTimeout: 25 * 60 * 1000 } : {}),
   // One worker: every spec shares the single seeded test-salon tenant, and the
   // booking specs create appointments that consume the slots the others look
   // for (parallel runs made booking-flex / booking-flow fail intermittently).
   workers: 1,
   reporter: process.env.CI
-    ? [["github"], ["html", { open: "never" }]]
+    ? [["line"], ["github"], ["html", { open: "never" }]]
     : "html",
 
   use: {
