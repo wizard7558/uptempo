@@ -188,6 +188,18 @@ async function waitForScheduleControlsReady(page: Page) {
   );
 }
 
+async function finishThemeColorTransitions(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const transitions = document.documentElement
+      .getAnimations({ subtree: true })
+      .filter((animation) => {
+        const endTime = animation.effect?.getComputedTiming().endTime;
+        return animation.playState === "running" && Number.isFinite(endTime);
+      });
+    await Promise.all(transitions.map((animation) => animation.finished.catch(() => undefined)));
+  });
+}
+
 async function waitForCalendarView(
   page: Page,
   expectedView: "Day" | "Week" | "Month",
@@ -1029,6 +1041,35 @@ test("calendar views and details stay accessible on desktop and phone", async ({
     await checkCalendarState("appointment details");
     await attachScreenshot(page, testInfo, "calendar-details-desktop");
     await dock.getByRole("button", { name: "Close", exact: true }).click();
+
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect
+      .poll(() => page.locator("html").evaluate((element) => element.classList.contains("dark")))
+      .toBe(true);
+    await finishThemeColorTransitions(page);
+    const readSettledColors = (locator: Locator) =>
+      locator.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          color: style.color,
+          backgroundColor: style.backgroundColor,
+          borderColor: style.borderTopColor,
+        };
+      });
+    const darkDateNav = page.getByTestId("schedule-date-navigation").getByRole("button");
+    const settledColors = await Promise.all([
+      readSettledColors(darkDateNav.nth(1)),
+      readSettledColors(darkDateNav.nth(3)),
+      readSettledColors(page.getByRole("button", { name: "Search", exact: true })),
+      readSettledColors(page.getByRole("button", { name: /E2E Host Client/ }).first()),
+    ]);
+    console.log(`[calendar-dark-settled-colors] ${JSON.stringify(settledColors)}`);
+    await checkCalendarState("week dark mode");
+    await attachScreenshot(page, testInfo, "calendar-week-dark-neutral-card");
+    await page.emulateMedia({ colorScheme: "light" });
+    await expect
+      .poll(() => page.locator("html").evaluate((element) => element.classList.contains("dark")))
+      .toBe(false);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.getByTestId("agenda-list")).toBeVisible();

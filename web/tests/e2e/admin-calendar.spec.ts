@@ -1,9 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
+import { addDays, addMonths, endOfWeek, format, parse, startOfWeek } from "date-fns";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import postgres from "postgres";
 
 const SCHEMA = `"tenant_test-salon"`;
 const ROOM = "Color Room";
 const HOST_CLIENT_ID = "f0e2e201-0000-4000-8000-000000000001";
+const DAY_DATE_FORMAT = "EEEE, MMM d, yyyy";
 
 function daytimeZone(now = new Date()): string {
   const shift = 12 - now.getUTCHours();
@@ -26,6 +28,97 @@ async function expectCalendarView(
   const viewData = page.locator(`[data-calendar-view="${view.toLowerCase()}"]`);
   await expect(viewData).toBeVisible();
   await expect(viewData).toHaveAttribute("aria-busy", "false");
+}
+
+async function expectNeutralCalendarSurface(locator: Locator) {
+  const colors = await locator.evaluate((element) => {
+    const probe = document.createElement("div");
+    probe.style.cssText =
+      "position:fixed;visibility:hidden;background-color:var(--card);color:var(--card-foreground);border:1px solid var(--border)";
+    document.body.append(probe);
+    const actual = getComputedStyle(element);
+    const expected = getComputedStyle(probe);
+    const result = {
+      background: actual.backgroundColor,
+      expectedBackground: expected.backgroundColor,
+      foreground: actual.color,
+      expectedForeground: expected.color,
+      border: actual.borderTopColor,
+      expectedBorder: expected.borderTopColor,
+      borderWidth: actual.borderTopWidth,
+    };
+    probe.remove();
+    return result;
+  });
+
+  expect(colors.background).toBe(colors.expectedBackground);
+  expect(colors.foreground).toBe(colors.expectedForeground);
+  expect(colors.border).toBe(colors.expectedBorder);
+  expect(colors.borderWidth).toBe("1px");
+}
+
+function parseDayDateLabel(label: string): Date {
+  const date = parse(label, DAY_DATE_FORMAT, new Date());
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Could not parse calendar day label: ${label}`);
+  }
+  return date;
+}
+
+function desktopDateLabel(date: Date, view: "Week" | "Month"): string {
+  if (view === "Month") return format(date, "MMMM yyyy");
+  return `${format(startOfWeek(date, { weekStartsOn: 1 }), "MMM d")} - ${format(endOfWeek(date, { weekStartsOn: 1 }), "MMM d, yyyy")}`;
+}
+
+async function expectResponsiveNavigation(
+  page: Page,
+  view: "Week" | "Month",
+) {
+  const dateNav = page.getByTestId("schedule-date-navigation");
+  const controls = dateNav.getByRole("button");
+  const previous = controls.nth(0);
+  const dateLabel = controls.nth(1);
+  const next = controls.nth(2);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByTestId("agenda-list")).toBeVisible();
+  await expect
+    .poll(() => dateLabel.innerText())
+    .toMatch(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), /);
+  const selectedDate = parseDayDateLabel(await dateLabel.innerText());
+  const selectedDateLabel = format(selectedDate, DAY_DATE_FORMAT);
+
+  await next.click();
+  await expect(dateLabel).toHaveText(format(addDays(selectedDate, 1), DAY_DATE_FORMAT));
+  await previous.click();
+  await expect(dateLabel).toHaveText(selectedDateLabel);
+  await previous.click();
+  await expect(dateLabel).toHaveText(format(addDays(selectedDate, -1), DAY_DATE_FORMAT));
+  await next.click();
+  await expect(dateLabel).toHaveText(selectedDateLabel);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expectCalendarView(page, view);
+  await expect(dateLabel).toHaveText(desktopDateLabel(selectedDate, view));
+  const nextDesktopDate =
+    view === "Week" ? addDays(selectedDate, 7) : addMonths(selectedDate, 1);
+  await next.click();
+  await expect(dateLabel).toHaveText(desktopDateLabel(nextDesktopDate, view));
+  await previous.click();
+  if (view === "Month") {
+    await dateLabel.click();
+    const selectedDayAttribute = await page.evaluate((isoDate) => {
+      const [year, month, day] = isoDate.split("-").map(Number);
+      return new Date(year!, month! - 1, day!).toLocaleDateString();
+    }, format(selectedDate, "yyyy-MM-dd"));
+    await page
+      .locator(`[data-slot="calendar"] button[data-day="${selectedDayAttribute}"]`)
+      .click();
+    await page.keyboard.press("Escape");
+    await expect(dateLabel).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator('[data-slot="popover-content"]')).toBeHidden();
+  }
+  await expect(dateLabel).toHaveText(desktopDateLabel(selectedDate, view));
 }
 
 test.describe("admin calendar", () => {
@@ -53,17 +146,17 @@ test.describe("admin calendar", () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.goto("/schedule");
       await expectCalendarView(page, "Day");
+      const week = page.getByRole("button", { name: "Week", exact: true });
+      const month = page.getByRole("button", { name: "Month", exact: true });
+      const day = page.getByRole("button", { name: "Day", exact: true });
       await expect(page.getByRole("button", { name: "Day", exact: true })).toBeVisible({
         timeout: 15000,
       });
-      const week = page.getByRole("button", { name: "Week", exact: true });
       await week.click();
       await expectCalendarView(page, "Week");
-      const month = page.getByRole("button", { name: "Month", exact: true });
       await month.click();
       await expectCalendarView(page, "Month");
       await expect(page.getByText("Mon", { exact: true })).toBeVisible();
-      const day = page.getByRole("button", { name: "Day", exact: true });
       await day.click();
       await expectCalendarView(page, "Day");
 
@@ -79,10 +172,51 @@ test.describe("admin calendar", () => {
         }
       }
       expect(foundHost).toBe(true);
+      await expectNeutralCalendarSurface(host.first());
+      const hostDetails = (await host.first().getAttribute("aria-label")) ?? "";
+      expect(hostDetails).toMatch(/^E2E Host Client, E2E Host Block, .+, .+$/);
+      const processingBand = host.first().locator('[aria-hidden="true"]');
+      await expect(processingBand).toHaveCount(1);
+      await expect
+        .poll(() =>
+          processingBand.evaluate((element) => getComputedStyle(element).backgroundImage),
+        )
+        .toContain("repeating-linear-gradient");
       await page.screenshot({
         path: testInfo.outputPath("calendar-day-desktop.png"),
         fullPage: false,
       });
+
+      await week.click();
+      await expectCalendarView(page, "Week");
+      await expect(host.first()).toBeVisible();
+      await expectNeutralCalendarSurface(host.first());
+
+      await month.click();
+      await expectCalendarView(page, "Month");
+      const monthHost = page.locator(
+        '[data-calendar-view="month"] div[title^="E2E Host Client"]',
+      );
+      await expect(monthHost.first()).toBeVisible();
+      await expectNeutralCalendarSurface(monthHost.first());
+
+      await day.click();
+      await expectCalendarView(page, "Day");
+      await expect(host.first()).toBeVisible();
+
+      await page.emulateMedia({ colorScheme: "dark" });
+      await expect
+        .poll(() => page.locator("html").evaluate((element) => element.classList.contains("dark")))
+        .toBe(true);
+      await expectNeutralCalendarSurface(host.first());
+      await page.screenshot({
+        path: testInfo.outputPath("calendar-day-dark-neutral-card.png"),
+        fullPage: false,
+      });
+      await page.emulateMedia({ colorScheme: "light" });
+      await expect
+        .poll(() => page.locator("html").evaluate((element) => element.classList.contains("dark")))
+        .toBe(false);
 
       const rooms = page.getByRole("button", { name: "Rooms", exact: true });
       await expect(rooms).toBeEnabled();
@@ -130,6 +264,14 @@ test.describe("admin calendar", () => {
       await expect(page.getByRole("heading", { name: "Move and notify the client?" })).toBeHidden();
 
       await dock.getByRole("button", { name: "Close", exact: true }).click();
+
+      await week.click();
+      await expectCalendarView(page, "Week");
+      await expectResponsiveNavigation(page, "Week");
+      await month.click();
+      await expectCalendarView(page, "Month");
+      await expectResponsiveNavigation(page, "Month");
+
       await page.setViewportSize({ width: 390, height: 844 });
       await expect(page.getByTestId("agenda-list")).toBeVisible();
       await expect(page.getByRole("button", { name: /E2E Host Client/ })).toBeVisible();

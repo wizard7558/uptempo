@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { completeAppointment } from "@/actions/checkout";
 import { useSchedule } from "@/hooks/use-schedule";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { DateNav } from "./date-nav";
 import { DayView } from "./day-view";
 import { WeekView } from "./week-view";
@@ -77,6 +78,8 @@ export function ScheduleView({
   taskTypes,
 }: ScheduleViewProps) {
   const schedule = useSchedule();
+  const isMobile = useIsMobile();
+  const navigationViewMode = isMobile ? "day" : schedule.viewMode;
   const t = useT("nav");
   const ts = useT("schedule");
   const [docked, setDocked] = useState(false);
@@ -312,8 +315,10 @@ export function ScheduleView({
         >
           <DateNav
             currentDate={schedule.currentDate}
-            viewMode={schedule.viewMode}
-            onNavigate={schedule.navigateDate}
+            viewMode={navigationViewMode}
+            onNavigate={(direction) =>
+              schedule.navigateDate(direction, navigationViewMode)
+            }
             onToday={schedule.goToToday}
             onDateSelect={schedule.setDate}
           />

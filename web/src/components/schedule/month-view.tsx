@@ -12,7 +12,6 @@ import {
   format,
 } from "date-fns";
 import { getScheduleData } from "@/actions/appointments";
-import { getServiceColor } from "@/lib/utils/service-colors";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/terms/client";
 import { visitWord } from "@/lib/schedule/visit-status";
@@ -35,7 +34,6 @@ interface DayAppointment {
   status: string;
   checkedInAt?: string | Date | null;
   start: Date;
-  serviceColor: string;
 }
 
 const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -80,9 +78,6 @@ export function MonthView({
             status: d.status,
             checkedInAt: d.checkedInAt,
             start: new Date(d.start),
-            serviceColor: getServiceColor(
-              d.services[0]?.serviceId ?? "default",
-            ),
           });
         }
       }
@@ -172,8 +167,7 @@ export function MonthView({
                   return (
                     <div
                       key={appt.id}
-                      className="truncate rounded px-1 py-0.5 text-xs leading-tight text-white"
-                      style={{ backgroundColor: appt.serviceColor }}
+                      className="truncate rounded border border-border bg-card px-1 py-0.5 text-xs leading-tight text-card-foreground"
                       title={`${appt.clientName}, ${appt.serviceName}, ${timeLabel}, ${statusLabel}`}
                     >
                       {timeLabel} {appt.clientName} {statusLabel}
