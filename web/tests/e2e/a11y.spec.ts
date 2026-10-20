@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
+import { execFileSync } from "node:child_process";
 import { createHmac } from "node:crypto";
 import { mkdir, stat, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
 import postgres from "postgres";
 import { industrySlug, marketingIndustries } from "../../src/lib/marketing/industries";
@@ -21,6 +23,17 @@ type BrandingRow = { id: string; brand_color: string | null; color_mode: string 
 const originalBranding = new Map<string, BrandingRow[]>();
 const insertedBrandingIds = new Map<string, string>();
 let brandingFixtureStarted = false;
+
+function playwrightFfmpegPath(): string {
+  const requireFromWeb = createRequire(`${process.cwd()}/package.json`);
+  const requireFromPlaywright = createRequire(requireFromWeb.resolve("@playwright/test"));
+  const { registry } = requireFromPlaywright("playwright-core/lib/server/registry/index") as {
+    registry: {
+      findExecutable(name: string): { executablePath(): string };
+    };
+  };
+  return registry.findExecutable("ffmpeg").executablePath();
+}
 
 function bookingSessionCookie(clientId: string): string {
   const secret = process.env.BOOKING_SESSION_SECRET || "e2e-booking-session-secret";
@@ -168,13 +181,21 @@ async function expectAccessibleState(page: Page) {
   expect(await accessibleStateIssues(page)).toEqual([]);
 }
 
+async function waitForScheduleControlsReady(page: Page) {
+  await expect(page.getByTestId("schedule-view-switcher")).toHaveAttribute(
+    "data-client-ready",
+    "true",
+  );
+}
+
 async function waitForCalendarView(
   page: Page,
   expectedView: "Day" | "Week" | "Month",
 ) {
-  await expect(
-    page.getByRole("button", { name: expectedView, exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  await waitForScheduleControlsReady(page);
+  const button = page.getByRole("button", { name: expectedView, exact: true });
+  await expect(button).toBeEnabled();
+  await expect(button).toHaveAttribute("aria-pressed", "true");
   const viewData = page.locator(
     `[data-calendar-view="${expectedView.toLowerCase()}"]`,
   );
@@ -554,18 +575,60 @@ for (const colorScheme of ["light", "dark"] as const) {
     });
     await page.emulateMedia({ colorScheme });
 
-    const checkPage = async (pathname: string, width: number) => {
+    const checkPage = async (
+      pathname: string,
+      width: number,
+      exerciseResize = false,
+    ) => {
+      const sidebar = page.locator('[data-slot="sidebar"]:visible');
+      const sidebarTrigger = page.locator('[data-slot="sidebar-trigger"]');
+      const readSidebarCookie = () =>
+        page.evaluate(
+          () =>
+            document.cookie
+              .split("; ")
+              .find((part) => part.startsWith("sidebar_state=")) ?? null,
+        );
+      const sidebarCookieBefore = await readSidebarCookie();
+
       if (width === 390) {
-        await page.getByRole("button", { name: "Open navigation menu" }).click();
+        await expect(sidebarTrigger).toHaveAccessibleName("Open navigation menu");
+        await sidebarTrigger.click();
       }
-      const sidebar = page.locator('[data-slot="sidebar"]');
       await expect(sidebar).toHaveCount(1);
       await expect(sidebar).toBeVisible();
       await expect(sidebar.locator('a[href="/schedule"][aria-label="Calendar"]')).toHaveCount(1);
       await expect(sidebar.locator('a[href="/walk-ins"][aria-label="Walk-ins"]')).toHaveCount(1);
       if (width === 390) {
+        const dialog = page.getByRole("dialog");
+        const dialogHasFocus = () =>
+          page.evaluate(() => {
+            const active = document.activeElement;
+            return active instanceof HTMLElement && Boolean(active.closest('[role="dialog"]'));
+          });
+        await expect(dialog).toBeVisible();
+        await expect.poll(dialogHasFocus).toBe(true);
+        await page.keyboard.press("Tab");
+        await expect.poll(dialogHasFocus).toBe(true);
         await page.keyboard.press("Escape");
-        await expect(sidebar).toBeHidden();
+        await expect(dialog).toBeHidden();
+        await expect(sidebarTrigger).toBeFocused();
+        await expect.poll(readSidebarCookie).toBe(sidebarCookieBefore);
+
+        if (exerciseResize) {
+          await sidebarTrigger.click();
+          await expect(dialog).toBeVisible();
+          await page.setViewportSize({ width: 1280, height: 800 });
+          await expect(dialog).toBeHidden();
+          await expect(sidebar).toHaveCount(1);
+          await expect(sidebarTrigger).toBeFocused();
+          await page.setViewportSize({ width: 390, height: 844 });
+          await expect(sidebar).toHaveCount(0);
+          await expect(sidebarTrigger).toHaveAccessibleName("Open navigation menu");
+          await expect.poll(readSidebarCookie).toBe(sidebarCookieBefore);
+        }
+      } else {
+        await expect(page.getByRole("dialog")).toHaveCount(0);
       }
       if (pathname === "/schedule") {
         await expect(page.locator('[data-testid="schedule-date-navigation"]:visible').first()).toBeVisible();
@@ -577,6 +640,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       } else {
         await expect(page.locator("html")).not.toHaveClass(/dark/);
       }
+      await expect(page.getByRole("button", { name: /^Alerts/ })).toBeVisible();
       await page.waitForTimeout(300);
       expect(pageErrors).toEqual([]);
       expect(consoleErrors.filter((message) => /hydration|react error #41[89]/i.test(message))).toEqual([]);
@@ -587,7 +651,7 @@ for (const colorScheme of ["light", "dark"] as const) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 800 });
         for (const pathname of ["/schedule", "/walk-ins"] as const) {
           await page.goto(pathname, { waitUntil: "domcontentloaded" });
-          await checkPage(pathname, width);
+          await checkPage(pathname, width, width === 390 && pathname === "/schedule");
           await page.reload({ waitUntil: "domcontentloaded" });
           await checkPage(pathname, width);
         }
@@ -606,6 +670,51 @@ for (const colorScheme of ["light", "dark"] as const) {
     }
   });
 }
+
+test("admin sidebar closes the topmost nested menu before the mobile sheet", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/schedule", { waitUntil: "domcontentloaded" });
+
+  const sidebar = page.locator('[data-slot="sidebar"]:visible');
+  const sidebarTrigger = page.locator('[data-slot="sidebar-trigger"]');
+  await expect(sidebarTrigger).toHaveAccessibleName("Open navigation menu");
+  await sidebarTrigger.click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  const businessSwitchTrigger = sidebar.getByRole("button", {
+    name: /Current .*:/,
+  });
+  await expect(businessSwitchTrigger).toBeVisible();
+  await businessSwitchTrigger.click();
+
+  const businessMenu = page.getByRole("menu");
+  await expect(businessMenu).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(businessMenu).toBeHidden();
+  await expect(dialog).toBeVisible();
+  await expect(businessSwitchTrigger).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(sidebarTrigger).toBeFocused();
+
+  await sidebarTrigger.click();
+  await expect(dialog).toBeVisible();
+  const dialogBox = await dialog.boundingBox();
+  const viewport = page.viewportSize();
+  expect(dialogBox).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  if (!dialogBox || !viewport) throw new Error("Mobile sidebar geometry is unavailable");
+
+  const outsideX = viewport.width - 2;
+  expect(outsideX).toBeGreaterThan(dialogBox.x + dialogBox.width);
+  await page.mouse.click(outsideX, Math.floor(viewport.height / 2));
+  await expect(dialog).toBeHidden();
+  await expect(sidebarTrigger).toBeFocused();
+});
 
 const QUEUE_SCHEMA = '"tenant_test-salon"';
 const QUEUE_PHONE = "+15555550188";
@@ -768,6 +877,7 @@ test("calendar views and details stay accessible on desktop and phone", async ({
     await page.emulateMedia({ colorScheme: colorMode });
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/schedule");
+    await waitForScheduleControlsReady(page);
     await expect(page.getByRole("group", { name: "Calendar view" })).toBeVisible();
     const day = page.getByRole("button", { name: "Day", exact: true });
     await expect(day).toBeVisible({ timeout: 15000 });
@@ -1003,6 +1113,9 @@ test("record a short booking and calendar interaction", async ({ browser }, test
   const page = await context.newPage();
   const video = page.video();
   const baseUrl = `http://localhost:${process.env.E2E_PORT ?? "3000"}`;
+  let testFailed = false;
+  let testFailure: unknown;
+  const recordingErrors: string[] = [];
   try {
     await page.goto(`${baseUrl}/book/test-salon`);
     await page.getByRole("checkbox").first().check();
@@ -1013,20 +1126,91 @@ test("record a short booking and calendar interaction", async ({ browser }, test
     await expect(page.getByLabel("Name")).toBeVisible();
     await page.waitForTimeout(1000);
     await page.goto(`${baseUrl}/schedule`);
+    await waitForScheduleControlsReady(page);
     const week = page.getByRole("button", { name: "Week", exact: true });
     await expect(week).toBeVisible();
+    await expect(week).toBeEnabled();
     await week.click();
     await waitForCalendarView(page, "Week");
     const day = page.getByRole("button", { name: "Day", exact: true });
     await day.click();
     await waitForCalendarView(page, "Day");
+  } catch (error) {
+    testFailed = true;
+    testFailure = error;
   } finally {
-    await context.close();
+    try {
+      await context.close();
+    } catch (error) {
+      if (testFailed) {
+        recordingErrors.push(`Failed to close recording context: ${String(error)}`);
+      } else {
+        testFailed = true;
+        testFailure = error;
+      }
+    }
+
+    try {
+      if (!video) throw new Error("Playwright did not create a recording for this context");
+      const videoPath = testInfo.outputPath("book-calendar-interaction.webm");
+      await video.saveAs(videoPath);
+      const videoStat = await stat(videoPath);
+      expect(videoStat.size).toBeGreaterThan(0);
+      const decodeCheckPath = testInfo.outputPath("book-calendar-interaction-decode-check.webm");
+      const ffmpegOutput = execFileSync(
+        playwrightFfmpegPath(),
+        [
+          "-hide_banner",
+          "-v",
+          "error",
+          "-i",
+          videoPath,
+          "-map",
+          "0:v:0",
+          "-c:v",
+          "libvpx",
+          "-deadline",
+          "realtime",
+          "-f",
+          "webm",
+          decodeCheckPath,
+          "-progress",
+          "pipe:1",
+          "-nostats",
+        ],
+        { encoding: "utf8", maxBuffer: 1024 * 1024 },
+      );
+      const decodedFrameCounts = Array.from(
+        ffmpegOutput.matchAll(/^frame=(\d+)$/gm),
+        (match) => Number(match[1]),
+      );
+      expect(Math.max(...decodedFrameCounts)).toBeGreaterThan(0);
+      await testInfo.attach("book-calendar-interaction", {
+        path: videoPath,
+        contentType: "video/webm",
+      });
+    } catch (error) {
+      if (testFailed) {
+        recordingErrors.push(`Failed to save, validate, or attach recording: ${String(error)}`);
+      } else {
+        testFailed = true;
+        testFailure = error;
+      }
+    }
+
+    if (recordingErrors.length > 0) {
+      try {
+        const recordingErrorsPath = testInfo.outputPath("recording-save-errors.txt");
+        await writeFile(recordingErrorsPath, recordingErrors.join("\n"), "utf8");
+        await testInfo.attach("recording-save-errors.txt", {
+          path: recordingErrorsPath,
+          contentType: "text/plain",
+        });
+      } catch {
+        // Preserve the original interaction error if attaching diagnostics fails.
+      }
+    }
   }
-  if (!video) throw new Error("Playwright did not create a recording for this context");
-  const videoPath = testInfo.outputPath("book-calendar-interaction.webm");
-  await video.saveAs(videoPath);
-  const videoStat = await stat(videoPath);
-  expect(videoStat.size).toBeGreaterThan(0);
-  await testInfo.attach("book-calendar-interaction", { path: videoPath, contentType: "video/webm" });
+
+  if (testFailed) throw testFailure;
 });

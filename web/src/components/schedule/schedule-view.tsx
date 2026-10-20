@@ -80,6 +80,11 @@ export function ScheduleView({
   const t = useT("nav");
   const ts = useT("schedule");
   const [docked, setDocked] = useState(false);
+  const [clientReady, setClientReady] = useState(false);
+
+  useEffect(() => {
+    setClientReady(true);
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(min-width: 1024px)");
@@ -321,6 +326,7 @@ export function ScheduleView({
               <Button
                 variant={schedule.dayAxis === "people" ? "default" : "outline"}
                 aria-pressed={schedule.dayAxis === "people"}
+                disabled={!clientReady}
                 className={cn(
                   "min-h-11 transition-none",
                   schedule.dayAxis === "people" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
@@ -332,6 +338,7 @@ export function ScheduleView({
               <Button
                 variant={schedule.dayAxis === "rooms" ? "default" : "outline"}
                 aria-pressed={schedule.dayAxis === "rooms"}
+                disabled={!clientReady}
                 className={cn(
                   "min-h-11 transition-none",
                   schedule.dayAxis === "rooms" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
@@ -342,10 +349,17 @@ export function ScheduleView({
               </Button>
             </div>
           )}
-          <div className="hidden gap-1 md:flex" role="group" aria-label={ts("calendarView")}>
+          <div
+            className="hidden gap-1 md:flex"
+            role="group"
+            aria-label={ts("calendarView")}
+            data-testid="schedule-view-switcher"
+            data-client-ready={clientReady ? "true" : "false"}
+          >
             <Button
               variant={schedule.viewMode === "day" ? "default" : "outline"}
               aria-pressed={schedule.viewMode === "day"}
+              disabled={!clientReady}
               className={cn(
                 "min-h-11 transition-none",
                 schedule.viewMode === "day" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
@@ -357,6 +371,7 @@ export function ScheduleView({
             <Button
               variant={schedule.viewMode === "week" ? "default" : "outline"}
               aria-pressed={schedule.viewMode === "week"}
+              disabled={!clientReady}
               className={cn(
                 "min-h-11 transition-none",
                 schedule.viewMode === "week" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
@@ -368,6 +383,7 @@ export function ScheduleView({
             <Button
               variant={schedule.viewMode === "month" ? "default" : "outline"}
               aria-pressed={schedule.viewMode === "month"}
+              disabled={!clientReady}
               className={cn(
                 "min-h-11 transition-none",
                 schedule.viewMode === "month" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",

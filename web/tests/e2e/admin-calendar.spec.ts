@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
 
 const SCHEMA = `"tenant_test-salon"`;
@@ -10,6 +10,22 @@ function daytimeZone(now = new Date()): string {
   if (shift === 0) return "UTC";
   if (shift > 0) return `Etc/GMT-${shift}`;
   return `Etc/GMT+${-shift}`;
+}
+
+async function expectCalendarView(
+  page: Page,
+  view: "Day" | "Week" | "Month",
+) {
+  await expect(page.getByTestId("schedule-view-switcher")).toHaveAttribute(
+    "data-client-ready",
+    "true",
+  );
+  const button = page.getByRole("button", { name: view, exact: true });
+  await expect(button).toBeEnabled();
+  await expect(button).toHaveAttribute("aria-pressed", "true");
+  const viewData = page.locator(`[data-calendar-view="${view.toLowerCase()}"]`);
+  await expect(viewData).toBeVisible();
+  await expect(viewData).toHaveAttribute("aria-busy", "false");
 }
 
 test.describe("admin calendar", () => {
@@ -36,13 +52,20 @@ test.describe("admin calendar", () => {
 
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.goto("/schedule");
+      await expectCalendarView(page, "Day");
       await expect(page.getByRole("button", { name: "Day", exact: true })).toBeVisible({
         timeout: 15000,
       });
-      await page.getByRole("button", { name: "Week", exact: true }).click();
-      await page.getByRole("button", { name: "Month", exact: true }).click();
+      const week = page.getByRole("button", { name: "Week", exact: true });
+      await week.click();
+      await expectCalendarView(page, "Week");
+      const month = page.getByRole("button", { name: "Month", exact: true });
+      await month.click();
+      await expectCalendarView(page, "Month");
       await expect(page.getByText("Mon", { exact: true })).toBeVisible();
-      await page.getByRole("button", { name: "Day", exact: true }).click();
+      const day = page.getByRole("button", { name: "Day", exact: true });
+      await day.click();
+      await expectCalendarView(page, "Day");
 
       const host = page.getByRole("button", { name: /E2E Host Client/ });
       let foundHost = false;
@@ -61,9 +84,15 @@ test.describe("admin calendar", () => {
         fullPage: false,
       });
 
-      await page.getByRole("button", { name: "Rooms", exact: true }).click();
+      const rooms = page.getByRole("button", { name: "Rooms", exact: true });
+      await expect(rooms).toBeEnabled();
+      await rooms.click();
+      await expect(rooms).toHaveAttribute("aria-pressed", "true");
       await expect(page.getByTestId("room-column").filter({ hasText: ROOM })).toBeVisible();
-      await page.getByRole("button", { name: "People", exact: true }).click();
+      const people = page.getByRole("button", { name: "People", exact: true });
+      await expect(people).toBeEnabled();
+      await people.click();
+      await expect(people).toHaveAttribute("aria-pressed", "true");
       await expect(page.getByTestId("person-column").filter({ hasText: "Test Stylist" })).toBeVisible();
       await expect(host.first()).toBeVisible({ timeout: 15000 });
 
