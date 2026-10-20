@@ -206,10 +206,9 @@ export function WeekView({
 
   return (
     <div
-      className={cn(
-        "flex h-full min-h-0 flex-col",
-        isPending && "opacity-60",
-      )}
+      data-calendar-view="week"
+      aria-busy={isPending}
+      className={cn("flex h-full min-h-0 flex-col")}
     >
       {/* Week summary header */}
       <div className="flex shrink-0 items-baseline justify-between gap-3 border-b bg-background px-4 py-2 text-xs">
@@ -364,9 +363,10 @@ function DayColumn({
       <button
         type="button"
         onClick={onHeaderClick}
+        aria-current={isToday ? "date" : undefined}
         className={cn(
-          "sticky top-0 z-30 flex w-full flex-col items-center gap-0.5 border-b bg-background px-2 py-1.5 text-center transition-colors hover:bg-muted/50",
-          isToday && "bg-primary/5",
+          "sticky top-0 z-30 flex w-full flex-col items-center gap-0.5 border-b bg-background px-2 py-1.5 text-center transition-none hover:bg-muted/50",
+          isToday && "bg-accent/5",
         )}
         style={{ height: WEEK_HEADER_HEIGHT_PX }}
       >
@@ -376,7 +376,7 @@ function DayColumn({
         <span
           className={cn(
             "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-sm font-medium leading-none",
-            isToday && "bg-primary text-primary-foreground",
+            isToday && "bg-accent text-accent-foreground",
           )}
         >
           {format(date, "d")}

@@ -460,6 +460,7 @@
     "day": "Day",
     "week": "Week",
     "month": "Month",
+    "calendarView": "Calendar view",
     "checkIn": "Check in",
     "checkedIn": "Checked in",
     "reschedule": "Reschedule",

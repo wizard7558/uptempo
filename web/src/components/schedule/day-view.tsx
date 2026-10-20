@@ -348,11 +348,17 @@ export function DayView({
         </div>
       )}
       <div
-        className={`flex overflow-x-auto ${isPending ? "opacity-60" : ""}`}
+        data-calendar-view="day"
+        data-testid="day-grid-scroll"
+        role="region"
+        aria-label={t("calendarView")}
+        tabIndex={0}
+        aria-busy={isPending}
+        className="flex min-w-0 overflow-x-auto"
         style={{ minHeight: TOTAL_HEIGHT_PX + 40 }}
       >
         <TimeColumn />
-        <div className="relative flex flex-1">
+        <div className="relative flex min-w-0 flex-1">
           <CurrentTimeMarker currentDate={currentDate} />
           {axis === "rooms"
             ? rooms.map((room) => (

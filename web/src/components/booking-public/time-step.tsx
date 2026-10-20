@@ -344,7 +344,7 @@ export function TimeStep({
                 aria-pressed={isSelected}
                 className={cn(
                   "flex min-h-11 w-full items-start gap-3 border border-[var(--line)] p-4 text-left",
-                  isSelected && "border-[var(--ink)] bg-[var(--ivory-raised)]",
+                  isSelected && "border-accent bg-accent/10",
                 )}
               >
                 <MapPinIcon className="mt-0.5 size-4 shrink-0 text-[var(--ink-soft)]" />
@@ -384,6 +384,7 @@ export function TimeStep({
                   <CalendarDayButton
                     {...props}
                     className="[&>span]:text-[13px]"
+                    isSelected={key === activeDate}
                     {...(enabled.has(key) ? { "data-booking-date": key } : {})}
                   />
                 );
@@ -427,12 +428,12 @@ export function TimeStep({
                             onClick={() => setActiveTime(slot.time)}
                             className={cn(
                               "flex min-h-14 flex-col items-center justify-center border-2 border-[var(--line)] px-3 py-2 text-sm font-medium",
-                              isSelected && "border-[var(--ink)] bg-[var(--ink)] text-[var(--ivory)]",
+                              isSelected && "border-accent bg-accent text-accent-foreground",
                             )}
                           >
                             <span>{formatSlotTime(slot.time)}</span>
                             {slot.isDoubleBook && (
-                              <span className={cn("text-[13px]", isSelected ? "text-[var(--ivory)]" : "text-[var(--ink-soft)]")}>
+                              <span className={cn("text-[13px]", isSelected ? "text-accent-foreground" : "text-[var(--ink-soft)]")}>
                                 (flex)
                               </span>
                             )}

@@ -24,55 +24,11 @@ import { getEnabledModules } from "@/lib/tenant/modules";
 import { AppProviders } from "@/components/app-providers";
 import { ThemeProvider } from "@/components/theme-provider";
 
-function SidebarChromeFallback({
-  role,
-  tenantSlug,
-}: {
-  role: string;
-  tenantSlug: string | null;
-}) {
-  return (
-    <div className="relative">
-      <AdminSidebar role={role} tenantSlug={tenantSlug} />
-      <div className="pointer-events-none absolute inset-x-3 top-16 space-y-3">
-        <Skeleton className="h-10 w-full rounded-lg" />
-        <Skeleton className="h-10 w-full rounded-lg" />
-        <Skeleton className="h-10 w-full rounded-lg" />
-      </div>
-    </div>
-  );
-}
-
 function BannerSkeleton() {
   return (
     <div className="border-b px-4 py-2">
       <Skeleton className="h-5 w-72 max-w-full" />
     </div>
-  );
-}
-
-async function SidebarMembershipsLoader({
-  role,
-  tenantSlug,
-}: {
-  role: string;
-  tenantSlug: string | null;
-}) {
-  const [membershipData, onboardingSteps, enabledModules] = await Promise.all([
-    listUserMemberships(),
-    tenantSlug ? getOnboardingState(tenantSlug) : Promise.resolve(null),
-    tenantSlug ? getEnabledModules(tenantSlug) : Promise.resolve([]),
-  ]);
-
-  return (
-    <AdminSidebar
-      role={role}
-      tenantSlug={tenantSlug}
-      onboardingSteps={onboardingSteps}
-      enabledModules={enabledModules}
-      memberships={membershipData.memberships}
-      activeTenantSlug={membershipData.activeTenantSlug}
-    />
   );
 }
 
@@ -151,11 +107,16 @@ export default async function AdminLayout({
   // Portal gate: a business that hasn't launched only exposes the onboarding
   // wizard (owners/admins) or a holding page (staff). Launched tenants are
   // never gated; this reads the same cached state the sidebar loader uses.
+  const onboardingState = tenantSlug ? await getOnboardingState(tenantSlug) : null;
   if (tenantSlug) {
-    const onboardingState = await getOnboardingState(tenantSlug);
     const gateRedirect = resolveOnboardingRedirect(onboardingState, role);
     if (gateRedirect) redirect(gateRedirect);
   }
+
+  const [membershipData, enabledModules] = await Promise.all([
+    listUserMemberships(),
+    tenantSlug ? getEnabledModules(tenantSlug) : Promise.resolve([]),
+  ]);
 
   const cookieStore = await cookies();
   const sidebarCookie = cookieStore.get("sidebar_state")?.value;
@@ -173,13 +134,14 @@ export default async function AdminLayout({
       defaultOpen={defaultOpen}
       savedOpenPreference={savedOpenPreference}
     >
-      <Suspense
-        fallback={
-          <SidebarChromeFallback role={role} tenantSlug={tenantSlug} />
-        }
-      >
-        <SidebarMembershipsLoader role={role} tenantSlug={tenantSlug} />
-      </Suspense>
+      <AdminSidebar
+        role={role}
+        tenantSlug={tenantSlug}
+        onboardingSteps={onboardingState}
+        enabledModules={enabledModules}
+        memberships={membershipData.memberships}
+        activeTenantSlug={membershipData.activeTenantSlug}
+      />
       <SidebarInset>
         <NavProgress />
         <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border/80 bg-background/95 px-4 backdrop-blur-sm">

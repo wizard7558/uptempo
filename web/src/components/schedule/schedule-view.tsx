@@ -31,6 +31,7 @@ import type { TimeBlockData } from "./time-block";
 import { deleteTimeBlock } from "@/actions/time-blocks";
 import { useT } from "@/lib/terms/client";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface StaffMember {
   id: string;
@@ -295,18 +296,23 @@ export function ScheduleView({
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-    <div className="flex min-h-0 flex-1">
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1">
       <div className="flex min-w-0 flex-1 flex-col">
       {/* Top bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-        <DateNav
-          currentDate={schedule.currentDate}
-          viewMode={schedule.viewMode}
-          onNavigate={schedule.navigateDate}
-          onToday={schedule.goToToday}
-          onDateSelect={schedule.setDate}
-        />
+        <div
+          data-testid="schedule-date-navigation"
+          className="w-full min-w-0 md:w-auto [&>div]:min-w-0 [&>div]:flex-wrap [&>div>button]:min-h-11 [&>div>button:first-child]:min-w-11 [&>div>button:nth-child(3)]:min-w-11 [&>div>button:last-child]:shrink-0"
+        >
+          <DateNav
+            currentDate={schedule.currentDate}
+            viewMode={schedule.viewMode}
+            onNavigate={schedule.navigateDate}
+            onToday={schedule.goToToday}
+            onDateSelect={schedule.setDate}
+          />
+        </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {schedule.viewMode === "day" && (
@@ -314,38 +320,58 @@ export function ScheduleView({
               <span className="text-sm">{ts("showBy")}</span>
               <Button
                 variant={schedule.dayAxis === "people" ? "default" : "outline"}
-                className="min-h-11"
+                aria-pressed={schedule.dayAxis === "people"}
+                className={cn(
+                  "min-h-11 transition-none",
+                  schedule.dayAxis === "people" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
+                )}
                 onClick={() => schedule.setDayAxis("people")}
               >
                 {ts("people")}
               </Button>
               <Button
                 variant={schedule.dayAxis === "rooms" ? "default" : "outline"}
-                className="min-h-11"
+                aria-pressed={schedule.dayAxis === "rooms"}
+                className={cn(
+                  "min-h-11 transition-none",
+                  schedule.dayAxis === "rooms" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
+                )}
                 onClick={() => schedule.setDayAxis("rooms")}
               >
                 {ts("rooms")}
               </Button>
             </div>
           )}
-          <div className="hidden gap-1 md:flex">
+          <div className="hidden gap-1 md:flex" role="group" aria-label={ts("calendarView")}>
             <Button
               variant={schedule.viewMode === "day" ? "default" : "outline"}
-              className="min-h-11"
+              aria-pressed={schedule.viewMode === "day"}
+              className={cn(
+                "min-h-11 transition-none",
+                schedule.viewMode === "day" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
+              )}
               onClick={() => schedule.setView("day")}
             >
               {ts("day")}
             </Button>
             <Button
               variant={schedule.viewMode === "week" ? "default" : "outline"}
-              className="min-h-11"
+              aria-pressed={schedule.viewMode === "week"}
+              className={cn(
+                "min-h-11 transition-none",
+                schedule.viewMode === "week" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
+              )}
               onClick={() => schedule.setView("week")}
             >
               {ts("week")}
             </Button>
             <Button
               variant={schedule.viewMode === "month" ? "default" : "outline"}
-              className="min-h-11"
+              aria-pressed={schedule.viewMode === "month"}
+              className={cn(
+                "min-h-11 transition-none",
+                schedule.viewMode === "month" && "border-accent bg-accent text-accent-foreground hover:bg-muted hover:text-foreground",
+              )}
               onClick={() => schedule.setView("month")}
             >
               {ts("month")}
@@ -365,7 +391,12 @@ export function ScheduleView({
       </div>
 
       {/* Schedule grid */}
-      <div className="hidden min-h-0 flex-1 overflow-auto md:block" tabIndex={0} aria-label={t("schedule")}>
+      <div
+        data-testid="schedule-grid-panel"
+        className="hidden min-h-0 min-w-0 flex-1 overflow-auto md:block"
+        tabIndex={0}
+        aria-label={t("schedule")}
+      >
         {schedule.viewMode === "month" ? (
           <MonthView
             key={`month-${refreshKey}`}
