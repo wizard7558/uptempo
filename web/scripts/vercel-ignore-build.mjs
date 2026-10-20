@@ -2,9 +2,9 @@
  * Vercel ignored-build command.
  * Exit 0 skips the deployment. Exit 1 lets the build continue.
  *
- * A production commit that changes the database migration inputs is skipped.
- * GitHub Actions applies those migrations on push to main. Promote that commit
- * to production only after the migrate job is green. Preview builds are unchanged.
+ * A production commit that changes migration inputs waits for a separately
+ * approved production migration run and verified outcome before an operator
+ * redeploys or promotes it. Preview builds are unchanged.
  */
 import { execSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -46,7 +46,7 @@ function main() {
   }
   if (productionBuildShouldWait(files, vercelEnv)) {
     console.log(
-      "Skipping production build until the database migration succeeds. Promote this commit only after the migrate job is green.",
+      "Skipping production build for a migration-input commit. Redeploy or promote it only after an approved production migration run has completed and its outcome is verified.",
     );
     process.exit(0);
   }
