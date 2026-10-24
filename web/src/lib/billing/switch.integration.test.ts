@@ -14,6 +14,7 @@ const stripeState = vi.hoisted(() => ({
   subscriptions: [] as Array<Record<string, unknown>>,
   calls: [] as Array<{ method: string; id?: string; params?: Record<string, unknown> }>,
   nextId: 0,
+  updateReceipts: new Map<string, { request: string; response: Record<string, unknown> }>(),
   failPayout: false,
   hideCustomerSearchSlug: null as string | null,
 }));
@@ -119,15 +120,28 @@ const fakeStripe = vi.hoisted(() => {
         has_more: false,
       })),
       retrieve: vi.fn(async (id: string) => structuredClone(getSubscription(id))),
-      update: vi.fn(async (id: string, params: Record<string, unknown>) => {
+      update: vi.fn(async (
+        id: string,
+        params: Record<string, unknown>,
+        options?: { idempotencyKey?: string },
+      ) => {
+        const key = options?.idempotencyKey;
+        const request = JSON.stringify({ id, params });
+        stripeState.calls.push({ method: "subscriptions.update", id, params });
+        const receipt = key ? stripeState.updateReceipts.get(key) : undefined;
+        if (receipt) {
+          if (receipt.request !== request) throw new Error("fake Stripe idempotency key reused with different request");
+          return structuredClone(receipt.response);
+        }
         const subscription = getSubscription(id);
         const { items: added, ...rest } = params;
         Object.assign(subscription, rest);
         for (const item of (added as Array<Record<string, unknown>> | undefined) ?? []) {
           (subscription.items as { data: unknown[] }).data.push(makeItem(item));
         }
-        stripeState.calls.push({ method: "subscriptions.update", id, params });
-        return structuredClone(subscription);
+        const response = structuredClone(subscription);
+        if (key) stripeState.updateReceipts.set(key, { request, response });
+        return structuredClone(response);
       }),
       resume: vi.fn(async (id: string) => {
         const subscription = getSubscription(id);
@@ -309,6 +323,7 @@ describe.skipIf(!databaseUrl)("billing notice delivery (db)", () => {
     stripeState.customers.length = 0;
     stripeState.subscriptions.length = 0;
     stripeState.calls.length = 0;
+    stripeState.updateReceipts.clear();
     stripeState.failPayout = false;
     stripeState.hideCustomerSearchSlug = null;
   }
@@ -884,7 +899,17 @@ describe.skipIf(!databaseUrl)("billing notice delivery (db)", () => {
       .from(hostedTextBillingState)
       .where(eq(hostedTextBillingState.tenantSlug, switchSlug));
     expect(lifecycle).toMatchObject({ lifecycleState: "ready", boundaryKind: "created" });
-    expect(JSON.parse(lifecycle!.meterOperationId!)).toMatchObject({ v: 1, kind: "attach" });
+    const operation = JSON.parse(lifecycle!.meterOperationId!);
+    expect(operation).toMatchObject({ v: 1, kind: "attach" });
+    const key = `hosted-meter-v1:${operation.id}`;
+    expect([...stripeState.updateReceipts.keys()]).toEqual([key]);
+    const receipt = stripeState.updateReceipts.get(key)!;
+    const request = JSON.parse(receipt.request);
+    // Provider replay returns the original receipt without attaching a second item.
+    await expect(fakeStripe.subscriptions.update(request.id, request.params, { idempotencyKey: key }))
+      .resolves.toEqual(receipt.response);
+    await expect(fakeStripe.subscriptions.update(request.id, { ...request.params, proration_behavior: "create_prorations" }, { idempotencyKey: key }))
+      .rejects.toThrow("idempotency key reused with different request");
     expect(results.filter((result) => "reason" in result && result.reason === "already_switched")).toHaveLength(1);
 
     const [mainTenant] = await publicDb
