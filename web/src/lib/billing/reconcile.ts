@@ -14,15 +14,27 @@ export type ReconcileResult = {
   created: string[];
   synced: string[];
   failed: string[];
+  /** Text lifecycle left fail-closed (unresolved, unsupported, uncertain, or pending). */
+  textMeterAttention: string[];
 };
+
+const TEXT_METER_ATTENTION = new Set(["unresolved", "unsupported", "uncertain", "pending"]);
 
 /**
  * Nightly catch-up for hosted billing. For every launched, non-comped business:
  * recount billable staff, then create the subscription if it is missing or bring
- * its items in line. One business failing never stops the others.
+ * its items in line, which also reconciles the hosted text meter (and repairs a
+ * meter left pending after a committed switch). One business failing never
+ * stops the others.
  */
 export async function reconcileHostedBilling(): Promise<ReconcileResult> {
-  const result: ReconcileResult = { checked: 0, created: [], synced: [], failed: [] };
+  const result: ReconcileResult = {
+    checked: 0,
+    created: [],
+    synced: [],
+    failed: [],
+    textMeterAttention: [],
+  };
   if (isSingleMode()) return result;
 
   // "Launched" is the onboarding step flag that launchBusiness sets.
@@ -54,14 +66,27 @@ export async function reconcileHostedBilling(): Promise<ReconcileResult> {
           trialDays: HOSTED_TRIAL_DAYS,
         });
         if ("subscriptionId" in created) result.created.push(slug);
+        noteTextMeter(result, slug, created);
       } else {
-        await syncHostedSubscription(slug);
+        const synced = await syncHostedSubscription(slug);
         result.synced.push(slug);
+        noteTextMeter(result, slug, synced);
       }
-    } catch (error) {
-      console.error("[billing] reconcileHostedBilling failed", slug, error);
+    } catch {
+      console.error("[billing] reconcileHostedBilling failed", "hosted_reconcile_failed");
       result.failed.push(slug);
     }
   }
   return result;
+}
+
+function noteTextMeter(
+  result: ReconcileResult,
+  slug: string,
+  outcome: { textMeter?: { outcome: string } } | object,
+): void {
+  const meter = "textMeter" in outcome ? outcome.textMeter : undefined;
+  if (meter && TEXT_METER_ATTENTION.has(meter.outcome)) {
+    result.textMeterAttention.push(slug);
+  }
 }

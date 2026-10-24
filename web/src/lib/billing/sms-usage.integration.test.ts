@@ -2,14 +2,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { eq, inArray } from "drizzle-orm";
 
 /**
- * DB-backed: needs DATABASE_URL. Uses throwaway scratch tenants and a mocked
- * Stripe, so it runs in CI's test-db job; skipped without a DB.
+ * DB-backed: needs DATABASE_URL with every public migration through 0038.
+ * Uses throwaway scratch tenants and a mocked Stripe; skipped without a DB.
  */
 
 const state = vi.hoisted(() => ({
   single: false,
-  /** subscription id -> price lookup keys on it */
-  subs: {} as Record<string, string[]>,
+  /** subscription id -> metered item creation time, or null when absent */
+  meters: {} as Record<string, number | null>,
   failIdentifierPrefix: null as string | null,
 }));
 
@@ -20,36 +20,37 @@ vi.mock("@/lib/config/mode", () => ({ isSingleMode: () => state.single }));
 vi.mock("@/lib/stripe/server", () => ({
   getStripe: () => ({
     subscriptions: { retrieve: subsRetrieve },
+    events: { list: async () => ({ data: [], has_more: false }) },
+    prices: { list: async () => ({ data: [{ id: "price_texts", lookup_key: "hosted_texts_metered" }] }) },
     billing: { meterEvents: { create: meterCreate } },
   }),
 }));
 
+const NOW = new Date("2031-05-25T02:00:00.000Z");
 const DATE = "2031-05-10";
 const NEXT = "2031-05-11";
 const QUIET = "2031-05-12";
-const NOMETER = "2031-05-13";
 const FAIL = "2031-05-14";
-const SINGLE = "2031-05-15";
 const CUTOVER = "2031-05-20";
 const CUTOVER_NEXT = "2031-05-21";
-const NEWBORN = "2031-05-22";
+const METER_FROM = Date.parse("2031-05-01T00:00:00Z") / 1000;
 
 describe.skipIf(!process.env.DATABASE_URL)("reportSmsUsage (db)", () => {
   let publicDb: typeof import("@/lib/db").publicDb;
-  let tenants: typeof import("@/lib/db/schema").tenants;
-  let smsUsageReports: typeof import("@/lib/db/schema").smsUsageReports;
+  let schema: typeof import("@/lib/db/schema");
   let reportSmsUsage: typeof import("./sms-usage").reportSmsUsage;
   let a: import("@/lib/scheduling/db-fixtures").ScratchTenant;
   let b: import("@/lib/scheduling/db-fixtures").ScratchTenant;
 
   const callsFor = (slug: string) =>
     meterCreate.mock.calls.filter(([p]) => String(p.identifier).startsWith(`${slug}:`));
+  const report = (date: string) => reportSmsUsage(date, { now: NOW });
 
   async function rowsFor(slug: string, date?: string) {
     const rows = await publicDb
       .select()
-      .from(smsUsageReports)
-      .where(eq(smsUsageReports.tenantSlug, slug));
+      .from(schema.smsUsageReports)
+      .where(eq(schema.smsUsageReports.tenantSlug, slug));
     return date ? rows.filter((r) => r.usageDate === date) : rows;
   }
 
@@ -68,40 +69,41 @@ describe.skipIf(!process.env.DATABASE_URL)("reportSmsUsage (db)", () => {
     }
   }
 
-  async function setBilling(slug: string, sub: string, cus: string) {
+  /** Bind billing ids and a ready lifecycle whose cursor starts at `from`. */
+  async function setReady(slug: string, from: string, billableFrom = `${from}T00:00:00.000Z`) {
     await publicDb
-      .update(tenants)
-      .set({ comped: 0, stripeSubscriptionId: sub, platformStripeCustomerId: cus })
-      .where(eq(tenants.slug, slug));
+      .update(schema.tenants)
+      .set({ comped: 0, stripeSubscriptionId: `sub_${slug}`, platformStripeCustomerId: `cus_${slug}` })
+      .where(eq(schema.tenants.slug, slug));
+    await publicDb.delete(schema.hostedTextBillingState).where(eq(schema.hostedTextBillingState.tenantSlug, slug));
+    await publicDb.insert(schema.hostedTextBillingState).values({
+      tenantSlug: slug,
+      customerId: `cus_${slug}`,
+      subscriptionId: `sub_${slug}`,
+      billableFrom: new Date(billableFrom),
+      boundaryKind: "created",
+      meterItemId: `si_meter_${slug}`,
+      nextUsageDate: from,
+      lifecycleState: "ready",
+    });
+    state.meters[`sub_${slug}`] = METER_FROM;
   }
 
-  async function setSwitchMarkers(
-    slug: string,
-    notice: Date | null,
-    switched: Date | null,
-  ) {
-    await publicDb
-      .update(tenants)
-      .set({
-        billingNoticeSentAt: notice,
-        billingSwitchAt: notice ? new Date("2031-07-19T00:00:00.000Z") : null,
-        billingSwitchedAt: switched,
-      })
-      .where(eq(tenants.slug, slug));
+  async function cursorOf(slug: string) {
+    const [row] = await publicDb
+      .select({ nextUsageDate: schema.hostedTextBillingState.nextUsageDate })
+      .from(schema.hostedTextBillingState)
+      .where(eq(schema.hostedTextBillingState.tenantSlug, slug));
+    return row?.nextUsageDate ?? null;
   }
 
   beforeAll(async () => {
     ({ publicDb } = await import("@/lib/db"));
-    ({ tenants, smsUsageReports } = await import("@/lib/db/schema"));
+    schema = await import("@/lib/db/schema");
     ({ reportSmsUsage } = await import("./sms-usage"));
     const { scratchTenant } = await import("@/lib/scheduling/db-fixtures");
     a = await scratchTenant("smsusagea");
     b = await scratchTenant("smsusageb");
-
-    await setBilling(a.slug, `sub_${a.slug}`, `cus_${a.slug}`);
-    await setBilling(b.slug, `sub_${b.slug}`, `cus_${b.slug}`);
-    state.subs[`sub_${a.slug}`] = ["hosted_base_monthly", "hosted_texts_metered"];
-    state.subs[`sub_${b.slug}`] = ["hosted_base_monthly", "hosted_texts_metered"];
 
     // Tenant A on DATE: 3 sent, 1 failed, 1 without a sid; plus 1 sent the next day.
     await addSms(a, 2, "SMa", "delivered", `${DATE}T08:00:00Z`);
@@ -109,17 +111,14 @@ describe.skipIf(!process.env.DATABASE_URL)("reportSmsUsage (db)", () => {
     await addSms(a, 1, "SMa", "failed", `${DATE}T10:00:00Z`);
     await addSms(a, 1, null, "queued", `${DATE}T11:00:00Z`);
     await addSms(a, 1, "SMa", "sent", `${NEXT}T00:00:00Z`);
-    // Tenant B has texts on FAIL day only.
     await addSms(a, 2, "SMa", "sent", `${FAIL}T09:00:00Z`);
     await addSms(b, 4, "SMb", "sent", `${FAIL}T09:00:00Z`);
     await addSms(a, 1, "SMcutover", "sent", `${CUTOVER}T11:59:59Z`);
     await addSms(a, 1, "SMcutover", "sent", `${CUTOVER}T12:00:00Z`);
     await addSms(a, 1, "SMcutover-next", "sent", `${CUTOVER_NEXT}T08:00:00Z`);
-    await addSms(b, 1, "SMnewborn", "sent", `${NEWBORN}T08:00:00Z`);
-    await addSms(b, 1, "SMnewborn", "sent", `${NEWBORN}T16:00:00Z`);
   }, 120_000);
 
-  beforeEach(() => {
+  beforeEach(async () => {
     state.single = false;
     state.failIdentifierPrefix = null;
     meterCreate.mockReset();
@@ -130,17 +129,31 @@ describe.skipIf(!process.env.DATABASE_URL)("reportSmsUsage (db)", () => {
       return {};
     });
     subsRetrieve.mockReset();
-    subsRetrieve.mockImplementation(async (id: string) => ({
-      id,
-      items: { data: (state.subs[id] ?? []).map((k) => ({ price: { lookup_key: k } })) },
-    }));
+    subsRetrieve.mockImplementation(async (id: string) => {
+      const slug = id.replace(/^sub_/, "");
+      const created = state.meters[id];
+      return {
+        id,
+        customer: `cus_${slug}`,
+        status: "active",
+        metadata: { tenantSlug: slug, purpose: "uptempo_hosted_plan" },
+        items: {
+          data: created == null ? [] : [{ id: `si_meter_${slug}`, created, price: { lookup_key: "hosted_texts_metered" } }],
+          has_more: false,
+        },
+      };
+    });
+    await publicDb.delete(schema.smsUsageReports).where(inArray(schema.smsUsageReports.tenantSlug, [a.slug, b.slug]));
+    await setReady(a.slug, DATE);
+    await setReady(b.slug, DATE);
   });
 
   afterAll(async () => {
     const slugs = [a?.slug, b?.slug].filter(Boolean) as string[];
     try {
       if (slugs.length > 0) {
-        await publicDb.delete(smsUsageReports).where(inArray(smsUsageReports.tenantSlug, slugs));
+        await publicDb.delete(schema.smsUsageReports).where(inArray(schema.smsUsageReports.tenantSlug, slugs));
+        await publicDb.delete(schema.hostedTextBillingState).where(inArray(schema.hostedTextBillingState.tenantSlug, slugs));
       }
     } finally {
       await a?.drop();
@@ -148,63 +161,73 @@ describe.skipIf(!process.env.DATABASE_URL)("reportSmsUsage (db)", () => {
     }
   });
 
-  it("reports the day's billed texts once, then skips on rerun", async () => {
-    const first = await reportSmsUsage(DATE);
+  it("reports each pending day once with frozen facts, advances the cursor, then skips on rerun", async () => {
+    const first = await report(NEXT);
     expect(first.reported).toContain(a.slug);
     const calls = callsFor(a.slug);
-    expect(calls).toHaveLength(1);
-    expect(calls[0][0]).toEqual({
-      event_name: "uptempo_texts",
-      payload: { stripe_customer_id: `cus_${a.slug}`, value: "3" },
-      identifier: `${a.slug}:${DATE}`,
-      timestamp: Math.floor(Date.parse(`${DATE}T23:59:59Z`) / 1000),
-    });
-    const rows = await rowsFor(a.slug, DATE);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].quantity).toBe(3);
-    expect(rows[0].meterEventIdentifier).toBe(`${a.slug}:${DATE}`);
+    expect(calls.map(([params]) => params)).toEqual([
+      {
+        event_name: "uptempo_texts",
+        payload: { stripe_customer_id: `cus_${a.slug}`, value: "3" },
+        identifier: `${a.slug}:${DATE}`,
+        timestamp: Math.floor(Date.parse(`${DATE}T23:59:59Z`) / 1000),
+      },
+      {
+        event_name: "uptempo_texts",
+        payload: { stripe_customer_id: `cus_${a.slug}`, value: "1" },
+        identifier: `${a.slug}:${NEXT}`,
+        timestamp: Math.floor(Date.parse(`${NEXT}T23:59:59Z`) / 1000),
+      },
+    ]);
+    const [row] = await rowsFor(a.slug, DATE);
+    expect(row).toMatchObject({ quantity: 3, reportStatus: "submitted", customerId: `cus_${a.slug}`, subscriptionId: `sub_${a.slug}` });
+    expect(calls[0]![1]).toEqual({ idempotencyKey: `hosted-usage-v1:${row!.id}`, timeout: 30_000, maxNetworkRetries: 0 });
+    expect(await cursorOf(a.slug)).toBe(QUIET);
 
     meterCreate.mockClear();
-    const second = await reportSmsUsage(DATE);
-    expect(second.skipped).toContain(a.slug);
+    const second = await report(NEXT);
     expect(second.reported).not.toContain(a.slug);
     expect(callsFor(a.slug)).toHaveLength(0);
     expect(await rowsFor(a.slug, DATE)).toHaveLength(1);
   });
 
-  it("records a zero row without a meter event when nothing was sent", async () => {
-    const res = await reportSmsUsage(QUIET);
+  it("submits a proven zero day without a meter event", async () => {
+    await setReady(a.slug, QUIET);
+    const res = await report(QUIET);
     expect(res.zero).toContain(a.slug);
     expect(callsFor(a.slug)).toHaveLength(0);
-    const rows = await rowsFor(a.slug, QUIET);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].quantity).toBe(0);
-    expect(rows[0].meterEventIdentifier).toBeNull();
+    const [row] = await rowsFor(a.slug, QUIET);
+    expect(row).toMatchObject({ quantity: 0, meterEventIdentifier: null, reportStatus: "submitted" });
   });
 
-  it("skips a subscription without the metered item and writes nothing", async () => {
-    state.subs[`sub_${a.slug}`] = ["hosted_base_monthly"];
-    try {
-      const res = await reportSmsUsage(NOMETER);
-      expect(res.skipped).toContain(a.slug);
-      expect(callsFor(a.slug)).toHaveLength(0);
-      expect(await rowsFor(a.slug, NOMETER)).toHaveLength(0);
-    } finally {
-      state.subs[`sub_${a.slug}`] = ["hosted_base_monthly", "hosted_texts_metered"];
-    }
+  it("keeps paid usage pending with no row and no cursor move while the meter is missing", async () => {
+    state.meters[`sub_${a.slug}`] = null;
+    const res = await report(DATE);
+    expect(res.held).toContain(a.slug);
+    expect(callsFor(a.slug)).toHaveLength(0);
+    expect(await rowsFor(a.slug, DATE)).toHaveLength(0);
+    expect(await cursorOf(a.slug)).toBe(DATE);
   });
 
-  it("marks a failed meter call and keeps other businesses going", async () => {
+  it("retains a pending row after a failed meter call and keeps other businesses going", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     try {
+      await setReady(a.slug, FAIL);
+      await setReady(b.slug, FAIL);
       state.failIdentifierPrefix = `${a.slug}:`;
-      const res = await reportSmsUsage(FAIL);
+      const res = await report(FAIL);
       expect(res.failed).toContain(a.slug);
-      expect(await rowsFor(a.slug, FAIL)).toHaveLength(0);
+      expect(await rowsFor(a.slug, FAIL)).toEqual([
+        expect.objectContaining({ quantity: 2, reportStatus: "pending", reportedAt: null }),
+      ]);
+      expect(await cursorOf(a.slug)).toBe(FAIL);
       expect(res.reported).toContain(b.slug);
-      const rows = await rowsFor(b.slug, FAIL);
-      expect(rows).toHaveLength(1);
-      expect(rows[0].quantity).toBe(4);
+      expect((await rowsFor(b.slug, FAIL))[0]).toMatchObject({ quantity: 4, reportStatus: "submitted" });
+
+      state.failIdentifierPrefix = null;
+      expect((await report(FAIL)).reported).toContain(a.slug);
+      const [first, retry] = callsFor(a.slug);
+      expect(retry).toEqual(first);
     } finally {
       errorSpy.mockRestore();
     }
@@ -212,44 +235,31 @@ describe.skipIf(!process.env.DATABASE_URL)("reportSmsUsage (db)", () => {
 
   it("does nothing in single mode", async () => {
     state.single = true;
-    const res = await reportSmsUsage(SINGLE);
-    expect(res).toEqual({ reported: [], zero: [], skipped: [], failed: [] });
+    const res = await report(DATE);
+    expect(res).toEqual({ reported: [], zero: [], skipped: [], failed: [], held: [] });
     expect(meterCreate).not.toHaveBeenCalled();
     expect(subsRetrieve).not.toHaveBeenCalled();
-    expect(await rowsFor(a.slug, SINGLE)).toHaveLength(0);
   });
 
-  it("holds notified legacy metering until the final switch marker and clamps only that first day", async () => {
-    await setSwitchMarkers(
-      a.slug,
-      new Date("2031-03-20T12:00:00.000Z"),
-      null,
-    );
-    const held = await reportSmsUsage(CUTOVER);
-    expect(held.skipped).toContain(a.slug);
-    expect(callsFor(a.slug)).toHaveLength(0);
+  it("holds notified legacy metering until the committed switch marker and clamps only that first day", async () => {
+    await setReady(a.slug, CUTOVER);
+    await publicDb
+      .update(schema.tenants)
+      .set({
+        billingNoticeSentAt: new Date("2031-03-20T12:00:00.000Z"),
+        billingSwitchAt: new Date("2031-05-20T12:00:00.000Z"),
+        billingSwitchedAt: null,
+      })
+      .where(eq(schema.tenants.slug, a.slug));
+    expect((await report(CUTOVER)).skipped).toContain(a.slug);
     expect(await rowsFor(a.slug, CUTOVER)).toHaveLength(0);
 
-    await setSwitchMarkers(
-      a.slug,
-      new Date("2031-03-20T12:00:00.000Z"),
-      new Date(`${CUTOVER}T12:00:00.000Z`),
-    );
-    const switched = await reportSmsUsage(CUTOVER);
-    expect(switched.reported).toContain(a.slug);
-    expect(callsFor(a.slug)).toHaveLength(1);
-    expect(callsFor(a.slug)[0][0].payload.value).toBe("1");
+    await publicDb
+      .update(schema.tenants)
+      .set({ billingSwitchedAt: new Date(`${CUTOVER}T12:00:00.000Z`) })
+      .where(eq(schema.tenants.slug, a.slug));
+    expect((await report(CUTOVER_NEXT)).reported).toContain(a.slug);
+    expect(callsFor(a.slug).map(([params]) => params.payload.value)).toEqual(["1", "1"]);
     expect((await rowsFor(a.slug, CUTOVER))[0]?.quantity).toBe(1);
-
-    const nextDay = await reportSmsUsage(CUTOVER_NEXT);
-    expect(nextDay.reported).toContain(a.slug);
-    expect(callsFor(a.slug)).toHaveLength(2);
-    expect(callsFor(a.slug)[1][0].payload.value).toBe("1");
-
-    await setSwitchMarkers(b.slug, null, new Date(`${NEWBORN}T12:00:00.000Z`));
-    const newborn = await reportSmsUsage(NEWBORN);
-    expect(newborn.reported).toContain(b.slug);
-    expect(callsFor(b.slug)).toHaveLength(1);
-    expect(callsFor(b.slug)[0][0].payload.value).toBe("2");
   });
 });

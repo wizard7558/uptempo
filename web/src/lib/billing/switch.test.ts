@@ -1,4 +1,50 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const h = vi.hoisted(() => ({
+  tenant: null as Record<string, unknown> | null,
+  committed: [] as Array<Record<string, unknown>>,
+  order: [] as string[],
+}));
+const ensureHostedSubscription = vi.hoisted(() => vi.fn());
+const reconcileHostedTextMeter = vi.hoisted(() => vi.fn());
+const setWeeklyPayouts = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/billing/subscriptions", () => ({ ensureHostedSubscription }));
+vi.mock("@/lib/billing/hosted-text-lifecycle", () => ({ reconcileHostedTextMeter }));
+vi.mock("@/lib/billing/billable-staff", () => ({ countBillableStaff: async () => 1 }));
+vi.mock("@/lib/stripe/connect", () => ({ setWeeklyPayouts }));
+vi.mock("@/lib/stripe/server", () => ({ getStripe: () => ({}) }));
+/** Query chains resolve to the locked tenant, one owner, and no tenant-schema rows. */
+const query = (rows: () => unknown[]) => {
+  const chain: Record<string, unknown> = {
+    from: () => chain, innerJoin: () => chain, where: () => chain, limit: () => chain,
+    for: async () => (h.tenant ? [h.tenant] : []),
+    then: (resolve: (value: unknown) => unknown) => resolve(rows()),
+  };
+  return chain;
+};
+vi.mock("@/lib/db/tenant", () => ({
+  withTenantDb: async (_slug: string, callback: (db: unknown, tables: unknown) => unknown) =>
+    callback({ select: () => query(() => []) }, { businessSettings: {}, clientMemberships: {} }),
+}));
+vi.mock("@/lib/db", () => ({
+  closePublicDb: async () => undefined,
+  db: {},
+  publicDb: {
+    // Writes become visible only when the whole callback commits.
+    transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+      const pending: Array<Record<string, unknown>> = [];
+      const result = await fn({
+        select: () => query(() => [{ tenantSlug: "acme", role: "owner", email: "owner@example.com" }]),
+        update: () => ({ set: (values: Record<string, unknown>) => ({ where: async () => void pending.push(values) }) }),
+      });
+      h.committed.push(...pending);
+      h.order.push("commit");
+      return result;
+    },
+  },
+}));
+
 import {
   assertBillingNoticeProviderAllowed,
   classifyTenant,
@@ -6,6 +52,7 @@ import {
   isBillingNoticeRetryWithinProviderWindow,
   isBillingSwitchDue,
   plannedBillingSwitchAt,
+  switchTenant,
   textLineIsBillable,
   type BillingNoticeTenant,
 } from "./switch";
@@ -155,5 +202,70 @@ describe("assertBillingNoticeProviderAllowed", () => {
     vi.stubEnv("EMAIL_PROVIDER", "resend");
     vi.stubEnv("RESEND_API_KEY", "test");
     expect(() => assertBillingNoticeProviderAllowed()).toThrow(/non-placeholder Resend key/);
+  });
+});
+
+describe("switchTenant and the hosted text meter", () => {
+  const dueAt = new Date("2026-03-02T14:00:00.000Z");
+  const due = () => ({
+    slug: "acme", status: "active", comped: 0, processingRateBps: 320, smsLineStatus: "shared",
+    stripeConnectAccountId: "acct_1", billingNoticeSentAt: new Date("2026-01-01T14:00:00.000Z"),
+    billingSwitchAt: dueAt, billingSwitchedAt: null as Date | null,
+  });
+
+  beforeEach(() => {
+    h.tenant = due();
+    h.committed = [];
+    h.order = [];
+    ensureHostedSubscription.mockReset().mockResolvedValue({ subscriptionId: "sub_1", status: "active" });
+    setWeeklyPayouts.mockReset().mockResolvedValue(undefined);
+    reconcileHostedTextMeter.mockReset().mockImplementation(async () => {
+      h.order.push("meter");
+      return { outcome: "ready" };
+    });
+  });
+
+  it("defers the meter inside the transaction and reconciles it only after the marker commits", async () => {
+    await expect(switchTenant("acme", dueAt)).resolves.toEqual({ slug: "acme", outcome: "switched", textMeter: "ready" });
+    expect(ensureHostedSubscription).toHaveBeenCalledWith("acme", expect.objectContaining({
+      trialDays: 0, billingSwitch: true, ownerEmail: "owner@example.com", textMeter: "defer", db: expect.anything(),
+    }));
+    expect(h.committed).toContainEqual(expect.objectContaining({ billingSwitchedAt: dueAt }));
+    expect(h.order).toEqual(["commit", "meter"]);
+    expect(reconcileHostedTextMeter).toHaveBeenCalledWith("acme");
+  });
+
+  it("rolls back a failed switch with zero meter calls", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    setWeeklyPayouts.mockRejectedValue(new Error("payout provider failure"));
+    await expect(switchTenant("acme", dueAt)).rejects.toThrow(/payout provider failure/);
+    expect([h.committed, h.order, reconcileHostedTextMeter.mock.calls]).toEqual([[], [], []]);
+    errorSpy.mockRestore();
+  });
+
+  it("reports a committed switch with a pending meter, then repairs only the meter on retry", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    reconcileHostedTextMeter.mockRejectedValueOnce(new Error("synthetic-private-canary"));
+    await expect(switchTenant("acme", dueAt)).resolves.toEqual({ slug: "acme", outcome: "switched", textMeter: "pending" });
+    expect(JSON.stringify(errorSpy.mock.calls).includes("synthetic-private-canary")).toBe(false);
+    expect(h.committed).toContainEqual(expect.objectContaining({ billingSwitchedAt: dueAt }));
+    h.tenant = { ...due(), billingSwitchedAt: dueAt };
+    await expect(switchTenant("acme", dueAt)).resolves.toEqual({
+      slug: "acme", outcome: "skipped", reason: "already_switched", textMeter: "ready",
+    });
+    expect([ensureHostedSubscription.mock.calls.length, setWeeklyPayouts.mock.calls.length, reconcileHostedTextMeter.mock.calls.length]).toEqual([1, 1, 2]);
+    errorSpy.mockRestore();
+  });
+
+  it.each([
+    ["comped", { comped: 1 }],
+    ["not due", { billingSwitchAt: new Date("2026-04-01T14:00:00.000Z") }],
+    ["inactive", { status: "suspended" }],
+  ])("never reconciles the meter for a %s business", async (_name, patch) => {
+    h.tenant = { ...due(), ...patch };
+    const result = await switchTenant("acme", dueAt);
+    expect(result).toMatchObject({ outcome: "skipped" });
+    expect(result).not.toHaveProperty("textMeter");
+    expect([reconcileHostedTextMeter.mock.calls.length, ensureHostedSubscription.mock.calls.length]).toEqual([0, 0]);
   });
 });

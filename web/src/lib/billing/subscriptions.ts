@@ -1,6 +1,11 @@
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
+import { EvidenceConflict } from "@/lib/billing/subscription-webhook";
 import { HOSTED_PLAN_PURPOSE } from "@/lib/billing/hosted-catalog";
+import {
+  reconcileHostedTextMeter,
+  type TextMeterResult,
+} from "@/lib/billing/hosted-text-lifecycle";
 import {
   extraStaffQuantity,
   HOSTED_BASE_MONTHLY_LOOKUP_KEY,
@@ -29,6 +34,19 @@ export type BillingDatabaseContext = typeof publicDb;
 const STRIPE_READ_OPTIONS = { timeout: 5_000, maxNetworkRetries: 0 } as const;
 const STRIPE_WRITE_OPTIONS = { timeout: 30_000, maxNetworkRetries: 0 } as const;
 
+/**
+ * The metered texts item is owned by the hosted text lifecycle. A caller that
+ * supplies its own transaction cannot persist a durable meter operation, so it
+ * must defer the meter and reconcile it after commit.
+ */
+type TextMeterMode =
+  | { db?: undefined; textMeter?: "reconcile" }
+  | {
+      /** Reuse the caller's transaction for every public tenant read and write. */
+      db: BillingDatabaseContext;
+      textMeter: "defer";
+    };
+
 type HostedSubscriptionOptions = {
   trialDays: number;
   collection?: "charge_automatically" | "send_invoice";
@@ -36,16 +54,21 @@ type HostedSubscriptionOptions = {
   billingSwitch?: boolean;
   /** Owner address from the existing billing-notice resolver. */
   ownerEmail?: string;
-  /** Reuse the switch transaction for every public tenant read and write. */
-  db?: BillingDatabaseContext;
-};
+} & TextMeterMode;
 
 type SubscriptionSyncOptions = {
-  /** Reuse the switch transaction for the tenant read. */
-  db?: BillingDatabaseContext;
   /** Add shared-line items before the final switch marker is committed. */
   billingSwitch?: boolean;
-};
+} & TextMeterMode;
+
+/** Runtime guard for untyped callers: a supplied db and "defer" always travel together. */
+function deferTextMeter(options: TextMeterMode): boolean {
+  const mode: string | undefined = options.textMeter;
+  if ((options.db != null) !== (mode === "defer")) {
+    throw new Error("A supplied billing transaction requires textMeter: 'defer'.");
+  }
+  return mode === "defer";
+}
 
 /**
  * The subscription items a business should have right now. Base and extra
@@ -74,6 +97,15 @@ export function desiredItems(input: {
     items.push({ lookupKey: HOSTED_TEXTS_METERED_LOOKUP_KEY });
   }
   return items;
+}
+
+/** desiredItems without the metered texts item, which the text lifecycle owns. */
+export function licensedItems(
+  input: Parameters<typeof desiredItems>[0],
+): DesiredItem[] {
+  return desiredItems(input).filter(
+    (item) => item.lookupKey !== HOSTED_TEXTS_METERED_LOOKUP_KEY,
+  );
 }
 
 export type CurrentItem = { id: string; quantity?: number | null };
@@ -441,7 +473,7 @@ function assertHostedSubscriptionBinding(
     subscription.metadata?.tenantSlug !== slug ||
     subscription.metadata?.purpose !== HOSTED_PLAN_PURPOSE
   ) {
-    throw new Error("Hosted subscription ownership does not match its tenant.");
+    throw new EvidenceConflict("Hosted subscription ownership does not match its tenant.");
   }
 }
 
@@ -518,6 +550,25 @@ async function retrieveHostedSubscription(
   customerId: string,
   stripe: ReturnType<typeof getStripe>,
 ): Promise<Stripe.Subscription> {
+  const subscription = await retrieveHostedSubscriptionInventory(
+    id,
+    slug,
+    customerId,
+    stripe,
+  );
+  if (TERMINAL_HOSTED_SUBSCRIPTION_STATES.has(subscription.status)) {
+    throw new Error("Terminal hosted subscription requires manual review.");
+  }
+  return subscription;
+}
+
+/** Ownership-checked subscription with its complete, paginated item inventory. */
+export async function retrieveHostedSubscriptionInventory(
+  id: string,
+  slug: string,
+  customerId: string,
+  stripe: ReturnType<typeof getStripe> = getStripe(),
+): Promise<Stripe.Subscription> {
   const subscription = await stripe.subscriptions.retrieve(
     id,
     {
@@ -530,9 +581,6 @@ async function retrieveHostedSubscription(
     STRIPE_READ_OPTIONS,
   );
   assertHostedSubscriptionBinding(subscription, slug, customerId);
-  if (TERMINAL_HOSTED_SUBSCRIPTION_STATES.has(subscription.status)) {
-    throw new Error("Terminal hosted subscription requires manual review.");
-  }
   if (!subscription.items.has_more) return subscription;
 
   const items: Stripe.SubscriptionItem[] = [];
@@ -555,10 +603,10 @@ async function retrieveHostedSubscription(
       };
     }
     const last = page.data.at(-1);
-    if (!last) throw new Error("Hosted subscription item history is unavailable.");
+    if (!last) throw new EvidenceConflict("Hosted subscription item history is unavailable.");
     startingAfter = last.id;
   }
-  throw new Error("Hosted subscription items exceed the safe recovery limit.");
+  throw new EvidenceConflict("Hosted subscription items exceed the safe recovery limit.");
 }
 
 async function syncSubscriptionItems(
@@ -573,12 +621,15 @@ async function syncSubscriptionItems(
   const duplicates: Array<{ id: string; lookupKey: string }> = [];
   for (const item of subscription.items.data) {
     const key = item.price.lookup_key;
-    if (!key) continue;
+    // The meter is never created, updated, or removed here (see
+    // hosted-text-lifecycle): Stripe rejects metered item writes while the
+    // trial-end pause setting is retained.
+    if (!key || key === HOSTED_TEXTS_METERED_LOOKUP_KEY) continue;
     if (current.has(key)) duplicates.push({ id: item.id, lookupKey: key });
     else current.set(key, { id: item.id, quantity: item.quantity });
   }
 
-  const wanted = desiredItems({
+  const wanted = licensedItems({
     billableStaff,
     smsLineStatus,
     billingSwitched,
@@ -626,6 +677,8 @@ async function syncSubscriptionItems(
 }
 
 async function updateCollectionAndResume(
+  slug: string,
+  customerId: string,
   subscription: Stripe.Subscription,
   collection: "charge_automatically" | "send_invoice",
   stripe: ReturnType<typeof getStripe>,
@@ -637,13 +690,13 @@ async function updateCollectionAndResume(
   if (collection === "send_invoice") params.days_until_due = 14;
   if (subscription.status === "trialing") params.trial_end = "now";
 
-  let updated = await stripe.subscriptions.update(
+  await stripe.subscriptions.update(
     subscription.id,
     params,
     STRIPE_WRITE_OPTIONS,
   );
   if (subscription.status === "paused") {
-    updated = await stripe.subscriptions.resume(
+    await stripe.subscriptions.resume(
       subscription.id,
       {
         billing_cycle_anchor: "unchanged",
@@ -652,7 +705,8 @@ async function updateCollectionAndResume(
       STRIPE_WRITE_OPTIONS,
     );
   }
-  return updated;
+  // A request acknowledgement is not proof of the resulting status.
+  return retrieveHostedSubscription(subscription.id, slug, customerId, stripe);
 }
 
 async function syncExistingHostedSubscription(
@@ -704,7 +758,13 @@ async function syncExistingHostedSubscription(
     ))
       ? "charge_automatically"
       : "send_invoice");
-  return updateCollectionAndResume(subscription, collection, options.stripe);
+  return updateCollectionAndResume(
+    slug,
+    tenant.platformStripeCustomerId,
+    subscription,
+    collection,
+    options.stripe,
+  );
 }
 
 /** Create the hosted subscription for a business, once. */
@@ -713,9 +773,10 @@ export async function ensureHostedSubscription(
   opts: HostedSubscriptionOptions,
 ): Promise<
   | { skipped: Exclude<SkipReason, "no_subscription"> }
-  | { subscriptionId: string; status: string }
+  | { subscriptionId: string; status: string; textMeter?: TextMeterResult }
 > {
   if (isSingleMode()) return { skipped: "single_mode" };
+  const deferMeter = deferTextMeter(opts);
   const db = opts.db ?? publicDb;
   const tenant = await loadTenant(slug, db);
   if (!tenant) return { skipped: "no_tenant" };
@@ -772,11 +833,18 @@ export async function ensureHostedSubscription(
       },
     );
   } else {
-    const wanted = desiredItems({
+    const trial = opts.trialDays > 0;
+    const itemInput = {
       billableStaff: tenant.billableStaff,
       smsLineStatus: tenant.smsLineStatus,
       billingSwitched: opts.billingSwitch ?? tenant.billingSwitchedAt != null,
-    });
+    };
+    // Stripe rejects a metered item next to the trial-end pause setting, and a
+    // deferred caller cannot record the meter operation. Both start licensed
+    // only; the text lifecycle attaches the meter once billing is paid.
+    const wanted = trial || deferMeter
+      ? licensedItems(itemInput)
+      : desiredItems(itemInput);
     const prices = await resolvePriceIds(wanted.map((item) => item.lookupKey));
     subscription = await stripe.subscriptions.create(
       {
@@ -786,14 +854,21 @@ export async function ensureHostedSubscription(
           ...(item.quantity !== undefined ? { quantity: item.quantity } : {}),
         })),
         metadata: { purpose: HOSTED_PLAN_PURPOSE, tenantSlug: slug },
-        ...(opts.trialDays > 0 ? { trial_period_days: opts.trialDays } : {}),
-        trial_settings: { end_behavior: { missing_payment_method: "pause" } },
+        ...(trial
+          ? {
+              trial_period_days: opts.trialDays,
+              trial_settings: {
+                end_behavior: { missing_payment_method: "pause" as const },
+              },
+            }
+          : {}),
         payment_settings: { save_default_payment_method: "on_subscription" },
         collection_method: collection,
         ...(collection === "send_invoice" ? { days_until_due: 14 } : {}),
       },
       {
-        idempotencyKey: `hosted-sub:${slug}`,
+        // v2: the item set and trial settings differ from the rejected v1 request.
+        idempotencyKey: `hosted-sub-v2:${slug}`,
         ...STRIPE_WRITE_OPTIONS,
       },
     );
@@ -808,18 +883,29 @@ export async function ensureHostedSubscription(
     })
     .where(eq(tenants.slug, slug));
 
-  return { subscriptionId: subscription.id, status: subscription.status };
+  const created = { subscriptionId: subscription.id, status: subscription.status };
+  if (deferMeter) return created;
+  return { ...created, textMeter: await reconcileHostedTextMeter(slug) };
 }
 
-/** Bring the subscription's items in line with desiredItems. */
+/**
+ * Bring the subscription's licensed items in line with desiredItems, then (in
+ * the default reconcile mode) reconcile the metered texts item.
+ */
 export async function syncHostedSubscription(
   slug: string,
   opts: SubscriptionSyncOptions = {},
 ): Promise<
   | { skipped: SkipReason }
-  | { created: number; updated: number; removed: number }
+  | {
+      created: number;
+      updated: number;
+      removed: number;
+      textMeter?: TextMeterResult;
+    }
 > {
   if (isSingleMode()) return { skipped: "single_mode" };
+  const deferMeter = deferTextMeter(opts);
   const tenant = await loadTenant(slug, opts.db ?? publicDb);
   if (!tenant) return { skipped: "no_tenant" };
   if (tenant.comped === 1) return { skipped: "comped" };
@@ -835,7 +921,7 @@ export async function syncHostedSubscription(
     tenant.platformStripeCustomerId,
     stripe,
   );
-  return syncSubscriptionItems(
+  const synced = await syncSubscriptionItems(
     slug,
     subscription,
     tenant.billableStaff,
@@ -843,4 +929,6 @@ export async function syncHostedSubscription(
     opts.billingSwitch ?? tenant.billingSwitchedAt != null,
     stripe,
   );
+  if (deferMeter) return synced;
+  return { ...synced, textMeter: await reconcileHostedTextMeter(slug) };
 }
