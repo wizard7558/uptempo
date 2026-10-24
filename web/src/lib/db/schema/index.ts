@@ -11,3 +11,4 @@ export * from "./waitlist-signups";
 export * from "./platform-charges";
 export * from "./job-runs";
 export * from "./sms-usage-reports";
+export * from "./hosted-text-billing-state";

@@ -40,14 +40,14 @@ describe("reconcileHostedBilling", () => {
   it("does nothing in single mode", async () => {
     state.single = true;
     state.rows = [{ slug: "a", subscriptionId: null, billingSwitchedAt: new Date() }];
-    expect(await reconcileHostedBilling()).toEqual({ checked: 0, created: [], synced: [], failed: [] });
+    expect(await reconcileHostedBilling()).toEqual({ checked: 0, created: [], synced: [], failed: [], textMeterAttention: [] });
     expect(syncBillableStaff).not.toHaveBeenCalled();
   });
 
   it("creates a missing subscription with the full trial", async () => {
     state.rows = [{ slug: "a", subscriptionId: null, billingSwitchedAt: new Date() }];
     const res = await reconcileHostedBilling();
-    expect(res).toEqual({ checked: 1, created: ["a"], synced: [], failed: [] });
+    expect(res).toEqual({ checked: 1, created: ["a"], synced: [], failed: [], textMeterAttention: [] });
     expect(syncBillableStaff).toHaveBeenCalledWith("a");
     expect(ensureHostedSubscription).toHaveBeenCalledWith("a", { trialDays: 14 });
     expect(syncHostedSubscription).not.toHaveBeenCalled();
@@ -56,7 +56,7 @@ describe("reconcileHostedBilling", () => {
   it("syncs an existing subscription", async () => {
     state.rows = [{ slug: "b", subscriptionId: "sub_1", billingSwitchedAt: null }];
     const res = await reconcileHostedBilling();
-    expect(res).toEqual({ checked: 1, created: [], synced: ["b"], failed: [] });
+    expect(res).toEqual({ checked: 1, created: [], synced: ["b"], failed: [], textMeterAttention: [] });
     expect(syncHostedSubscription).toHaveBeenCalledWith("b");
     expect(ensureHostedSubscription).not.toHaveBeenCalled();
   });
@@ -70,7 +70,7 @@ describe("reconcileHostedBilling", () => {
   it("does not trial-create a legacy tenant before the switch", async () => {
     state.rows = [{ slug: "legacy", subscriptionId: null, billingSwitchedAt: null }];
     const res = await reconcileHostedBilling();
-    expect(res).toEqual({ checked: 1, created: [], synced: [], failed: [] });
+    expect(res).toEqual({ checked: 1, created: [], synced: [], failed: [], textMeterAttention: [] });
     expect(ensureHostedSubscription).not.toHaveBeenCalled();
     expect(syncHostedSubscription).not.toHaveBeenCalled();
   });
@@ -86,7 +86,26 @@ describe("reconcileHostedBilling", () => {
       return { created: 0, updated: 0, removed: 0 };
     });
     const res = await reconcileHostedBilling();
-    expect(res).toEqual({ checked: 2, created: [], synced: ["good"], failed: ["bad"] });
+    expect(res).toEqual({ checked: 2, created: [], synced: ["good"], failed: ["bad"], textMeterAttention: [] });
     errorSpy.mockRestore();
+  });
+
+  it("lists businesses whose text lifecycle is left fail-closed, without failing the sync", async () => {
+    state.rows = [
+      { slug: "ready", subscriptionId: "sub_1", billingSwitchedAt: new Date() },
+      { slug: "unresolved", subscriptionId: "sub_2", billingSwitchedAt: new Date() },
+      { slug: "pending-switch-meter", subscriptionId: "sub_3", billingSwitchedAt: new Date() },
+      { slug: "trial", subscriptionId: null, billingSwitchedAt: new Date() },
+    ];
+    const outcomes: Record<string, string> = { ready: "ready", unresolved: "unresolved", "pending-switch-meter": "pending" };
+    syncHostedSubscription.mockImplementation(async (slug: string) => ({
+      created: 0, updated: 0, removed: 0, textMeter: { outcome: outcomes[slug] },
+    }));
+    ensureHostedSubscription.mockResolvedValue({ subscriptionId: "sub_4", status: "trialing", textMeter: { outcome: "free" } });
+    const res = await reconcileHostedBilling();
+    expect(res.synced).toEqual(["ready", "unresolved", "pending-switch-meter"]);
+    expect(res.created).toEqual(["trial"]);
+    expect(res.textMeterAttention).toEqual(["unresolved", "pending-switch-meter"]);
+    expect(syncHostedSubscription.mock.calls).toEqual([["ready"], ["unresolved"], ["pending-switch-meter"]]);
   });
 });

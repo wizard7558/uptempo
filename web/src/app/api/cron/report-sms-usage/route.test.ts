@@ -9,8 +9,8 @@ vi.mock("@/lib/config/mode", () => ({ isSingleMode: () => state.single }));
 vi.mock("@/lib/billing/sms-usage", () => ({ reportSmsUsage }));
 vi.mock("@/lib/billing/reconcile", () => ({ reconcileHostedBilling }));
 
-const USAGE = { reported: ["a"], zero: [], skipped: [], failed: [] };
-const RECONCILE = { checked: 1, created: [], synced: ["a"], failed: [] };
+const USAGE = { reported: ["a"], zero: [], skipped: [], failed: [], held: [] };
+const RECONCILE = { checked: 1, created: [], synced: ["a"], failed: [], textMeterAttention: [] };
 
 describe("GET /api/cron/report-sms-usage", () => {
   const saved = process.env.CRON_SECRET;
@@ -39,18 +39,23 @@ describe("GET /api/cron/report-sms-usage", () => {
     expect(reportSmsUsage).not.toHaveBeenCalled();
   });
 
-  it("reports yesterday (UTC) by default, then reconciles", async () => {
+  it("reconciles first, then catches usage up through yesterday (UTC) with the request clock", async () => {
     const res = await call();
     expect(res.status).toBe(200);
-    expect(reportSmsUsage).toHaveBeenCalledWith("2031-06-14");
+    expect(reportSmsUsage).toHaveBeenCalledWith("2031-06-14", {
+      now: new Date("2031-06-15T02:30:00Z"),
+    });
     expect(reconcileHostedBilling).toHaveBeenCalledTimes(1);
+    expect(reconcileHostedBilling.mock.invocationCallOrder[0]!).toBeLessThan(
+      reportSmsUsage.mock.invocationCallOrder[0]!,
+    );
     expect(await res.json()).toEqual({ date: "2031-06-14", usage: USAGE, reconcile: RECONCILE });
   });
 
   it("passes a valid backfill date through", async () => {
     const res = await call("?date=2031-05-20");
     expect(res.status).toBe(200);
-    expect(reportSmsUsage).toHaveBeenCalledWith("2031-05-20");
+    expect(reportSmsUsage).toHaveBeenCalledWith("2031-05-20", expect.anything());
     // Oldest allowed day is exactly 30 days back.
     expect((await call("?date=2031-05-16")).status).toBe(200);
   });
@@ -78,14 +83,28 @@ describe("GET /api/cron/report-sms-usage", () => {
     expect(reconcileHostedBilling).not.toHaveBeenCalled();
   });
 
+  it("still reports usage when reconcile throws, then returns 500", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    reconcileHostedBilling.mockRejectedValue(new Error("synthetic-private-canary"));
+    const res = await call();
+    expect(res.status).toBe(500);
+    expect(reportSmsUsage).toHaveBeenCalledTimes(1);
+    const body = await res.json();
+    expect(body.reconcileError).toBe("hosted_reconcile_failed");
+    expect(JSON.stringify([body, errorSpy.mock.calls]).includes("synthetic-private-canary")).toBe(false);
+    expect(body.usage).toEqual(USAGE);
+    errorSpy.mockRestore();
+  });
+
   it("still reconciles when usage reporting throws, then returns 500", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    reportSmsUsage.mockRejectedValue(new Error("stripe down"));
+    reportSmsUsage.mockRejectedValue(new Error("synthetic-private-canary"));
     const res = await call();
     expect(res.status).toBe(500);
     expect(reconcileHostedBilling).toHaveBeenCalledTimes(1);
     const body = await res.json();
-    expect(body.usageError).toBe("stripe down");
+    expect(body.usageError).toBe("usage_reporting_failed");
+    expect(JSON.stringify([body, errorSpy.mock.calls]).includes("synthetic-private-canary")).toBe(false);
     expect(body.reconcile).toEqual(RECONCILE);
     errorSpy.mockRestore();
   });

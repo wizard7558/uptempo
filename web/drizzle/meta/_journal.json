@@ -267,6 +267,13 @@
       "when": 1792171341731,
       "tag": "0037_billing_switch_notices",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792790355184,
+      "tag": "0038_hosted_text_billing_lifecycle",
+      "breakpoints": true
     }
   ]
 }

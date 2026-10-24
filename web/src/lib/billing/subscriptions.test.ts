@@ -64,7 +64,10 @@ const stripe = vi.hoisted(() => ({
   },
 }));
 
+const reconcileHostedTextMeter = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/stripe/server", () => ({ getStripe: () => stripe }));
+vi.mock("@/lib/billing/hosted-text-lifecycle", () => ({ reconcileHostedTextMeter }));
 vi.mock("@/lib/config/mode", () => ({ isSingleMode: () => state.single }));
 vi.mock("@/lib/db/schema", () => ({
   tenants: new Proxy({}, { get: (_t, c) => String(c) }),
@@ -186,6 +189,7 @@ beforeEach(() => {
     card: { exp_month: 12, exp_year: 2099 },
   } as never));
   resetHostedPriceCacheForTests();
+  reconcileHostedTextMeter.mockReset().mockResolvedValue({ outcome: "free" });
   state.single = false;
   state.tenant = tenant();
   state.updates = [];
@@ -283,7 +287,12 @@ describe("ensureHostedSubscription", () => {
     const result = await ensureHostedSubscription("test-salon", {
       trialDays: 14,
     });
-    expect(result).toEqual({ subscriptionId: "sub_new", status: "trialing" });
+    expect(result).toEqual({
+      subscriptionId: "sub_new",
+      status: "trialing",
+      textMeter: { outcome: "free" },
+    });
+    expect(reconcileHostedTextMeter).toHaveBeenCalledWith("test-salon");
 
     expect(stripe.customers.create).toHaveBeenCalledWith(
       {
@@ -321,7 +330,7 @@ describe("ensureHostedSubscription", () => {
     });
     expect(params).not.toHaveProperty("days_until_due");
     expect(options).toEqual({
-      idempotencyKey: "hosted-sub:test-salon",
+      idempotencyKey: "hosted-sub-v2:test-salon",
       timeout: 30_000,
       maxNetworkRetries: 0,
     });
@@ -334,6 +343,47 @@ describe("ensureHostedSubscription", () => {
         subscriptionStatus: "trialing",
       }),
     );
+  });
+
+  it("keeps the metered item off a text-on trial and off a deferred zero-trial create", async () => {
+    state.tenant = tenant({ smsLineStatus: "active" });
+    await ensureHostedSubscription("test-salon", { trialDays: 14 });
+    const [trialParams] = stripe.subscriptions.create.mock
+      .calls[0] as unknown as [{ items: Array<{ price: string }> } & Record<string, unknown>];
+    expect(trialParams.items.map((item) => item.price)).toEqual([
+      "price_base",
+      "price_extra",
+      "price_line",
+    ]);
+    expect(trialParams.trial_settings).toEqual({
+      end_behavior: { missing_payment_method: "pause" },
+    });
+
+    vi.clearAllMocks();
+    state.tenant = tenant({ smsLineStatus: "active" });
+    const db = (await import("@/lib/db")).publicDb;
+    const deferred = await ensureHostedSubscription("test-salon", {
+      trialDays: 0,
+      db,
+      textMeter: "defer",
+    });
+    const [switchParams] = stripe.subscriptions.create.mock
+      .calls[0] as unknown as [{ items: Array<{ price: string }> } & Record<string, unknown>];
+    expect(switchParams.items.map((item) => item.price)).not.toContain("price_texts");
+    expect(switchParams).not.toHaveProperty("trial_settings");
+    expect(deferred).not.toHaveProperty("textMeter");
+    expect(reconcileHostedTextMeter).not.toHaveBeenCalled();
+  });
+
+  it("requires a supplied transaction to defer the text meter", async () => {
+    const db = (await import("@/lib/db")).publicDb;
+    await expect(
+      ensureHostedSubscription("test-salon", { trialDays: 0, db } as never),
+    ).rejects.toThrow(/textMeter: 'defer'/);
+    await expect(
+      syncHostedSubscription("test-salon", { textMeter: "defer" } as never),
+    ).rejects.toThrow(/textMeter: 'defer'/);
+    expect(writeCalls()).toBe(0);
   });
 
   it("includes the hosted text line only for an active registered line", async () => {
@@ -371,6 +421,8 @@ describe("ensureHostedSubscription", () => {
     ];
     expect(params.customer).toBe("cus_existing");
     expect(params).not.toHaveProperty("trial_period_days");
+    // The pause setting is trial-only; Stripe rejects it beside a meter.
+    expect(params).not.toHaveProperty("trial_settings");
   });
 
   it("does not create a trial subscription for a legacy tenant before its switch", async () => {
@@ -566,6 +618,13 @@ describe("ensureHostedSubscription", () => {
       { billing_cycle_anchor: "unchanged", proration_behavior: "none" },
       { timeout: 30_000, maxNetworkRetries: 0 },
     );
+    // The resume acknowledgement is not proof: the status comes from a fresh read.
+    expect(
+      stripe.subscriptions.resume.mock.invocationCallOrder[0]!,
+    ).toBeLessThan(stripe.subscriptions.retrieve.mock.invocationCallOrder.at(-1)!);
+    expect(state.updates).toContainEqual(
+      expect.objectContaining({ subscriptionStatus: "paused" }),
+    );
   });
 
   it("fails closed for a canceled hosted subscription instead of creating a replacement", async () => {
@@ -635,7 +694,12 @@ describe("syncHostedSubscription", () => {
       item("si_extra", "hosted_extra_staff_monthly", 0),
     ]);
     const result = await syncHostedSubscription("test-salon");
-    expect(result).toEqual({ created: 0, updated: 1, removed: 0 });
+    expect(result).toEqual({
+      created: 0,
+      updated: 1,
+      removed: 0,
+      textMeter: { outcome: "free" },
+    });
     expect(stripe.subscriptionItems.update).toHaveBeenCalledTimes(1);
     expect(stripe.subscriptionItems.update).toHaveBeenCalledWith(
       "si_extra",
@@ -653,7 +717,7 @@ describe("syncHostedSubscription", () => {
       item("si_line", "hosted_text_line_monthly", 1),
     ]);
     const result = await syncHostedSubscription("test-salon");
-    expect(result).toEqual({ created: 1, updated: 0, removed: 1 });
+    expect(result).toMatchObject({ created: 1, updated: 0, removed: 1 });
     expect(stripe.subscriptionItems.create).toHaveBeenCalledWith(
       {
         subscription: "sub_1",
@@ -670,7 +734,7 @@ describe("syncHostedSubscription", () => {
     );
   });
 
-  it("adds active-line items without proration and removes them when the line is off", async () => {
+  it("adds the licensed text line without proration and leaves the meter to the text lifecycle", async () => {
     state.tenant = tenant({
       smsLineStatus: "active",
       platformStripeCustomerId: "cus_1",
@@ -681,10 +745,12 @@ describe("syncHostedSubscription", () => {
       item("si_extra", "hosted_extra_staff_monthly", 0),
     ]);
     expect(await syncHostedSubscription("test-salon")).toEqual({
-      created: 2,
+      created: 1,
       updated: 0,
       removed: 0,
+      textMeter: { outcome: "free" },
     });
+    expect(stripe.subscriptionItems.create).toHaveBeenCalledTimes(1);
     expect(stripe.subscriptionItems.create).toHaveBeenCalledWith(
       {
         subscription: "sub_1",
@@ -694,14 +760,7 @@ describe("syncHostedSubscription", () => {
       },
       { idempotencyKey: "hosted-item:sub_1:hosted_text_line_monthly", timeout: 30_000, maxNetworkRetries: 0 },
     );
-    expect(stripe.subscriptionItems.create).toHaveBeenCalledWith(
-      {
-        subscription: "sub_1",
-        price: "price_texts",
-        proration_behavior: "none",
-      },
-      { idempotencyKey: "hosted-item:sub_1:hosted_texts_metered", timeout: 30_000, maxNetworkRetries: 0 },
-    );
+    expect(reconcileHostedTextMeter).toHaveBeenCalledWith("test-salon");
 
     vi.clearAllMocks();
     resetHostedPriceCacheForTests();
@@ -716,12 +775,37 @@ describe("syncHostedSubscription", () => {
       item("si_line", "hosted_text_line_monthly", 1),
       item("si_texts", "hosted_texts_metered"),
     ]);
-    expect(await syncHostedSubscription("test-salon")).toEqual({
+    expect(await syncHostedSubscription("test-salon")).toMatchObject({
       created: 0,
       updated: 0,
-      removed: 2,
+      removed: 1,
     });
-    expect(stripe.subscriptionItems.del).toHaveBeenCalledTimes(2);
+    expect(stripe.subscriptionItems.del).toHaveBeenCalledTimes(1);
+    expect(stripe.subscriptionItems.del).toHaveBeenCalledWith(
+      "si_line",
+      { proration_behavior: "none" },
+      { timeout: 30_000, maxNetworkRetries: 0 },
+    );
+  });
+
+  it("preserves existing and duplicate meter items in deferred licensed sync", async () => {
+    state.tenant = tenant({
+      smsLineStatus: "off",
+      platformStripeCustomerId: "cus_1",
+      stripeSubscriptionId: "sub_1",
+    });
+    state.subscription = hostedSubscription([
+      item("si_base", "hosted_base_monthly", 1),
+      item("si_extra", "hosted_extra_staff_monthly", 0),
+      item("si_texts", "hosted_texts_metered"),
+      item("si_texts_2", "hosted_texts_metered"),
+    ]);
+    const db = (await import("@/lib/db")).publicDb;
+    expect(
+      await syncHostedSubscription("test-salon", { db, textMeter: "defer" }),
+    ).toEqual({ created: 0, updated: 0, removed: 0 });
+    expect(writeCalls()).toBe(0);
+    expect(reconcileHostedTextMeter).not.toHaveBeenCalled();
   });
 
   it("makes no write when nothing changed", async () => {
@@ -734,6 +818,7 @@ describe("syncHostedSubscription", () => {
       created: 0,
       updated: 0,
       removed: 0,
+      textMeter: { outcome: "free" },
     });
     expect(writeCalls()).toBe(0);
   });
@@ -753,6 +838,7 @@ describe("syncHostedSubscription", () => {
     });
     expect(stripe.subscriptions.retrieve).not.toHaveBeenCalled();
     expect(writeCalls()).toBe(0);
+    expect(reconcileHostedTextMeter).not.toHaveBeenCalled();
   });
 });
 

@@ -1,109 +1,106 @@
-/**
- * Applies public-schema SQL migrations via drizzle-kit (drizzle.__drizzle_migrations).
- * Loads env like Next.js: prefer .env.local over .env.
- *
- * If the DB was synced with `drizzle-kit push` only, the migration table can be empty
- * while tables already exist — then `migrate` would try to re-run 0000 and fail.
- * In that case we baseline journal rows (same hashes as drizzle-orm/migrator.js) and
- * re-run migrate (no-op).
- */
-import crypto from "node:crypto";
-import { execSync } from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import postgres from "postgres";
+/** Real SQL migrator on one dedicated direct PostgreSQL session. */
+import { pathToFileURL } from "node:url";
 import nextEnv from "@next/env";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { archiveLegacyPublicTables } from "./archive-legacy-public.mjs";
+import { projectDir, migrationsFolder, migrationPlan, databaseState, assertKnownJournal, assertDedicatedClient,
+  prepareDatabase, verifySlugIndex, verifyHostedTextMigration, LOCK_NAME, safeFailure, MigrationPhaseError,
+  initialPhase, connectionUnknown, createMigrationClient, closeMigrationClient, verifyPublicSearchPath } from "./db-prepare.mjs";
 
-const { loadEnvConfig } = nextEnv;
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const projectDir = path.resolve(__dirname, "..");
-
-// If DATABASE_URL is already set (e.g. migrate:production), do not let file-based
-// env replace it — Next's loader can otherwise clobber a production URL with .env.local.
-const pinnedDatabaseUrl = process.env.DATABASE_URL;
-loadEnvConfig(projectDir);
-if (pinnedDatabaseUrl) {
-  process.env.DATABASE_URL = pinnedDatabaseUrl;
-}
-
-if (!process.env.DATABASE_URL) {
-  console.error(
-    "[migrate:platform] Missing DATABASE_URL. Set it in `.env.local` or `.env`.",
-  );
-  process.exit(1);
-}
-
-/** @param {import('postgres').Sql} sql */
-async function baselineJournalIfPushOnlyDb(sql) {
-  const [{ count }] =
-    await sql`SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations`;
-  if (count > 0) return;
-
-  const [{ exists }] = await sql`
-    SELECT EXISTS (
-      SELECT 1 FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = 'tenants'
-    ) AS exists
-  `;
-  if (!exists) return;
-
-  console.log(
-    "[migrate:platform] Journal is empty but public tables exist (typical after `drizzle-kit push`). Baselining migration history…",
-  );
-
-  const journalPath = path.join(projectDir, "drizzle/meta/_journal.json");
-  const journal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
-
-  for (const e of journal.entries) {
-    const migrationPath = path.join(projectDir, `drizzle/${e.tag}.sql`);
-    const query = fs.readFileSync(migrationPath, "utf8");
-    const hash = crypto.createHash("sha256").update(query).digest("hex");
-    await sql`
-      INSERT INTO drizzle.__drizzle_migrations (hash, created_at)
-      VALUES (${hash}, ${e.when})
-    `;
+export async function migratePlatform(sql) {
+  assertDedicatedClient(sql); // No SQL, URL rewriting, or caller configuration changes before this guard.
+  const phase=initialPhase(), secondary=[];
+  let locked=false, primary, backend, lost=false, ending=false, priorPath, priorTimeout;
+  const previous=sql.options.onclose;
+  const onclose=(id) => {
+    if (!ending) {
+      lost=true; ending=true;
+      // End the native driver immediately, so queued work cannot reconnect and continue.
+      void sql.end({ timeout: 0 }).catch((error) => secondary.push({ stage: 'fatal-close', error }));
+    }
+    if (previous) { try { previous(id); } catch (error) { secondary.push({ stage: 'onclose', error }); } }
+  };
+  sql.options.onclose=onclose;
+  const identity=async () => {
+    if (lost) throw Object.assign(new Error('Direct migration session lost'), { code: 'CONNECTION_CLOSED' });
+    const [row]=await sql`SELECT pg_backend_pid() AS pid, current_setting('search_path') AS path, current_setting('lock_timeout') AS timeout`;
+    if (backend===undefined) {priorPath=row.path;priorTimeout=row.timeout;}
+    if (backend!==undefined && row.pid!==backend) {
+      lost=true; ending=true; await sql.end({ timeout: 0 });
+      throw Object.assign(new Error('Direct migration session replaced'), { code: 'CONNECTION_CLOSED' });
+    }
+    backend=row.pid;
+  };
+  try {
+    await identity();
+    phase.baseline='unresolved';
+    const baseline=await prepareDatabase(sql);
+    phase.baseline=baseline.baseline ? 'committed' : 'existing';
+    await identity();
+    await sql`SET lock_timeout = '10s'`;
+    await sql`SET search_path = public`;
+    await verifyPublicSearchPath(sql);
+    await sql`SELECT pg_advisory_lock(hashtext(${LOCK_NAME}))`;
+    locked=true;
+    await identity();
+    const { rows }=await databaseState(sql), migrations=migrationPlan();
+    assertKnownJournal(rows,migrations);
+    const tail=migrations.find((entry) => entry.idx===38);
+    if (rows.some((row) => row.hash===tail.hash)) await verifyHostedTextMigration(sql);
+    if (Number(rows.at(-1).created_at)>=migrations[37].folderMillis) await verifySlugIndex(sql);
+    await identity();
+    await archiveLegacyPublicTables(sql);
+    await identity();
+    phase.tail='commit_unresolved';
+    await migrate(drizzle(sql), { migrationsFolder });
+    phase.tail='committed';
+    await identity();
+    await verifyHostedTextMigration(sql);
+    phase.catalog='verified';
+    phase.outcome='CATALOG_VERIFIED';
+  } catch (error) {
+    primary=error;
+    if (connectionUnknown(error)) {
+      lost=true; ending=true;
+      try { await sql.end({timeout:0}); } catch (close) { secondary.push({stage:'fatal-close',error:close}); }
+    }
+    if (phase.baseline==='unresolved') phase.baseline=connectionUnknown(error) ? 'unknown' : 'not_committed';
+    if (phase.tail==='committed') { phase.catalog='failed'; phase.outcome='COMMITTED_UNVERIFIED'; }
+    else if (lost || connectionUnknown(error)) phase.outcome='UNKNOWN';
+    else { if (phase.tail==='commit_unresolved') phase.tail='rolled_back'; phase.outcome='NOT_COMMITTED'; }
+  } finally {
+    const cleanupFailure=(stage,error) => { if (primary) secondary.push({stage,error}); else primary=error; phase.cleanup='failed'; };
+    if (!lost) {
+      if (locked) {
+        try {
+          await identity();
+          const [row]=await sql`SELECT pg_advisory_unlock(hashtext(${LOCK_NAME})) AS released`;
+          if (!row.released) throw new Error('Advisory lock release not confirmed');
+        } catch (error) { cleanupFailure('unlock',error); }
+      }
+      if (!lost && priorTimeout!==undefined) { try { await sql`SELECT set_config('lock_timeout',${priorTimeout},false)`; } catch (error) { cleanupFailure('reset',error); } }
+      if (!lost && priorPath!==undefined) { try { await sql`SELECT set_config('search_path',${priorPath},false)`; } catch (error) { cleanupFailure('search-path',error); } }
+    } else phase.cleanup='failed';
+    if (sql.options.onclose===onclose) sql.options.onclose=previous;
+    if (phase.cleanup!=='failed') phase.cleanup='complete';
   }
-
-  console.log(
-    `[migrate:platform] Baseline complete (${journal.entries.length} rows).`,
-  );
+  if (primary || lost) {
+    if (phase.tail==='committed' && phase.catalog==='verified') phase.outcome='COMMITTED_CLEANUP_FAILED';
+    throw new MigrationPhaseError(phase,primary ?? new Error('Direct session lost'),secondary);
+  }
+  return { status: 'catalog-verified', migrations: migrationPlan().length, phase };
 }
 
 async function main() {
-  const sql = postgres(process.env.DATABASE_URL, { max: 1 });
-  try {
-    await sql`CREATE SCHEMA IF NOT EXISTS drizzle`;
-    await sql`
-      CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (
-        id SERIAL PRIMARY KEY,
-        hash text NOT NULL,
-        created_at bigint
-      )
-    `;
-    await baselineJournalIfPushOnlyDb(sql);
-    const archived = await archiveLegacyPublicTables(sql);
-    console.log(`[archive-legacy] ${JSON.stringify(archived)}`);
-  } finally {
-    await sql.end({ timeout: 5 });
-  }
-
-  console.log("[migrate:platform] Running drizzle-kit migrate…");
-
-  try {
-    execSync("npx drizzle-kit migrate", {
-      cwd: projectDir,
-      stdio: "inherit",
-      env: process.env,
-    });
-  } catch {
-    process.exit(1);
-  }
+  if (!process.env.DATABASE_URL) nextEnv.loadEnvConfig(projectDir);
+  if (!process.env.DATABASE_URL) throw new Error('Missing DATABASE_URL');
+  const sql=createMigrationClient(process.env.DATABASE_URL);
+  let result, primary;
+  try { result=await migratePlatform(sql); } catch (error) { primary=error; }
+  result=await closeMigrationClient(sql,result,primary);
+  console.log(`[migrate:platform] ${JSON.stringify({ ...result,status:'complete' })}`);
 }
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => { console.error(`[migrate:platform] ${safeFailure(error)}`); process.exitCode=1; });
+}

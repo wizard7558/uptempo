@@ -8,7 +8,8 @@ const state = vi.hoisted(() => ({
 }));
 
 const stripe = vi.hoisted(() => ({
-  subscriptions: { retrieve: vi.fn() },
+  subscriptions: { retrieve: vi.fn(), update: vi.fn(), resume: vi.fn() },
+  subscriptionItems: { create: vi.fn(), update: vi.fn(), del: vi.fn() },
   billingPortal: { sessions: { create: vi.fn() } },
 }));
 
@@ -50,6 +51,15 @@ beforeEach(() => {
   state.tenant = tenant();
   stripe.subscriptions.retrieve.mockReset();
   stripe.billingPortal.sessions.create.mockReset();
+  for (const mock of [
+    stripe.subscriptions.update,
+    stripe.subscriptions.resume,
+    stripe.subscriptionItems.create,
+    stripe.subscriptionItems.update,
+    stripe.subscriptionItems.del,
+  ]) {
+    mock.mockReset();
+  }
 });
 
 describe("getHostedPlan", () => {
@@ -164,6 +174,32 @@ describe("openBillingPortal", () => {
     const args = stripe.billingPortal.sessions.create.mock.calls[0][0];
     expect(args.customer).toBe("cus_1");
     expect(args.return_url.endsWith("/settings/billing")).toBe(true);
+  });
+
+  it("collects a card in the portal without ending a trial or attaching the text meter", async () => {
+    state.tenant = tenant({
+      platformStripeCustomerId: "cus_1",
+      stripeSubscriptionId: "sub_1",
+      subscriptionStatus: "trialing",
+      smsLineStatus: "active",
+    });
+    stripe.billingPortal.sessions.create.mockResolvedValue({
+      url: "https://billing.stripe.test/p/trial",
+    });
+    expect(await openBillingPortal()).toEqual({ url: "https://billing.stripe.test/p/trial" });
+    expect(Object.keys(stripe.billingPortal.sessions.create.mock.calls[0][0]).sort()).toEqual([
+      "customer",
+      "return_url",
+    ]);
+    for (const mock of [
+      stripe.subscriptions.update,
+      stripe.subscriptions.resume,
+      stripe.subscriptionItems.create,
+      stripe.subscriptionItems.update,
+      stripe.subscriptionItems.del,
+    ]) {
+      expect(mock).not.toHaveBeenCalled();
+    }
   });
 
   it("returns the error copy when Stripe fails", async () => {

@@ -26,8 +26,9 @@ function validateDate(date: string, todayMs: number): string | null {
 }
 
 /**
- * Nightly: report yesterday's billed texts to the Stripe meter, then reconcile
- * hosted subscriptions. `?date=YYYY-MM-DD` backfills a day in the last 30.
+ * Nightly: reconcile hosted subscriptions (and the text lifecycle) first, then
+ * report billed texts to the Stripe meter for every pending day through
+ * yesterday. `?date=YYYY-MM-DD` limits the catch-up to a day in the last 30.
  */
 export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -54,22 +55,25 @@ export async function GET(request: Request) {
   }
   const date = requested ?? isoDay(todayMs - DAY_MS);
 
-  let usage: Awaited<ReturnType<typeof reportSmsUsage>> | null = null;
-  let usageError: string | null = null;
-  try {
-    usage = await reportSmsUsage(date);
-  } catch (error) {
-    console.error("[billing] report-sms-usage failed", date, error);
-    usageError = error instanceof Error ? error.message : "Unknown error";
-  }
-
+  // Reconcile first so a paid boundary or meter repaired tonight is visible to
+  // the report. Every reporting tenant independently validates its lifecycle,
+  // including when this preliminary reconciliation fails or crashes.
   let reconcile: Awaited<ReturnType<typeof reconcileHostedBilling>> | null = null;
   let reconcileError: string | null = null;
   try {
     reconcile = await reconcileHostedBilling();
-  } catch (error) {
-    console.error("[billing] reconcileHostedBilling crashed", error);
-    reconcileError = error instanceof Error ? error.message : "Unknown error";
+  } catch {
+    console.error("[billing] reconcileHostedBilling crashed", "hosted_reconcile_failed");
+    reconcileError = "hosted_reconcile_failed";
+  }
+
+  let usage: Awaited<ReturnType<typeof reportSmsUsage>> | null = null;
+  let usageError: string | null = null;
+  try {
+    usage = await reportSmsUsage(date, { now: new Date(now) });
+  } catch {
+    console.error("[billing] report-sms-usage failed", "usage_reporting_failed");
+    usageError = "usage_reporting_failed";
   }
 
   const failed = usageError !== null || reconcileError !== null;

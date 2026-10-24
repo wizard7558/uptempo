@@ -16,6 +16,10 @@ import { render } from "@react-email/render";
 import { BillingChangeNotice } from "@/emails/billing-change-notice";
 import { hostedMonthlyCents } from "@/lib/billing/hosted-pricing";
 import { countBillableStaff } from "@/lib/billing/billable-staff";
+import {
+  reconcileHostedTextMeter,
+  type TextMeterOutcome,
+} from "@/lib/billing/hosted-text-lifecycle";
 import { ensureHostedSubscription, type BillingDatabaseContext } from "@/lib/billing/subscriptions";
 import {
   processingFeePercent,
@@ -900,8 +904,15 @@ export class BillingSwitchError extends Error {
   }
 }
 
+/**
+ * Hosted text meter state after a committed switch. The meter is reconciled
+ * only after the switch marker commits; a failure leaves it pending for the
+ * nightly reconcile and never rolls back the switch.
+ */
+export type SwitchTextMeter = TextMeterOutcome;
+
 export type BillingSwitchTenantResult =
-  | { slug: string; outcome: "switched" }
+  | { slug: string; outcome: "switched"; textMeter?: SwitchTextMeter }
   | {
       slug: string;
       outcome: "skipped";
@@ -912,6 +923,7 @@ export type BillingSwitchTenantResult =
         | "inactive"
         | "already_switched"
         | "not_due";
+      textMeter?: SwitchTextMeter;
     }
   | {
       slug: string;
@@ -991,13 +1003,40 @@ async function updateActiveMembershipFees(
   }
 }
 
-/** Apply the 6.5b cutover under one tenant-row lock and one public DB transaction. */
+/**
+ * Apply the 6.5b cutover under one tenant-row lock and one public DB
+ * transaction, then reconcile the hosted text meter after the marker commits.
+ */
 export async function switchTenant(
   slug: string,
   now: Date = new Date(),
 ): Promise<BillingSwitchTenantResult> {
   if (isSingleMode()) return { slug, outcome: "skipped", reason: "single_mode" };
 
+  const committed = await commitTenantSwitch(slug, now);
+  if (
+    committed.outcome === "switched" ||
+    (committed.outcome === "skipped" && committed.reason === "already_switched")
+  ) {
+    return { ...committed, textMeter: await reconcileMeterAfterSwitch(slug) };
+  }
+  return committed;
+}
+
+/** Runs only on the committed marker; it never repeats membership or payout work. */
+async function reconcileMeterAfterSwitch(slug: string): Promise<SwitchTextMeter> {
+  try {
+    return (await reconcileHostedTextMeter(slug)).outcome;
+  } catch {
+    console.error("[billing] hosted text meter pending after committed switch", "meter_reconcile_failed");
+    return "pending";
+  }
+}
+
+async function commitTenantSwitch(
+  slug: string,
+  now: Date,
+): Promise<BillingSwitchTenantResult> {
   try {
     return await publicDb.transaction(async (tx) => {
       const [tenant] = await tx
@@ -1054,11 +1093,13 @@ export async function switchTenant(
         })
         .where(eq(tenants.slug, slug));
 
+      // The caller-owned transaction cannot persist a durable meter operation.
       const hosted = await ensureHostedSubscription(slug, {
         trialDays: 0,
         billingSwitch: true,
         ownerEmail,
         db: billingDb,
+        textMeter: "defer",
       });
       if (!("subscriptionId" in hosted)) {
         throw new Error(`Hosted subscription could not be switched (${hosted.skipped}).`);

@@ -76,6 +76,13 @@ vi.mock("@/lib/db", () => ({
 // Mock tenant registry
 vi.mock("@/lib/tenant/registry", () => ({
   listActiveTenants: vi.fn().mockResolvedValue([{ slug: "test-salon", id: "tenant-1", name: "Test Salon", status: "active" }]),
+  findTenantByConnectAccountId: vi.fn().mockResolvedValue("test-salon"),
+}));
+
+// The hosted text lifecycle is unit-tested on its own; here only its routing.
+const mockReconcileHostedTextMeter = vi.fn();
+vi.mock("@/lib/billing/hosted-text-lifecycle", () => ({
+  reconcileHostedTextMeter: (...args: unknown[]) => mockReconcileHostedTextMeter(...args),
 }));
 
 const mockGrantMembershipCredits = vi.fn().mockResolvedValue({ granted: true, balance: 8 });
@@ -175,6 +182,7 @@ describe("Stripe webhook handler integration", () => {
     mockDb = createMockDb();
     mockPublicDb = createMockPublicDb();
     vi.mocked(withTenantDb).mockImplementation(mockWithDb());
+    mockReconcileHostedTextMeter.mockReset().mockResolvedValue({ outcome: "free" });
   });
 
   it("rejects requests with missing stripe-signature header", async () => {
@@ -392,6 +400,54 @@ describe("Stripe webhook handler integration", () => {
     );
     expect(withTenantDb).not.toHaveBeenCalled();
     expect(mockDb.update).not.toHaveBeenCalled();
+    expect(mockReconcileHostedTextMeter).toHaveBeenCalledWith("test-salon", {
+      event: expect.objectContaining({ type: "customer.subscription.updated" }),
+    });
+  });
+
+  it("propagates a hosted activation failure so Stripe retries, without reaching membership handling", async () => {
+    const hostedSub = {
+      id: "sub_host",
+      status: "active",
+      metadata: { purpose: "uptempo_hosted_plan", tenantSlug: "test-salon" },
+    };
+    mockStripe.subscriptions.retrieve.mockResolvedValueOnce(hostedSub);
+    mockReconcileHostedTextMeter.mockRejectedValueOnce(new Error("meter attach failed"));
+    mockVerifyWebhookSignature.mockReturnValue(
+      makeStripeEvent("customer.subscription.resumed", hostedSub),
+    );
+    await expect(
+      POST(createMockRequest("{}", { "stripe-signature": "valid_sig" })),
+    ).rejects.toThrow("meter attach failed");
+    expect(withTenantDb).not.toHaveBeenCalled();
+  });
+
+  it("keeps membership subscription routing and never runs the hosted text lifecycle", async () => {
+    mockVerifyWebhookSignature.mockReturnValue(
+      makeStripeEvent("customer.subscription.updated", {
+        id: "sub_member",
+        status: "active",
+        metadata: { purpose: "beauty_bank_membership", tenantSlug: "test-salon" },
+      }),
+    );
+    const response = await POST(createMockRequest("{}", { "stripe-signature": "valid_sig" }));
+    expect(response.status).toBe(200);
+    expect(withTenantDb).toHaveBeenCalledWith("test-salon", expect.any(Function));
+    expect(mockReconcileHostedTextMeter).not.toHaveBeenCalled();
+  });
+
+  it("routes Connect account events before any hosted plan handling", async () => {
+    mockVerifyWebhookSignature.mockReturnValue({
+      ...makeStripeEvent("customer.subscription.updated", {
+        id: "sub_connect",
+        metadata: { purpose: "uptempo_hosted_plan", tenantSlug: "test-salon" },
+      }),
+      account: "acct_connected",
+    });
+    const response = await POST(createMockRequest("{}", { "stripe-signature": "valid_sig" }));
+    expect(response.status).toBe(200);
+    expect(mockStripe.subscriptions.retrieve).not.toHaveBeenCalled();
+    expect(mockReconcileHostedTextMeter).not.toHaveBeenCalled();
   });
 
   it("returns 200 for unhandled event types", async () => {
