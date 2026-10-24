@@ -255,7 +255,7 @@ async function main() {
       }
 
       lines.push(
-        "Run `npx drizzle-kit push` to sync the public schema, then re-run `npm run dev`.",
+        "Run `npm run migrate:platform` to prepare and migrate the public schema, then re-run `npm run dev`.",
       );
       lines.push(
         "If you intentionally want to bypass this guard, use `SKIP_BOOTSTRAP_CHECK=1 npm run dev`.",

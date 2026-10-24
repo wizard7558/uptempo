@@ -73,7 +73,7 @@ describe.skipIf(!process.env.DATABASE_URL)("reportSmsUsage (db)", () => {
   async function setReady(slug: string, from: string, billableFrom = `${from}T00:00:00.000Z`) {
     await publicDb
       .update(schema.tenants)
-      .set({ comped: 0, stripeSubscriptionId: `sub_${slug}`, platformStripeCustomerId: `cus_${slug}` })
+      .set({ comped: 0, smsLineStatus: "active", stripeSubscriptionId: `sub_${slug}`, platformStripeCustomerId: `cus_${slug}` })
       .where(eq(schema.tenants.slug, slug));
     await publicDb.delete(schema.hostedTextBillingState).where(eq(schema.hostedTextBillingState.tenantSlug, slug));
     await publicDb.insert(schema.hostedTextBillingState).values({
@@ -251,8 +251,12 @@ describe.skipIf(!process.env.DATABASE_URL)("reportSmsUsage (db)", () => {
         billingSwitchedAt: null,
       })
       .where(eq(schema.tenants.slug, a.slug));
-    expect((await report(CUTOVER)).skipped).toContain(a.slug);
+    for (const outcome of Object.values(await report(CUTOVER))) {
+      expect(outcome).not.toContain(a.slug);
+    }
+    expect(callsFor(a.slug)).toHaveLength(0);
     expect(await rowsFor(a.slug, CUTOVER)).toHaveLength(0);
+    expect(await cursorOf(a.slug)).toBe(CUTOVER);
 
     await publicDb
       .update(schema.tenants)

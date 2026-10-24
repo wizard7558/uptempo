@@ -383,7 +383,7 @@ jobs:
         run: PGPASSWORD=postgres psql -h localhost -U postgres -d uptempo_test -c "CREATE EXTENSION IF NOT EXISTS btree_gist;"
 
       - name: Run database migrations
-        run: npx drizzle-kit push
+        run: node scripts/db-prepare.mjs && node scripts/migrate-platform.mjs
 
       - name: Seed test data
         id: e2eSeed
@@ -411,7 +411,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/uptempo_production_test
         run: |
-          npx drizzle-kit push
+          node scripts/db-prepare.mjs
+          node scripts/migrate-platform.mjs
           npx tsx scripts/seed-e2e-data.ts
 
       - name: Run production E2E smoke tests

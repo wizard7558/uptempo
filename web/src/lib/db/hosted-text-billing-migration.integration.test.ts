@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import postgres from "postgres";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
+import { readMigrationFiles } from "drizzle-orm/migrator";
 import { hostedTextBillingState } from "./schema/hosted-text-billing-state";
 import { smsUsageReports } from "./schema/sms-usage-reports";
 
@@ -23,7 +24,7 @@ describe.skipIf(!enabled)("hosted text lifecycle migration 0038 (disposable loca
     }
   };
   const clear = async () => {
-    await client.unsafe("DROP TABLE IF EXISTS public.hosted_text_billing_state, public.sms_usage_reports, public.tenants");
+    await client.unsafe("DROP TABLE IF EXISTS public.tenant_slug_observer, public.hosted_text_billing_state, public.sms_usage_reports, public.tenants");
     await client.unsafe("DROP FUNCTION IF EXISTS public.hosted_text_preserve_report_facts()");
   };
   const state = (tenantSlug = "tenant-a") => ({
@@ -35,7 +36,16 @@ describe.skipIf(!enabled)("hosted text lifecycle migration 0038 (disposable loca
     customerId: "cus_a", subscriptionId: "sub_a", meterEventIdentifier: "evt_a",
     meterEventTimestamp: 1792713600, firstAttemptAt: new Date("2026-10-23T00:00:00Z"),
   });
+  const invariants = async () => ({
+    index: await client.unsafe(`SELECT c.oid, pg_get_indexdef(c.oid) AS definition, i.indisunique, i.indisvalid, i.indisready
+      FROM pg_class c JOIN pg_index i ON i.indexrelid = c.oid WHERE c.oid = 'public.tenants_slug_unique'::regclass`),
+    unrelatedFk: await client.unsafe(`SELECT oid, pg_get_constraintdef(oid) AS definition FROM pg_constraint
+      WHERE conname = 'tenant_slug_observer_tenant_fk'`),
+    observer: await client.unsafe("SELECT * FROM public.tenant_slug_observer ORDER BY tenant_slug"),
+    ledger: await client.unsafe("SELECT * FROM drizzle.__drizzle_migrations ORDER BY id"),
+  });
   const expectGuardedRollback = async () => {
+    const before = await invariants();
     await expect(client.unsafe(rollback)).rejects.toThrow("0038 rollback refused");
     const [objects] = await client.unsafe(`SELECT
       to_regclass('public.hosted_text_billing_state') IS NOT NULL AS lifecycle,
@@ -44,6 +54,7 @@ describe.skipIf(!enabled)("hosted text lifecycle migration 0038 (disposable loca
       EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
         AND table_name = 'sms_usage_reports' AND column_name = 'report_status') AS status`);
     expect(objects).toEqual({ lifecycle: true, function: true, trigger: true, status: true });
+    expect(await invariants()).toEqual(before);
   };
 
   beforeAll(async () => {
@@ -63,14 +74,24 @@ describe.skipIf(!enabled)("hosted text lifecycle migration 0038 (disposable loca
 
   beforeEach(async () => {
     await clear();
-    // Minimal accepted preimage: public tenant key and the exact 0034 report table.
+    // Canonical key preimage: tenants.id PK plus the standalone unique slug index.
     // No historical journal bootstrap, provider access, or environment-file loading.
     await client.unsafe(`CREATE TABLE public.tenants (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL,
-      slug text NOT NULL UNIQUE, comped integer NOT NULL DEFAULT 0,
+      slug text NOT NULL, comped integer NOT NULL DEFAULT 0,
       platform_stripe_customer_id text, stripe_subscription_id text);
       INSERT INTO public.tenants (name, slug, comped) VALUES
-        ('A', 'tenant-a', 0), ('B', 'tenant-b', 1)`);
+        ('A', 'tenant-a', 0), ('B', 'tenant-b', 1);
+      CREATE UNIQUE INDEX tenants_slug_unique ON public.tenants USING btree (slug);
+      CREATE TABLE public.tenant_slug_observer (tenant_slug text NOT NULL,
+        CONSTRAINT tenant_slug_observer_tenant_fk FOREIGN KEY (tenant_slug) REFERENCES public.tenants(slug));
+      INSERT INTO public.tenant_slug_observer VALUES ('tenant-a'), ('tenant-b');
+      CREATE SCHEMA IF NOT EXISTS drizzle;
+      CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (id serial PRIMARY KEY, hash text NOT NULL, created_at bigint);
+      TRUNCATE drizzle.__drizzle_migrations RESTART IDENTITY`);
+    const previousJournal = readMigrationFiles({ migrationsFolder: resolve(process.cwd(), "drizzle") }).slice(0, 38)
+      .map((entry) => ({ hash: entry.hash, created_at: entry.folderMillis }));
+    await client`INSERT INTO drizzle.__drizzle_migrations ${client(previousJournal)}`;
     await client.unsafe(readFileSync(resolve(process.cwd(), "drizzle/0034_sms_usage_reports.sql"), "utf8"));
     await client.unsafe(`INSERT INTO public.sms_usage_reports
       (tenant_slug, usage_date, quantity, meter_event_identifier, reported_at) VALUES
@@ -84,9 +105,11 @@ describe.skipIf(!enabled)("hosted text lifecycle migration 0038 (disposable loca
   });
 
   it("preserves all legacy tenant/report values through migration and rollback and keeps old inserts compatible", async () => {
+    const before = await invariants();
     const tenants = await client.unsafe("SELECT * FROM public.tenants ORDER BY slug");
     const reports = await client.unsafe(`SELECT ${legacyReportColumns} FROM public.sms_usage_reports ORDER BY tenant_slug`);
     await executeUp();
+    expect(await invariants()).toEqual(before);
     expect(await client.unsafe("SELECT * FROM public.tenants ORDER BY slug")).toEqual(tenants);
     expect(await client.unsafe(`SELECT ${legacyReportColumns} FROM public.sms_usage_reports ORDER BY tenant_slug`)).toEqual(reports);
     expect(await client.unsafe("SELECT * FROM public.hosted_text_billing_state")).toHaveLength(0);
@@ -100,6 +123,7 @@ describe.skipIf(!enabled)("hosted text lifecycle migration 0038 (disposable loca
       VALUES ('tenant-a', '2026-10-22', 9) ON CONFLICT DO NOTHING`);
     const beforeDown = await client.unsafe(`SELECT ${legacyReportColumns} FROM public.sms_usage_reports ORDER BY tenant_slug, usage_date`);
     await client.unsafe(rollback);
+    expect(await invariants()).toEqual(before);
     expect(await client.unsafe("SELECT * FROM public.tenants ORDER BY slug")).toEqual(tenants);
     expect(await client.unsafe("SELECT * FROM public.sms_usage_reports ORDER BY tenant_slug, usage_date")).toEqual(beforeDown);
     const [column] = await client.unsafe(`SELECT is_nullable, column_default FROM information_schema.columns
