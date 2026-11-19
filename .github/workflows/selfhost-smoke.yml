@@ -9,7 +9,7 @@ on:
 
 jobs:
   smoke:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, riley-public-ci-linux-arm64]
     timeout-minutes: 20
     defaults:
       run:

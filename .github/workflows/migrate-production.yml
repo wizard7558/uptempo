@@ -18,7 +18,7 @@ jobs:
       github.repository == 'wizard7558/uptempo' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, riley-local-production-arm64]
     environment: production
     defaults:
       run:

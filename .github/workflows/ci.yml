@@ -7,7 +7,7 @@ on:
 
 jobs:
   gate:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, riley-public-ci-linux-arm64]
     defaults:
       run:
         working-directory: web
@@ -54,7 +54,7 @@ jobs:
         run: pnpm run build
 
   test-db:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, riley-public-ci-linux-arm64]
     defaults:
       run:
         working-directory: web
@@ -198,7 +198,7 @@ jobs:
         run: pnpm exec vitest run
 
   review-otp-security-integration:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, riley-public-ci-linux-arm64]
     timeout-minutes: 15
     defaults:
       run:
@@ -328,7 +328,7 @@ jobs:
           dropdb -h localhost -p 5432 -U postgres "${REVIEW_OTP_TEST_DATABASE_NAME}"
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, riley-public-ci-linux-arm64]
     timeout-minutes: 30
     defaults:
       run:

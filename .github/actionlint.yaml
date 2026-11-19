@@ -1,0 +1,4 @@
+self-hosted-runner:
+  labels:
+    - riley-public-ci-linux-arm64
+    - riley-local-production-arm64
